@@ -10,6 +10,8 @@ for more information visit: [lunamech.com](https://lunamech.com/)
 
 This readme is seriously out of date.
 
+[blog post](https://k1d77a.com/blog/main/general/programming/common%20lisp/LunaMech/LunaMech%20is%20finally%20FOSS%20software)
+
 
 ## Communities
 

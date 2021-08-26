@@ -50,7 +50,7 @@
     ""
   (format t "https://lunamech.com/"))
 
-(new-normie-luna-command code ()
+(new-normie-luna-command source ()
     ""
   (format t "My source code is here: https://github.com/K1D77A/LunaMech I am licensed under the GNU General Public License v3.0"))
 
