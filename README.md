@@ -6,22 +6,7 @@ on Discord, so LunaMech has been built around the idea of communities. Because o
 idea of creating "communities" using LunaMech, commands are prefixed with community
 names and commands that start with community names only impact that community.
 
-## Todo
-
-* Implement encryption - currently the bot can only read from non encrypted rooms
-but I am currently working on fixing this.
-* Create solid documentation.
-* Create a ready to go binary - Currently the bot would require you to load her up
-with quicklisp and create a valid config file
-* Document the creation of a valid config file - Config files are just normal .lisp
-files, this is very convenient but the bot won't work without a correct one. - You can now do this using (gen-config). This generates a config at ./generated-communities.lisp, you will have to move this to ./config/communities.lisp
-* (maybe) Create a means to start the bot and get the bot to run through the
-creation of a valid config file from user input.
-* Document how to extend the functionality of LunaMech through the creation of
-modules.
-
-
-* Absord the features from https://github.com/matrix-org/mjolnir into Luna
+for more information visit: [lunamech.com](https://lunamech.com/)
 
 
 ## Communities
