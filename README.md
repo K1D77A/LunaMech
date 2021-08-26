@@ -8,6 +8,8 @@ names and commands that start with community names only impact that community.
 
 for more information visit: [lunamech.com](https://lunamech.com/)
 
+This readme is seriously out of date.
+
 
 ## Communities
 
