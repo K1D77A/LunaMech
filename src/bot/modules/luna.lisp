@@ -54,4 +54,9 @@
     ""
   (format t "My source code is here: https://github.com/K1D77A/LunaMech I am licensed under the GNU General Public License v3.0"))
 
-
+(new-normie-luna-command modules ()
+    "Returns the names of all the modules within Luna"
+  (format t "Loaded modules: ~%~{.~:(~A~)~%~}~%Type 'MODULE help' for more information."
+          (mapcar (lambda (module)
+                    (symbol-name (matrix-moonbot::prefix module)))
+                  (found-modules *luna*))))
