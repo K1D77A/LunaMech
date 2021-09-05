@@ -308,7 +308,7 @@ from the appropriate private-room. After cleans any empty private-rooms"
                            invoker community)
   "When prefix is 'admin with no privileges search for admin-command"
   (or (type-find 'direct-message-command invoker *commands*
-                 :key #'name :test #'sym-name-equal)
+                 :key #'name :test #'string-equal)
       (error 'missing-command)))
 
 (defmethod execute-command ((moonbot moonbot) (priv ubermensch-privilege)

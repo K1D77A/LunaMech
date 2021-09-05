@@ -16,7 +16,7 @@
 (defmethod locate-command ((module rss-module) priv invoker community)
   "When prefix is 'luna with no privileges search for luna-command"
   (or (type-find 'rss-command invoker *commands*
-                 :key #'name :test #'sym-name-equal)      
+                 :key #'name :test #'string-equal)
       (error 'missing-command)))
 
 (defmethod execute-command ((moonbot moonbot) (priv ubermensch-privilege)

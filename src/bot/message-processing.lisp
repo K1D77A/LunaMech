@@ -37,10 +37,11 @@ object"
   "Attemps to determine if STRING has a valid prefix. Currently the prefix is just the 
 character #\. In the case that it does returns t otherwise signals condition 'invalid-prefix"
   (or (char= (aref string 0) #\.)
-      (error 'invalid-prefix
-             :message-process-failure-culprit string
-             :message-process-failure-message
-             (format nil "String has invalid prefix ~A" string))))
+      (let ((trimmed (%trim-message 25 string)))
+        (error 'invalid-prefix
+               :message-process-failure-culprit trimmed
+               :message-process-failure-message
+               (format nil "String has invalid prefix ~A" trimmed)))))
 
 (defun community-prefix-p (community string)
   (string-equal string (format nil ".~A" (name community))))
@@ -70,15 +71,25 @@ a 'invalid-prefix' condition."
               (let ((mod (check-found-modules moonbot in)))
                 (if mod
                     (cons mod (rest split))
-                    (error 'invalid-prefix
-                           :message-process-failure-culprit prefix
-                           :message-process-failure-message
-                           (format nil "Prefix is invalid ~A" prefix)))))))
+                    (let ((trimmed (%trim-message 25 prefix)))
+                      (error 'invalid-prefix
+                             :message-process-failure-culprit trimmed
+                             :message-process-failure-message
+                             (format nil "Prefix is invalid ~A" trimmed))))))))
     ((and error (not invalid-prefix)) ()
       (error 'message-process-failure
              :message-process-failure-culprit string
              :message-process-failure-message
              (format nil "Message is invalid")))))
+
+(defun %trim-message (n message)
+  "Shortens MESSAGE if its greater than length N"
+  (let ((len (length message)))
+    (if (< n len)
+        (let ((trimmed (subseq message 0 n))
+              (rem (- len n)))
+          (format nil "~A (~D remaining)" trimmed rem))
+        message)))
 
 (defun process-message (moonbot community room message)
   "Normal - initially determines the privilege of the user from the message, then

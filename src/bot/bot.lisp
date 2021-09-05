@@ -22,7 +22,8 @@
   (handler-case 
       (front-end-loop)
     (SB-SYS:INTERACTIVE-INTERRUPT (c)
-      (stop *luna*)
+      (when (slot-boundp *luna* 'thread)
+        (stop *luna*))
       (sb-ext:quit))))
 
 (defun front-end-loop ()
@@ -39,7 +40,8 @@ and sleep over and over and over again."
   (log:info "Adding exit hooks for Luna.")
   (push (lambda ()
           (log:info "Exit hook invoked. Shutting down.")
-          (stop *luna*))
+          (when (slot-boundp *luna* 'thread)
+            (stop *luna*)))
         sb-ext:*exit-hooks*))
 
 (defun new-password ()

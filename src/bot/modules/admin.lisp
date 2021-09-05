@@ -14,7 +14,7 @@
                            invoker community)
   "When prefix is 'admin with no privileges search for admin-command"
   (or (type-find 'admin-command invoker *commands*
-                 :key #'name :test #'sym-name-equal)
+                 :key #'name :test #'string-equal)
       (error 'missing-command)))
 
 (defmethod locate-command ((module admin-module) priv invoker community)

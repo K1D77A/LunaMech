@@ -33,7 +33,7 @@
                            invoker community)
   "When prefix is 'webhook with no privileges search for webhook-command"
   (or (type-find 'webhook-command invoker *commands*
-                 :key #'name :test #'sym-name-equal)
+                 :key #'name :test #'string-equal)
       (error 'missing-command)))
 
 (defmethod locate-command ((module webhook-module) priv invoker community)
@@ -87,7 +87,9 @@
 
 (def-webhook upload-content ()
   ((for-stickerpicker
-    :validator (lambda (filename content-type content-bytes) t)
+    :validator (lambda (filename content-type content-bytes)
+                 (declare (ignore filename content-type content-bytes))
+                 t)
     :fn (lambda (filename content-type content-bytes)
           (log:info filename)
           (let ((uploaded 

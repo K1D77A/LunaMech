@@ -59,14 +59,14 @@ that file must be of type sticker-api-list otherwise will signal a type conditio
                            invoker community)
   "When prefix is 'admin with no privileges search for sticker-command"
   (or (type-find 'sticker-command invoker *commands*
-                 :key #'name :test #'sym-name-equal)
+                 :key #'name :test #'string-equal)
       (error 'missing-command)))
 
 (defmethod locate-command ((module sticker-module) (priv normie-privilege)
                            invoker community)
   ""
   (or (type-find 'sticker-command invoker *commands*
-                 :key #'name :test #'sym-name-equal)
+                 :key #'name :test #'string-equal)
       (error 'missing-command)))
 
 (defmethod locate-command ((module sticker-module) priv invoker community)

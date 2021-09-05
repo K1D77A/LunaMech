@@ -13,7 +13,7 @@
 (defmethod locate-command ((module luna-module) priv invoker community)
   "When prefix is 'luna with no privileges search for luna-command"
   (or (type-find 'luna-command invoker *commands*
-                 :key #'name :test #'sym-name-equal)
+                 :key #'name :test #'string-equal)
       ;;luna commands created for communities that are for normies
       (error 'missing-command)))
 

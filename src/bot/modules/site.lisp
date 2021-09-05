@@ -10,7 +10,7 @@
 (defmethod locate-command ((module site-module) priv invoker community)
   "When prefix is 'site with no privileges search for site-command"
   (or (type-find 'site-command invoker *commands*
-                 :key #'name :test #'sym-name-equal)
+                 :key #'name :test #'string-equal)
       ;;site commands created for communities that are for normies
       (error 'missing-command)))
 

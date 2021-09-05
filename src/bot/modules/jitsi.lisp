@@ -169,7 +169,7 @@ change will happen if the room is not registered within a community in Luna."
                            invoker community)
   "When prefix is 'jitsi with no privileges search for jitsi-command"
   (or (type-find 'jitsi-command invoker *commands*
-                 :key #'name :test #'sym-name-equal)
+                 :key #'name :test #'string-equal)
       (error 'missing-command)))
 
 (defmethod locate-command ((module jitsi-module) priv invoker community)

@@ -171,7 +171,7 @@ that file must be of type twitter-api-list otherwise will signal a type conditio
                            invoker community)
   "When prefix is 'admin with no privileges search for twitter-command"
   (or (type-find 'twitter-command invoker *commands*
-                 :key #'name :test #'sym-name-equal)
+                 :key #'name :test #'string-equal)
       (error 'missing-command)))
 
 (defmethod locate-command ((module twitter-module) priv invoker community)

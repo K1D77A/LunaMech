@@ -63,7 +63,7 @@ the prefix, the command and the community it was sent in."))
 (defmethod locate-command (prefix priv invoker community)
   "Default. Just search for community based, non privileged commands."
   (or (type-find 'community-command invoker *commands* '
-                 :key #'name :test #'sym-name-equal)
+                 :key #'name :test #'string-equal)
       ;;need to check within the communities local commands
       (error 'missing-command)))
 

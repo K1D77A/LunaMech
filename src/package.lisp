@@ -316,7 +316,6 @@
            #:total-failure-caught-condition
            #:type-find
            #:type-remove
-           #:sym-name-equal
            #:download-content
            #:user-profile-url
            #:on-sync

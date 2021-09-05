@@ -56,7 +56,7 @@
 (defmethod locate-command ((module huginn-module) (priv ubermensch-privilege)
                            invoker community)
   (or (type-find 'huginn-command invoker *commands*
-                 :key #'name :test #'sym-name-equal)
+                 :key #'name :test #'string-equal)
       (error 'missing-command)))
 
 (defmethod locate-command ((module huginn-module) priv invoker community)
@@ -65,7 +65,7 @@ check to see if the userid is found in *huginn-privileged*. if command is not fo
 then signal 'missing-command, if command is found but the user is not privileged
 then signal 'missing-command"
   (let ((command (type-find 'huginn-command invoker *commands*
-                            :key #'name :test #'sym-name-equal)))
+                            :key #'name :test #'string-equal)))
     (unless command
       (error 'missing-command))
     (if (find (user-id priv) *huginn-privileged* :test #'string=)
