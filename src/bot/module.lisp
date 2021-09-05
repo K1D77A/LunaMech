@@ -52,7 +52,7 @@ and the name of its module subclass."))
 (defmethod module-information (module)
   "Default fallback."
   nil)
-
+                                        ;(eval-when (:execute :load-toplevel :compile-toplevel) 
 (defmacro defmodule (name (package prefix privilege-required &rest module-args)
                      command-class command-slots module-class module-slots)
   `(let ((*package* (find-package ',package)))
@@ -74,13 +74,13 @@ and the name of its module subclass."))
 
 (defun new-module (class prefix command-type privilege-required
                    &rest args)
-  (apply #'make-instance class  
-         (print (append args 
-                        (list 
-                         :prefix prefix 
-                         :command-type (make-instance command-type)
-                         :privilege-required (make-instance privilege-required))))))
-
+  (apply #'make-instance class
+         (apply #'concatenate 'list 
+                (list 
+                 :prefix prefix 
+                 :command-type (make-instance command-type)
+                 :privilege-required (make-instance privilege-required))
+                args)))
 
 (defmethod find-module ((luna luna) sym &optional (silent t))
   "Takes in a symbol SYM and looks within the alist (modules LUNA) for a 

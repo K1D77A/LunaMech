@@ -2,7 +2,7 @@
 (asdf:defsystem #:matrix-moonbot
   :description "LunaMech is a featureful bot for use on Matrix."
   :author "K1D77A"
-  :license  ""
+  :license  "GPL-3.0"
   :build-operation "program-op"
   :build-pathname "./lunamech"
   :entry-point "matrix-moonbot:setup-and-go"
@@ -66,7 +66,8 @@
                                (:file "command-system")
                                (:module "modules"
                                 :components
-                                        ((:file "admin")
+                                        ((:file "keys")
+                                         (:file "admin")
                                          (:file "compass")
                                          (:file "luna")
                                          (:file "huginn")
