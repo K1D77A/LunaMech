@@ -67,7 +67,7 @@ a 'invalid-prefix' condition."
           (if (or (community-prefix-p community prefix)
                   (community-alias-p community prefix))
               (cons in (rest split))
-              (let ((mod (locate-module moonbot in)))
+              (let ((mod (check-found-modules moonbot in)))
                 (if mod
                     (cons mod (rest split))
                     (error 'invalid-prefix

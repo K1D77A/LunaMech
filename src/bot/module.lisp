@@ -72,6 +72,11 @@ and the name of its module subclass."))
              :command ',command-class
              :privilege ',privilege-required))))
 
+(defun check-found-modules (luna prefix)
+  "Loops through (found-modules LUNA) looking for a module whose prefix is PREFIX."
+  (let ((mods (found-modules luna)))
+    (find prefix mods :key #'prefix :test #'string-equal)))
+
 (defun new-module (class prefix command-type privilege-required
                    &rest args)
   (apply #'make-instance class
