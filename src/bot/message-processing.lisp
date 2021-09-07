@@ -70,7 +70,11 @@ a 'invalid-prefix' condition."
               (cons in (rest split))
               (let ((mod (check-found-modules moonbot in)))
                 (if mod
-                    (cons mod (rest split))
+                    (progn (unless (rest split)
+                             (error 'missing-invoker
+                                    :message-process-failure-culprit split
+                                    :message-proceess-failure-message "Missing invoker"))
+                           (cons mod (rest split)))
                     (let ((trimmed (%trim-message 25 prefix)))
                       (error 'invalid-prefix
                              :message-process-failure-culprit trimmed

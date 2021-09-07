@@ -101,3 +101,6 @@ by 10."
                                 "compass.png" "image/png" vec))))
 
 
+(new-compass-command test ()
+    "The URL for the test"
+  (format t "You can find the test at spekr.org"))

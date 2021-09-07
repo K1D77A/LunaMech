@@ -800,6 +800,9 @@ type"))
 (define-condition invalid-prefix (message-process-failure)
   ())
 
+(define-condition missing-invoker (message-process-failure)
+  ())
+
 (define-condition missing-command (message-process-failure)
   ())
 

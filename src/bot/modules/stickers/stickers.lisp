@@ -109,6 +109,7 @@ to chirp."
       (alexandria:doplist (room events rooms)
         (setf media (append media (collect-images room events)))))
     (when media
+      ;;can put lparallel mapc here
       (mapc (lambda (media)
               (handler-case 
                   (upload-event-to-sticker-site luna media)

@@ -21,6 +21,7 @@
             (sticker-rooms
              :accessor sticker-rooms
              :initarg :sticker-rooms
+             :initform '(:%TESTING "!WJvFXSrAnfoqNgwqpE:scyldings.com")
              :type list)
             (server-information
              :accessor server-information
