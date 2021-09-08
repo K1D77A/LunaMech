@@ -206,3 +206,29 @@
     (jojo:write-key-value "avatar_url" (slot-value obj 'avatar-url))
     (jojo:write-key-value "presence" (slot-value obj 'presence))))
 
+(defclass power-level ()
+  ((users
+    :accessor users
+    :initarg :users
+    :type power-level%users
+    :documentation "A power-level%users object")))
+
+(defclass power-level%users ()
+  ((users
+    :accessor users
+    :initarg :users
+    :initform ()
+    :documentation "An alist of users to their powerlevels. 50 is moderator, 100 admin.")))
+
+(defmethod jojo:%to-json ((obj power-level))
+  (jojo:with-object
+    (jojo:write-key-value "content"
+                          (jojo:%to-json (slot-value obj 'users)))))
+
+(defmethod jojo:%to-json ((obj power-level%users))
+  (jojo:with-object 
+    (jojo:write-key-value "users" (jojo:to-json (slot-value obj 'users) :from :alist))))
+
+
+
+

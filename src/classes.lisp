@@ -292,6 +292,12 @@ ubermensch of admin. They can only execute normie commands."))
     :type (or null connection)
     :documentation "An instance of CONNECTION that is used to login to the server where
 this community is located. This should be eq to a connection within (connections LUNA)")
+   (top-level-space
+    :accessor top-level-space
+    :initform ""
+    :initarg :top-level-space
+    :type string
+    :documentation "The top level space for that community.")
    (filters
     :accessor filters
     :initform nil
@@ -586,7 +592,7 @@ is removed."
 
 ;;;;conditions
 
-(define-condition moonbot-condition (condition)
+(define-condition moonbot-condition (error)
   ()
   (:documentation "Top level class for all Moonbot defined conditions"))
 

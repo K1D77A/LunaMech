@@ -287,4 +287,20 @@ check and change the name of this room depending on the number of people within 
                            I am no longer checking this room for members."
           room-id))
 
+(new-jitsi-command monitor-new-jitsi ((url (:minlen 1) (:maxlen 100))
+                                      (room-id (:minlen 1) (:maxlen 50))
+                                      (jitsi-id (:minlen 1) (:maxlen 50)))
+    "Gets Luna to modify the name of ROOM-ID based on the number of people in the JITSI-ID."
+  (let ((list (list :ID room-id :JITSI-ID jitsi-id))
+        (rooms (find url (rooms *module*) :test #'string= :key (lambda (ele) (getf ele :url)))))
+    (if rooms
+        (progn 
+          (pushnew list (getf rooms :rooms) :test #'string=
+                                            :key (lambda (ele) (getf ele :jitsi-id)))
+          (format t "I am now monitoring ~A." jitsi-id))
+        (format t "Cannot find rooms for URL: ~A." url))))
 
+(new-jitsi-command all-urls ()
+    "Returns the available URL's that Luna already has registered."
+  (format t "~{ ~A~%~}" (mapcar (lambda (ele) (getf ele :url)) (rooms *module*))))
+  

@@ -10,13 +10,19 @@ Test API for Spaces
              nil resp :msc2946)
     resp))
 
+(defun spaces-hierarchy (connection room-id)
+  (auth-req (:get connection
+             ("rooms/" (url-e room-id) "/hierarchy")
+             nil resp :msc2946)
+    resp))
+
 (defun rooms-in-a-space (connection room-id)
-  (let* ((response (spaces-rooms connection room-id))
+  (let* ((response (spaces-hierarchy connection room-id))
          (rooms (getf response :|rooms|)))
     (mapcar (lambda (room)
               (destructuring-bind (&key |room_id| |name| |room_type| &allow-other-keys)
                   room
-                (list :name |name| :room-id |room_id| :room-type |room_type|)))
+                (list :name |name| :id |room_id| :room-type |room_type|)))
             rooms)))
 
 (defun spaces-in-a-space (connection room-id)

@@ -84,6 +84,7 @@
              resp)
     resp))
 
+
 (defun make-auth (connection)
   "Creates a plist which represents an auth token that can be sent to the server using data within
 CONNECTION."

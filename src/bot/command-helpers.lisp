@@ -78,6 +78,7 @@
 (defun moon-mapcar (community room function list)
   (moon-map #'mapcar community room function list))
 
+
 (defun moon-map-rooms (map-fun community message-room function &optional (exclude nil))
   (let* ((failures nil)
          (res (funcall map-fun community message-room 

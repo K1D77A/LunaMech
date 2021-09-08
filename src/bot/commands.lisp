@@ -212,3 +212,58 @@
 (new-admin-community-command help ()
     "Attempts an explanation of how commands work"
   (moonhelp 'admin-community-command community room))
+
+(new-admin-community-command all-spaces ()
+    "Returns all the spaces within the top level space for this community."
+  (with-accessors ((top-level-space top-level-space)
+                   (connection connection))
+      community
+    (when (string/= top-level-space "")
+      (format t "Spaces:~%~{ ~A~%~}"
+              (mapcar (lambda (plist)
+                        (destructuring-bind (&key |name| |room_id| &allow-other-keys)
+                            plist
+                          (format nil "NAME: ~A  ID: ~A" |name| |room_id|)))
+                      (spaces-in-a-space connection top-level-space))))))
+
+(new-admin-community-command rooms-in-a-space ((space (:minlen 1)
+                                                      (:maxlen 50)))
+    "Returns all of the room with in a space. Space must be either the top level space or 
+a subspace within this community."
+  (with-accessors ((top-level-space top-level-space)
+                   (connection connection))
+      community
+    (when (string/= top-level-space "")
+      (let* ((spaces (spaces-in-a-space connection top-level-space))
+             (space (find space spaces :test #'string-equal
+                                       :key (lambda (ele) (getf ele :|name|)))))
+        (if space
+            (format t "Rooms in that Space: ~%~{ ~A~%~}"
+                    (mapcar (lambda (plist)
+                              (destructuring-bind (&key name room-id room-type
+                                                   &allow-other-keys)
+                                  plist
+                                (format nil "NAME: ~A. ROOM-ID ~A. TYPE: ~A."
+                                        name room-id room-type)))
+                            (rooms-in-a-space connection
+                                              (getf space :|room_id|))))
+            (format t "No subspace by the name ~A" space))))))
+
+
+(new-admin-community-command populate-rooms ()
+    "Fills all of the rooms in the community using the top-level-space."
+  (with-accessors ((top-level-space top-level-space)
+                   (connection connection))
+      community
+    (when (string/= top-level-space "")
+      (let* ((rooms (rooms-in-a-space connection top-level-space)))
+        (when rooms
+          (setf (rooms community) rooms)
+          (format t "New Rooms:~% ~{ ~A~%~}"
+                  (mapcar (lambda (room)
+                            (destructuring-bind (&key name id room-type
+                                                 &allow-other-keys)
+                                room
+                              (format nil "ROOM: '~A'. ID: ~A. TYPE: ~A." name id
+                                      room-type)))
+                          rooms)))))))

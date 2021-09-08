@@ -52,6 +52,7 @@ that can be used to grab the backup config."
          (data (second list))
          (url (msoc :url data #'error))
          (api (msoc :api data #'error))
+         (space (msoc :top-level-space data))
          (admins (msoc :admins data))
          (aliases (msoc :aliases data nil));no need to worry if they dont have one
          (listen-in (msoc :listen-in data #'error))
@@ -62,7 +63,8 @@ that can be used to grab the backup config."
     ;;I could possibly do some mop wizardry here
     (make-instance 'community :extra extra :members members :rooms rooms
                               :admins admins :listen-in listen-in :api api
-                              :url url :name name :username username :aliases aliases)))
+                              :url url :name name :username username :aliases aliases
+                              :top-level-space space)))
 
 (defun password-from-file ()
   (str:remove-punctuation
@@ -139,6 +141,7 @@ that can be used to grab the backup config."
                    (name name)
                    (url url)
                    (api api)
+                   (top-level-space top-level-space)
                    (listen-in listen-in)
                    (admins admins)
                    (aliases aliases)
@@ -151,6 +154,7 @@ that can be used to grab the backup config."
        (:api ,api)
        (:username ,username)
        (:aliases ,aliases)
+       (:top-level-space ,top-level-space)
        (:listen-in ,listen-in)
        (:admins ,admins)
        (:rooms ,rooms)

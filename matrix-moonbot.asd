@@ -48,6 +48,7 @@
                                (:file "user-api")
                                (:file "admin-api")
                                (:file "filter-api")
+                               (:file "spaces")
                                (:file "sync")))
                  (:module "bot"
                   :depends-on ("package" "classes" "api" "compass")
