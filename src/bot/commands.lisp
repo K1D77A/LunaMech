@@ -267,3 +267,8 @@ a subspace within this community."
                               (format nil "ROOM: '~A'. ID: ~A. TYPE: ~A." name id
                                       room-type)))
                           rooms)))))))
+
+(new-admin-community-command update-top-level-space ((space (:minlen 10)(:maxlen 50)))
+    "Updates the top level space for this community. Best called 'populate rooms' after."
+  (setf (top-level-space community) space)
+  (format t "I have set (top-level-space COMMUNITY) to ~A" space))

@@ -4,6 +4,8 @@
 
 ;;;admin API https://github.com/matrix-org/synapse/blob/master/docs/admin_api/user_admin_api.rst
 
+;;;https://matrix-org.github.io/synapse/latest/admin_api/rooms.html#make-room-admin-api
+
 (defun admin-query-user-account (connection user-id)
   "Queries the admin API. Uses CONNECTION to return information about USER-ID"
   (auth-req (:admin-get connection ("/_synapse/admin/v2/users/" user-id) nil resp )
@@ -154,3 +156,24 @@ USER-ID."
              nil resp)
     resp))
 
+(defun admin-make-user-id-room-admin (connection user-id room-id)
+  "Queries the admin API. Uses CONNECTION and makes USER-ID and administrator in that room."
+  ;;  /_synapse/admin/v1/rooms/<room_id_or_alias>/make_room_admin
+  (auth-req (:admin-post connection
+             ("/_synapse/admin/v1/rooms/" (url-e room-id) "/make_room_admin")
+             (list :|user_id| user-id) resp)
+    resp))
+
+(defun admin-force-user-to-join-room (connection user-id room-id)
+  (auth-req (:admin-post connection
+             ("/_synapse/admin/v1/join/" (url-e room-id))
+             (list :|user_id| user-id) resp)
+    resp))
+
+(defun admin-send-server-notice (connection user-id message)
+  (let ((message-event (make-instance 'm-text :body message)))
+    (auth-req (:admin-post-object connection
+               ("/_synapse/admin/v1/send_server_notice")
+               (list :|user_id| user-id :|content| message-event)
+               resp)
+      resp)))

@@ -66,6 +66,7 @@ an invite. If the invite is valid and from an ubermensch user then joins the roo
               ;;this should hopefully produce a list of two.
               (when (loop :for event :in room.members
                             :thereis (valid-invite-p connection event))
+                (log:info "Accepting invite and joining room" room)
                 (join-room connection (symbol-name room))))))))))
 
 (defun find-types-in-rooms-timeline (types rooms sync)

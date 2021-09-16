@@ -146,7 +146,7 @@
 
 (new-admin-command deactivate-account ((user-id))
     "Deactivates USER-ID's account."
-  (format t "Attempting to deactivate ~A's account" user-id)
+  (format t "Attempting to deactivate ~A's account~%" user-id)
   (admin-deactivate-account (connection community) user-id)
   (format t "Success."))
 
@@ -172,4 +172,12 @@
     "Adds the room that Luna receives this command from into COMMUNITY-NAME."
   (let ((add-in (find-community community-name moonbot)))
     (add-room add-in room))
+  (format t "Success."))
+
+(new-admin-command make-user-admin-in-room ((room-id (:maxlen 50)
+                                                     (:minlen 10))
+                                            (user-id (:maxlen 50)
+                                                     (:minlen 1)))
+    "Uses the Admin API to make USER-ID an admin in ROOM-ID."
+  (admin-make-user-id-room-admin (conn *luna*) user-id room-id)
   (format t "Success."))

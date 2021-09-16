@@ -157,6 +157,15 @@ special condition defined in src/classes.lisp and signals."
           (dex:post (apply #'str:concat url) :headers headers
                                              :use-connection-pool nil)))))
 
+(defun admin-post-object (connection url object)
+  (with-captured-dex-error
+    (let ((headers (gen-headers connection)))
+      (dex:post (apply #'str:concat url)
+                :headers headers
+                :content (jojo:to-json object)
+                :use-connection-pool nil))))
+  
+
 ;;;put requests 
 (defun put-request (connection url plist)
   (with-captured-dex-error 
@@ -280,6 +289,11 @@ special condition defined in src/classes.lisp and signals."
                           data)))
 
 (new-r-t (:admin-post)
+  (declare (ignore prefix))
+  (jojo:parse
+   (admin-post-request connection (nconc (gen-admin-url connection) url) data)))
+
+(new-r-t (:admin-post-object)
   (declare (ignore prefix))
   (jojo:parse
    (admin-post-request connection (nconc (gen-admin-url connection) url) data)))

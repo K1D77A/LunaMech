@@ -43,6 +43,7 @@
            #:admin-change-a-users-device-data
            #:admin-shadow-ban-user-id
            #:admin-change-user-to/from-administrator
+           #:admin-make-user-id-room-admin
            #:module-command
            #:admin-community-command
            #:admin-create-or-modify-account
@@ -65,6 +66,7 @@
            #:admin-delete-local-media-before-time
            #:admin-delete-local-media
            #:admin-delete-remote-media-beforetime
+           #:admin-force-user-to-join-room
            #:admin-whois
            #:admins
            #:aliases
@@ -316,6 +318,7 @@
            #:total-failure-caught-condition
            #:type-find
            #:type-remove
+           
            #:download-content
            #:user-profile-url
            #:on-sync
