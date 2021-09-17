@@ -214,3 +214,7 @@
       (subseq user-id 1)
       user-id))
 
+(defun same-homeserver-p (connection user-id)
+  (string= (homeserver connection)
+           (second (str:split #\: user-id))))
+

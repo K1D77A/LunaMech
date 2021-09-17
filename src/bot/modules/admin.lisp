@@ -181,3 +181,34 @@
     "Uses the Admin API to make USER-ID an admin in ROOM-ID."
   (admin-make-user-id-room-admin (conn *luna*) user-id room-id)
   (format t "Success."))
+
+(new-admin-command force-user ((room-id (:maxlen 50)
+                                        (:minlen 10))
+                               (user-id (:maxlen 50)
+                                        (:minlen 1)))
+    "Forces USER-ID into ROOM-ID. Luna must have invite perms in that room."
+  (admin-force-user-to-join-room (conn *luna*) user-id room-id)
+  (format t "Success."))
+
+(new-admin-command force-community ((community-name :valid-community)
+                                    (room-id (:maxlen 50)
+                                             (:minlen 10)))
+    "Forces the members within COMMUNITY-NAME into ROOM-ID. Removes all users who do not
+have the same homeserver as Luna and all of those who are already in the room."
+  (let* ((community (find-community community-name *luna*))
+         (members-in-room (members-in-room%ids (conn *luna*) room-id))
+         (remainder (set-difference (members community) members-in-room :test #'string=))
+         (only-same-home (remove-if-not (lambda (username)
+                                          (same-homeserver-p (conn *luna*) username))
+                                        remainder)))
+    (moonmat-message community room "forcing ~r member~:p into ~A"
+                     (length only-same-home) room-id)
+    (moon-mapc community room
+               (lambda (member)
+                 (catch-limit-exceeded
+                   (admin-force-user-to-join-room (conn *luna*)
+                                                  member room-id)
+                   (format t "Forced ~A successfully~%" member)))
+               only-same-home)
+    (format t "Success.")))
+

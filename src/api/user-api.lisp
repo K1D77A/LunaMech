@@ -140,13 +140,19 @@ CONNECTION."
 (defun members-in-room (connection room-id)
   "Gets the members of ROOM-ID."
   (auth-req (:get connection ("rooms/" (url-e room-id) "/members")
-                  nil resp)
+             nil resp)
     resp))
+
+(defun members-in-room%ids (connection room-id)
+  (let ((members (members-in-room connection room-id)))
+    (mapcar (lambda (ele)
+              (getf ele :|user_id|))
+            (getf members :|chunk|))))
 
 (defun members-in-room-ids (connection room-id)
   "Gets the members id's of ROOM-ID."
   (auth-req (:get connection ("rooms/" (url-e room-id) "/joined_members")
-                  nil resp)
+             nil resp)
     resp))
 
 (defun admin-whois (connection user-id)

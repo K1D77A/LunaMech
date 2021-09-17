@@ -54,7 +54,7 @@ hash-table *validators*. On success returns the validator, on failure signals th
   (check-type (first args) integer)
   (<= (first args) (length entry)))
 
-(create-new-validator validat-valid-community :valid-community
+(create-new-validator validator-valid-community :valid-community
     "Checks to make sure that entry denotes a valid-community"
     "Your input is not a valid community."
   (declare (special luna))

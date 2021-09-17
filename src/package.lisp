@@ -27,6 +27,8 @@
            #:make-timers
            #:find-and-reset-timer
            #:find-types-in-rooms-timeline
+           #:homeserver
+           #:same-homeserver-p
            #:moonhelp
            #:add-admin
            #:add-command
@@ -207,6 +209,7 @@
            #:media
            #:members
            #:members-in-room
+           #:members-in-room%ids
            #:members-in-room-ids
            #:message
            #:message-community

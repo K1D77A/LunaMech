@@ -553,6 +553,9 @@ is removed."
          (device-id connection)
          "No device ID yet"))))
 
+(defmethod homeserver ((con connection))
+  (second (str:split #\: (user-id con))))
+
 (defun make-connection (username password url api)
   (make-instance 'connection :username username :password password
                              :url url :api api))

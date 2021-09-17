@@ -162,7 +162,9 @@ and COMMAND."))
 (defmethod format-condition (community room condition command)
   (format t "Unhandled condition signalled Community: ~A~%Room: ~A~%Command: ~A~
              ~%Condition: ~A~%Condition type: ~A"
-          (name community) room (name command) condition (type-of condition)))
+          (name community) room (name command)
+          (str:replace-all #.(string #\Newline) " " (format nil "~A" condition))
+          (type-of condition)))
 
 (defgeneric execute (command &rest args)
   (:documentation "Executes the COMMAND using ARGS. ARGS should be a list of 
