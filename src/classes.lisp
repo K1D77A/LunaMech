@@ -57,13 +57,13 @@ sure that no event is handled twice by the command execution system.")
     :allocation :class
     :documentation "When Luna is started the modules within Luna are searched for within 
 the Lisp image, this is a list of all the modules that were found.")
-   (uber-room
-    :accessor uber-room
-    :initarg :uber-room
-    :initform ""
-    :type string
-    :documentation "This room is the room that Luna will always listen in. It will be 
-used for starting and stopping Lunas primary thread from Matrix.")
+   (uber-rooms
+    :accessor uber-rooms
+    :initarg :uber-rooms
+    :initform ()
+    :type list
+    :documentation "Rooms that Luna will always listen in. Ignores all encapsulation on 
+communities")
    (stopp
     :accessor stopp
     :initform nil
@@ -137,7 +137,6 @@ and it is that same instance that is backed up to the same file."))
 (defmethod found-modules :around ((luna luna))
   (quicklock (luna :found-modules)
     (call-next-method)))
-
 
 (defmethod cycle-history :around ((luna luna))
   (quicklock (luna :cycle-history)
@@ -383,12 +382,6 @@ commands related to this community would go something like .my-community <comman
     :type (or null string)
     :documentation "The current API version for the community to use, this will 
 normally be '/_matrix/client/r0/'")
-   (listen-in
-    :accessor listen-in
-    :initarg :listen-in
-    :initform nil
-    :type (or null list)
-    :documentation "This is a list of room-ids that Luna will check for commands within.")
    (admins
     :accessor admins
     :initarg :admins

@@ -66,7 +66,7 @@
     "Prints all the communities."
   (with-accessors ((communities communities))
       moonbot
-    (format t "~{~A~%~}" communities)))
+    (format t "~{~A~%~}" (mapcar #'name communities))))
 
 (new-admin-command copy-admins ((from :valid-community)(to :valid-community))
     "Copies the admins from community name and puts them into the other"

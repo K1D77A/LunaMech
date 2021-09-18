@@ -89,6 +89,16 @@ an invite. If the invite is valid and from an ubermensch user then joins the roo
 (defun find-messages-from-rooms (rooms sync)
   (find-types-in-rooms-timeline '("m.room.message" "m.room.encrypted") rooms sync))
 
+(defun extract-all-relevant-messages (luna community sync)
+  (with-accessors ((uber-rooms uber-rooms))
+      luna
+    (let ((rooms (append uber-rooms
+                         (loop :for room-list :in (rooms community)
+                               :when (string/= (getf room-list :room-type) "m.space")
+                                 :collect (getf room-list :id)))))
+      (when rooms 
+        (find-messages-from-rooms rooms sync)))))
+
 (defun find-messages-from-listen-in (community sync)
   ;;(declare (optimize (speed 3) (safety 1)))
   (let ((listen-in (listen-in community)))

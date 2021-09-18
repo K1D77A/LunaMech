@@ -159,7 +159,8 @@ passes them to process-messages"))
   (with-accessors ((connection connect)
                    (listen-in listen-in))
       community
-    (let ((messages (find-messages-from-listen-in community sync)))
+    (let ((messages (extract-all-relevant-messages moonbot community sync)))
+      ;;            (find-messages-from-listen-in community sync)))
       (when messages
         (alexandria:doplist (room messages messages)
           (when messages

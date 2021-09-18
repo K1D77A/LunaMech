@@ -203,6 +203,7 @@ Returns a string."
 (defun change-name (connection room-id new-name)
   "Changes the name of ROOM-ID to NEW-NAME"
   (let ((name-event (make-instance 'm-room-name :name new-name)))
+    ;;;need something to handle a m forbidden
     (send-state-event-to-room connection room-id "m.room.name" name-event)))
 
 (defun get-room-info (url &key (prefix "") (domain "meet.jitsi"))

@@ -118,17 +118,17 @@ that can be used to grab the backup config."
                             :connections connections
                             :ubermensch (second (second global-config))
                             :modules (second (third global-config))
-                            :uber-room (second (fourth global-config)))))
+                            :uber-rooms (second (fourth global-config)))))
 
 (defmethod global-config-to-list (moonbot)
   (with-accessors ((ubermensch ubermensch)
                    (modules modules)
-                   (uber-room uber-room))
+                   (uber-rooms uber-rooms))
       moonbot
     (list :GLOBAL-CONFIG
           (list :UBERMENSCH ubermensch)
           (list :MODULES modules)
-          (list :UBER-ROOM uber-room))))
+          (list :UBER-ROOMS uber-rooms))))
 
 (defmethod object-to-list ((moonbot moonbot))
   (append (list (global-config-to-list moonbot))

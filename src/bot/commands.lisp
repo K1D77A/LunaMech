@@ -11,20 +11,20 @@
       (with-formatted-output-to-room (community room)
         (format t"message: ~D" (1+ i))))))
 
-(new-admin-community-command listen-in ()
-    "Prints out the rooms that this community is listening in"
-  (format t "Listening in:~%~{  ~A~%~}" (listen-in community)))
+;; (new-admin-community-command listen-in ()
+;;     "Prints out the rooms that this community is listening in"
+;;   (format t "Listening in:~%~{  ~A~%~}" (listen-in community)))
 
-(new-admin-community-command add-listen-in ((room-id :valid-room))
-    "Adds a room that the bot will listen in"
-  (push (getf (find-room community room-id) :id) (listen-in community))
-  (format t "Now listening in ~A" room-id))
+;; (new-admin-community-command add-listen-in ((room-id :valid-room))
+;;     "Adds a room that the bot will listen in"
+;;   (push (getf (find-room community room-id) :id) (listen-in community))
+;;   (format t "Now listening in ~A" room-id))
 
-(new-admin-community-command remove-listen-in ((room-id :valid-listen-in))
-    "Removes a room that the bot listens in"
-  (setf (listen-in community)
-        (remove room-id (listen-in community) :test #'string=))
-  (format t "No longer listening in ~A" room-id))
+;; (new-admin-community-command remove-listen-in ((room-id :valid-listen-in))
+;;     "Removes a room that the bot listens in"
+;;   (setf (listen-in community)
+;;         (remove room-id (listen-in community) :test #'string=))
+;;   (format t "No longer listening in ~A" room-id))
 
 (new-admin-community-command message-community ((to-send (:maxlen 40) (:minlen 1)))
     "Sents a message to all rooms in a community"
@@ -272,3 +272,14 @@ a subspace within this community."
     "Updates the top level space for this community. Best called 'populate rooms' after."
   (setf (top-level-space community) space)
   (format t "I have set (top-level-space COMMUNITY) to ~A" space))
+
+(new-admin-community-command join-rooms-in-community ()
+    "Luna attempts to join all the rooms found within the community."
+  (let ((rooms (mapcar (lambda (room-list)
+                         (getf room-list :ID))
+                       (rooms community))))
+    (moonmat-message community room "Joining ~r room~:p" (length rooms))
+    (mapc (lambda (room)
+            (join-room (connection community) room))
+          rooms)))
+    
