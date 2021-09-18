@@ -171,6 +171,9 @@ primary listening thread. If Luna is not logged in then evaluates (login <luna>)
     (find-modules moonbot)
     (dolist (mod (found-modules moonbot))
       (on-load-up moonbot mod)))
+  (unless (boundp 'lparallel:*kernel*)
+    (log:info "Starting lparallel kernel now with ~r workers." 2)
+    (setf lparallel:*kernel* (lparallel:make-kernel 2)))
   (if (logged-in-p moonbot)
       (progn (psetf (stopp moonbot) nil
                     (cycle-history moonbot) nil

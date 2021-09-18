@@ -110,17 +110,20 @@ to chirp."
         (setf media (append media (collect-images room events)))))
     (when media
       ;;can put lparallel mapc here
-      (mapc (lambda (media)
-              (handler-case 
-                  (upload-event-to-sticker-site luna media)
-                (imagemagick-condition (c)
-                  (log:error "Condition signalled when calling ImageMagick. ~
+      (funcall (if (parallel-p *luna*)
+                   #'lparallel:pmapc
+                   #'mapc)
+               (lambda (media)
+                 (handler-case 
+                     (upload-event-to-sticker-site luna media)
+                   (imagemagick-condition (c)
+                     (log:error "Condition signalled when calling ImageMagick. ~
                              Make sure it is installed. ~A" c)
-                  nil)
-                (condition (c)
-                  (log:error "Unknown error occurred. Chances are its network related. ~A"
-                             c))))
-            media))))
+                     nil)
+                   (condition (c)
+                     (log:error "Unknown error occurred. Chances are its network related. ~A"
+                                c))))
+               media))))
 ;;(print media)))
 
 (defun mxc->server (mxc)

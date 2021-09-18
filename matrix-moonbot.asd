@@ -40,6 +40,7 @@
                  (:file "package")
                  (:file "helpers")
                  (:file "classes" :depends-on ("package"))
+                 (:file "conditions")
                  (:module "api"
                   :depends-on ("package" "classes")
                   :serial t

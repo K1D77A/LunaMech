@@ -37,6 +37,7 @@
            #:start-moonbot
            #:stop-moonbot
            #:add-room
+           #:parallel-p
            #:add-rooms
            #:add-string->condition
            #:pkv

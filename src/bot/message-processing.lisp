@@ -189,19 +189,25 @@ Finally at the end of every loop (timestamp ) is reset to (local-time:now)"
                       (sleep 0.00001)
                       (let ((sync (filter-sync connection
                                                (get-filter connection :junk-removed))))
-                        (mapc (lambda (com)
-                                (grab-messages-and-process moonbot com sync))
-                              (communities moonbot))
-                        (mapc (lambda (module)
-                                (handler-case
-                                    (bt:with-timeout (30)
-                                      ;;smashout after 30 seconds
-                                      (on-sync moonbot module sync)
-                                      (execute-all-communications-between-modules
-                                       moonbot module sync))
-                                  (sb-ext:timeout ()
-                                    (log:error "An on-sync method timed out."))))
-                              (found-modules moonbot))))
+                        (funcall (if (parallel-p moonbot)
+                                     #'lparallel:pmapc
+                                     #'mapc)
+                                 (lambda (com)
+                                   (grab-messages-and-process moonbot com sync))
+                                 (communities moonbot))
+                        (funcall (if (parallel-p moonbot)
+                                     #'lparallel:pmapc
+                                     #'mapc)
+                                 (lambda (module) 
+                                   (handler-case
+                                       (bt:with-timeout (30)
+                                         ;;smashout after 30 seconds
+                                         (on-sync moonbot module sync)
+                                         (execute-all-communications-between-modules
+                                          moonbot module sync))
+                                     (sb-ext:timeout ()
+                                       (log:error "An on-sync method timed out."))))
+                                 (found-modules moonbot))))
                     (connections moonbot))
               (when (zerop (mod x 50))
                 (mapc (lambda (con)
