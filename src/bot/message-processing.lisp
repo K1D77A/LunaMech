@@ -156,8 +156,7 @@ the messages from the rooms that luna is listening in for that community and the
 passes them to process-messages"))
 
 (defmethod grab-messages-and-process ((moonbot moonbot) (community community) sync)
-  (with-accessors ((connection connect)
-                   (listen-in listen-in))
+  (with-accessors ((connection connect))
       community
     (let ((messages (extract-all-relevant-messages moonbot community sync)))
       ;;            (find-messages-from-listen-in community sync)))

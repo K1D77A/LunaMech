@@ -93,8 +93,7 @@ Luna will not evaluate any initiating functions and will login using the same de
               (first-sync con)
               (initiate-encryption con)
               (initiate-filters con))))
-        (connections moonbot))
-  (initiate-filters moonbot))
+        (connections moonbot)))
 
 (defmethod logged-in-p ((moonbot moonbot))
   (every #'logged-in-p (connections moonbot)))

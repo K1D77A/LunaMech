@@ -96,12 +96,6 @@ hash-table *validators*. On success returns the validator, on failure signals th
           (string-equal entry string))
         '("true" "false" "yes" "no" "y" "n" "t" "f" "1" "0" "nil")))
 
-(create-new-validator validator-validate-room :valid-listen-in
-    "Checks to make sure that entry is a valid room-id within (listen-in community)"
-    "Your input is not within the listen-in list."
-  (declare (special community))
-  (find entry (listen-in community) :test #'string=))
-
 (create-new-validator validator-validate-room :valid-room
     "Checks to make sure that entry is a valid room"
     "Your input is not a valid room. Check the case if you used a room name not ID."

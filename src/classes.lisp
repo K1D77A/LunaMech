@@ -422,7 +422,7 @@ the community. This is normally acquired through the populate-community command.
     (flet ((nl (&rest names)
              (loop :for name :in names
                    :appending (list name (bt:make-lock (format nil "~A" name))))))
-      (nl :members :rooms :admins :listen-in :aliases)))))
+      (nl :members :rooms :admins :aliases)))))
 
 (defmethod members :around ((community community))
   (quicklock (community :members)
@@ -434,10 +434,6 @@ the community. This is normally acquired through the populate-community command.
 
 (defmethod admins :around ((community community))
   (quicklock (community :admins)
-    (call-next-method)))
-
-(defmethod listen-in :around ((community community))
-  (quicklock (community :listen-in)
     (call-next-method)))
 
 (defmethod rooms-id ((community community))
@@ -500,23 +496,6 @@ side it"
     (setf (slot-value community 'rooms)
           (remove-duplicates rooms :test #'string= :key (lambda (ele)
                                                           (getf ele :id))))))
-
-(defmethod (setf listen-in) :before (new-val (community community))
-  "Checks to make sure that the user isn't removing the last listen-in room. You don't want
-the user to lose the ability to invoke commands for their community. If they
-try then signals the condition 'cannot-perform-action"
-  (unless new-val
-    (error 'cannot-perform-action
-           :cannot-perform-action-action "Remove the last listen-in"
-           :cannot-perform-action-message "I cannot remove the last listen-in.")))
-
-(defmethod (setf listen-in) :after (new-val (community community))
-  "Automatically update the filter :listen-in when a new listen-in is added, or one
-is removed."
-  (let ((rooms (remove-duplicates (slot-value community 'listen-in)
-                                  :test #'string=)))
-    (setf (slot-value community 'listen-in) rooms)))
-
 
 (defmethod (setf members) :after (new-val (community community))
   "Remove any duplicates from members after a new one is added."
