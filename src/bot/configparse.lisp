@@ -55,14 +55,13 @@ that can be used to grab the backup config."
          (space (msoc :top-level-space data))
          (admins (msoc :admins data))
          (aliases (msoc :aliases data nil));no need to worry if they dont have one
-         (listen-in (msoc :listen-in data #'error))
          (username (msoc :username data #'error))
-         (rooms (msoc :rooms data))
-         (members (msoc :members data))
+         ;; (rooms (msoc :rooms data))
+         ;; (members (msoc :members data))
          (extra (msoc :extra data nil)))
     ;;I could possibly do some mop wizardry here
-    (make-instance 'community :extra extra :members members :rooms rooms
-                              :admins admins :listen-in listen-in :api api
+    (make-instance 'community :extra extra :members nil :rooms nil
+                              :admins admins :api api
                               :url url :name name :username username :aliases aliases
                               :top-level-space space)))
 
@@ -142,7 +141,6 @@ that can be used to grab the backup config."
                    (url url)
                    (api api)
                    (top-level-space top-level-space)
-                   (listen-in listen-in)
                    (admins admins)
                    (aliases aliases)
                    (rooms rooms)
@@ -155,10 +153,9 @@ that can be used to grab the backup config."
        (:username ,username)
        (:aliases ,aliases)
        (:top-level-space ,top-level-space)
-       (:listen-in ,listen-in)
        (:admins ,admins)
-       (:rooms ,rooms)
-       (:members ,members)
+     ;;  (:rooms ,rooms)
+      ;; (:members ,members)
        (:extra ,extra)))))
 
 (defun moonbot->config (moonbot &optional (dir *default-config-location*))

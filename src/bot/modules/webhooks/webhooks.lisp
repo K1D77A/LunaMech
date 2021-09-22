@@ -65,8 +65,7 @@
       (let ((len (length otp)))
         (<= 1 len 4)))
     :fn (lambda (username otp)
-          (mm-module.direct-message:start-dm :otp username (conn *luna*) otp)
-          "t")
+          (string (mm-module.direct-message:start-dm :otp username (conn *luna*) otp)))
     :expected-args (username otp)))
   (:private-key
    (lambda ()
@@ -110,6 +109,12 @@
   (:private-key
    (lambda ()
      (mm-module.private-keys:get-key :webhook/openid))))
+
+;; (def-webhook basketweaving ()
+;;   ((invite
+;;     :validator (lambda () t)
+;;     :fn (lambda ()
+
 
 (defun check-authorized-webhook-request (application private-key)
   "Checks if the APPLICATION provided (string) is valid, checks if a private-key exists

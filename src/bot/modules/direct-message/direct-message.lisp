@@ -244,7 +244,7 @@ message-events"
         (progn 
           (leave-room connection room-id)
           (log:info "done"))
-      (condition ()
+      (error ()
         (log:error "Error leaving dm room ~A" room-id)))
     (remove-dm-room room-id)));;could get the user-id
 

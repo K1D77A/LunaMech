@@ -73,17 +73,22 @@ the prefix, the command and the community it was sent in."))
       ;;need to check within the communities local commands
       (error 'missing-command)))
 
+(defun %already-processed-message-p (luna event-id)
+  "Checks if a message has already been processed within LUNA."
+  (and (find event-id (cycle-history luna) :test #'string=) t))
+
 ;;;store the message event in a short history to stop repeat executions.
 (defmethod initiate-command-execution :before
     (luna priv prefix invoker community room message rest)
-  (if (find (getf message :|event_id|) (cycle-history luna) :test #'string=)
-      (error 'already-processed)
-      (push (getf message :|event_id|) (cycle-history luna))))
+  (let ((event-id (getf message :|event_id|)))
+    (if (%already-processed-message-p luna event-id)
+        (error 'already-processed)
+        (push event-id (cycle-history luna)))))
 
 (defmethod initiate-command-execution
     (luna privilege prefix/module invoker community room message rest)
   (restart-case      
-      (let ((command (locate-command prefix/module privilege invoker community)))
+      (let ((command (locate-command prefix/module privilege invoker community)))        
         (execute-command luna privilege command community room message rest))
     (tell-user ()
       :report "Command is missing, inform user?"
@@ -132,7 +137,7 @@ the prefix, the command and the community it was sent in."))
           (execute command community room message args luna)) 
       (api-timeout (c)
         (error c))
-      (condition (c)
+      (error (c)
         (format-condition community room c command)))))
 
 (defgeneric format-condition (community room condition command)
@@ -157,7 +162,7 @@ and COMMAND."))
   (format t "~A" (cannot-perform-action-action condition)))
 
 (defmethod format-condition (community room (condition invalid-arguments) command)
-  (format t "Invalid arugments."))
+  (format t "Invalid arguments."))
 
 (defmethod format-condition (community room condition command)
   (format t "Unhandled condition signalled Community: ~A~%Room: ~A~%Command: ~A~

@@ -253,6 +253,12 @@ form of usocket condition. Module is not being unloaded. Condition: ~A" module c
 (new-module-hook on-load-up (luna module)
                  "This is called when a module is loaded. This is called when Luna starts.")
 
+(new-module-hook on-login (luna module)
+                 "This is called when Luna first logs in")
+
+(new-module-hook on-restart (luna module)
+                 "This is called when Luna starts up but doesn't login")
+
 (new-module-hook on-module-hotload (luna module)
                  "This is called when a module is hotloaded, this can be used by modules to
     perform operations just after they are loaded.")

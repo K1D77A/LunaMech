@@ -2,7 +2,7 @@
 
 ;;;;this file contains code to handle a variety of syncs.
 
-(defmethod filter-sync ((connection connection) filter)
+(defmethod filter-sync ((connection connection) (filter filter))
   (declare (optimize (speed 3) (safety 1)))
   (let ((plist (list :|filter| (id filter))))
     (if (last-sync-string filter)
@@ -24,11 +24,14 @@
       community
     (filter-sync connection filter)))
 
+(defmethod filter-sync ((community community) (filter null))
+  (log:error "Missing filter"))
+
 (defmethod key-sync ((community community) key)
   (key-sync (connection community) key))
 
 (defmethod key-sync ((connection connection) key)
-  "Takes a COMMUNITY and a KEY, then uses they key as an argument to /sync, and 
+  "Takes a CONNECTION and a KEY, then uses they key as an argument to /sync, and 
 returns the final value. If KEY is not found within (filters COMMUNITY) then signals
 'missing-filter-for-key"
   (check-type key keyword)
