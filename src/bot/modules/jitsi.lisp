@@ -78,7 +78,7 @@
   (declare (ignorable luna module sync))
   (execute-stamp-n-after-luna ((find-timer (timers *module*) :check)
                                24)
-    (log:info "Checking if rooms need their names changed.")
+;;    (log:info "Checking if rooms need their names changed.")
     (mapc (lambda (room-plist)
             (handler-case
                 (initiate-name-change luna room-plist)

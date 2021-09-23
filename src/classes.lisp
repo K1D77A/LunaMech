@@ -85,6 +85,11 @@ complete listening cycle. This can be used to implement timers.")
     :accessor cotroller-thread
     :documentation "This is a thread that is used to control Luna from matrix, ie to start
 stop etc")
+   (timers
+    :accessor timers
+    :initarg :timers
+    :initform (make-timers '(:clear-cycle :backup))
+    :documentation "Timers for performing actions after a certain period of time.")
    (%locks
     :reader %locks
     :type list
@@ -218,6 +223,17 @@ running but they have to have been compiled into the lisp image.
 The basic skeleton required to implement modules within Luna. 
 The three slots 'command-type' 'privilege-required' and 'prefix' are required for the 
 implementation of a new module."))
+
+(defclass background-module (module)
+  ((thread
+    :accessor thread
+    :initarg :thread
+    :type bt:thread
+    :documentation "The currently running thread."))
+  (:documentation "A normal module except these ones have certain methods executed 
+in a completely separate thread. Currently only on-sync is processed this way.
+This can work when modules are completely self contained making no modifications to 
+Luna. An example is the RSS or Jitsi module."))
 
 (defclass command ()
   ((name

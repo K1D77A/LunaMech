@@ -11,13 +11,20 @@
   "Normal - looks within the list to find the key :|user_id| and returns this.
 Exceptional - When SIGCON-WHEN-NIL-P is non nil signals a MISSING-EXPECTED-KEY 
 condition"
-  (let ((val (or (getf message :|sender|)
-                 (getf message :|user_id|))))
-    (if (and sigcon-when-nil-p (not val))
-        (error 'missing-expected-key
-               :message-process-failure-culprint "user_id or sender"
-               :message-process-failure-message "Missing user_id or sender in list")
-        val)))
+  (destructuring-bind (&key |sender| |user_id| &allow-other-keys)
+      message
+    (let ((val (or |sender| |user_id|)))
+      (if (and sigcon-when-nil-p (not val))
+          (error 'missing-expected-key
+                 :message-process-failure-culprit "user_id or sender"
+                 :message-process-failure-message "Missing user_id or sender in list")
+          val))))
+
+(defun ubermensch-p (moonbot string)
+  (and (find string (ubermensch moonbot) :test #'string=) t))
+
+(defun community-admin-p (community string)
+  (and (find string (admins community) :test #'string=) t))
 
 (defun determine-privilege (moonbot community message)
   "Determines the privilege of a message sender by checking the name first against
@@ -26,9 +33,9 @@ defaulting to normie. Returns either an ubermensch, admin, or normie privilege
 object"
   (let ((sender (message-from? message t)))
     (make-instance
-     (cond ((find sender (ubermensch moonbot) :test #'string=)
+     (cond ((ubermensch-p moonbot sender)
             'ubermensch-privilege)
-           ((find sender (admins community) :test #'string=)
+           ((community-admin-p community sender)
             'admin-privilege)
            (t 'normie-privilege))
      :user-id sender)))
@@ -137,16 +144,15 @@ that the message type is unknown then signals the condition 'unknown-message-typ
                              (lambda (c)
                                (declare (ignore c))
                                (invoke-restart 'return-nil))))
-              (let ((type (getf message :|type|)))
-                (unless (find (getf message :|event_id|)
-                              (cycle-history moonbot)
-                              :test #'string=)
-                  (cond ((string= type "m.room.message")
+              (destructuring-bind (&key |type| |event_id| &allow-other-keys)
+                  message
+                (unless (%already-processed-message-p moonbot |event_id|)
+                  (cond ((string= |type| "m.room.message")
                          (process-message moonbot community room message))
-                        ((string= type "m.room.encrypted")
+                        ((string= |type| "m.room.encrypted")
                          (process-encrypted moonbot community room message))
                         (t (error 'unknown-message-type
-                                  :message-process-failure-type type
+                                  :message-process-failure-type |type|
                                   :message-process-failure-message
                                   "Unknown type"))))))))
 
@@ -183,20 +189,24 @@ Next if 100 loops have been completed then Luna resets the (cycle-history ) vari
 Next if 2000 loops have been completed then Luna will backup to file and call 
 the on-save method for all found-modules.
 Finally at the end of every loop (timestamp ) is reset to (local-time:now)"
-  (let ((x 0))
+  (with-accessors ((stopp stopp)
+                   (parallel-p parallel-p)
+                   (timers timers)
+                   (found-modules found-modules)
+                   (timestamp timestamp)
+                   (cycle-history cycle-history)
+                   (connections connections)
+                   (communities communities))
+      moonbot
     (loop :while (not (stopp moonbot))
           :do (mapc (lambda (connection)
-                      (sleep 0.00001)
+                      (sleep 0.000001)
                       (let ((sync (key-sync connection :junk-removed)))
-                        (funcall (if (parallel-p moonbot)
-                                     #'lparallel:pmapc
-                                     #'mapc)
+                        (funcall (if parallel-p #'lparallel:pmapc #'mapc)
                                  (lambda (com)
                                    (grab-messages-and-process moonbot com sync))
-                                 (communities moonbot))
-                        (funcall (if (parallel-p moonbot)
-                                     #'lparallel:pmapc
-                                     #'mapc)
+                                 communities)
+                        (funcall (if parallel-p #'lparallel:pmapc #'mapc)
                                  (lambda (module) 
                                    (handler-case
                                        (bt:with-timeout (30)
@@ -206,18 +216,18 @@ Finally at the end of every loop (timestamp ) is reset to (local-time:now)"
                                           moonbot module sync))
                                      (sb-ext:timeout ()
                                        (log:error "An on-sync method timed out."))))
-                                 (found-modules moonbot))
+                                 found-modules)
                         (process-invites moonbot connection sync)))
-                    (connections moonbot))
-              (when (zerop (mod x 100))
-                (setf (cycle-history moonbot) nil))
-              (when (= x 2000)
+                    connections)
+              (execute-stamp-n-after-luna ((find-timer timers :clear-cycle)
+                                           5)
+                (setf cycle-history nil))
+              (execute-stamp-n-after-luna ((find-timer timers :backup)
+                                           300)
                 (log:info "Backing up Luna to ~A" *config-file*)
-                (dolist (mod (found-modules moonbot))
+                (dolist (mod found-modules)
                   (on-save moonbot mod))
                 (moonbot->config moonbot)
-                (log:info "Luna backed up")
-                (setf x 0))
-              (setf (timestamp moonbot) (local-time:now))
-              (incf x)
+                (log:info "Luna backed up"))
+              (setf timestamp (local-time:now))
           :finally (log:info "Luna going down"))))

@@ -228,6 +228,7 @@
            #:missing-expected-key
            #:missing-module
            #:module
+           #:background-module
            #:module-error
            #:module-error-message
            #:module-error-module

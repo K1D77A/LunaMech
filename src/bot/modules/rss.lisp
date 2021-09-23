@@ -15,7 +15,8 @@
                        (rooms->feeds
                         :accessor rooms->feeds
                         :initform nil
-                        :documentation "A mapping of rooms to feeds.")))
+                        :documentation "A mapping of rooms to feeds."))
+           :module-superclass (background-module))
 
 (defmethod locate-command ((module rss-module) priv invoker community)
   "When prefix is 'luna with no privileges search for luna-command"
@@ -32,7 +33,7 @@
 
 ;;;few more module specific commands for persistent configs
 (defun save-results ()
-  (when (rooms *module*);dont write empty results
+  (when (rooms->feeds *module*);dont write empty results
     (alexandria:write-string-into-file
      (format nil "~S" (rooms->feeds *module*)) "config/rss-config.lisp"
      :if-does-not-exist :create
@@ -94,57 +95,87 @@
 (defun rss-feed (name)
   (getf (rss-entry name) :feed))
 
-(defun rss-room (name)
+(defmethod rss-room (name)
   (getf (rss-entry name) :room))
+
+(defmethod (setf rss-room) (new-val name)
+  (setf (getf (getf (rooms->feeds *module*) name) :room)
+        new-val))
 
 (defmethod (setf last-entry) (new-val name)
   (setf (getf (getf (rooms->feeds *module*) name) :last-entry)
         new-val))
 
-(defun update-last-entry (name last-entry)
-  (setf (getf (getf (rooms->feeds *module*) :last-entry) name)
-        last-entry))
+(defun latest-published-date (entries)
+  (reduce #'max (mapcar (lambda (entry)
+                          (destructure-entry (entry)
+                            published-parsed))
+                        entries)))
 
 (defun subscribe-to-rss (name feed room &key (count 10))
   (let ((last-entry nil))
     (destructure-rss ((feedparser:parse-feed (dex:get feed) :max-entries count))
       (destructure-entry ((first entries))
-        (setf last-entry published-parsed))
-      (dolist (entry entries)
-        (destructure-entry (entry)
-          (module-moonmat-message (conn *luna*) room
-                                  (format-rss-entry entry)))))
-    (new-rss name feed room last-entry)))
+        (setf last-entry (latest-published-date entries))
+        (dolist (entry (reverse entries))
+          (destructure-entry (entry)
+            (module-moonmat-message (conn *luna*) room
+                                    "~A"
+                                    (format-rss-entry entry)))))
+      (new-rss name feed room last-entry))))
 
 (defun format-rss-entry (entry)
   (destructure-entry (entry)
-    (format nil "Title: ~A~%Link: ~A~%Date: ~A~%" title link published)))
+    (format nil "Title: ~A~%[Luna] Date: ~A~%[Luna] URL: ~A~%" title published link)))
+
+(defun newer-entry-p (last-entry published)
+  (< last-entry published))
+
+(defun safe-dex (url)
+  (handler-case 
+      (let ((retry-request (dex:retry-request 3 :interval 1)))
+        (handler-bind ((dex:http-request-failed retry-request))
+          (dex:get url :use-connection-pool nil)))
+    (error (c)
+      (log:error "Safe dex failed with URL: ~A" url)
+      nil)))
 
 (defun update-rss (name)
   (let ((last-entry (last-entry name)))
-    (destructure-rss ((feedparser:parse-feed (dex:get (rss-feed name)
-                                                      :use-connection-pool nil)
-                                             :max-entries 10))
-      (dolist (entry (reverse entries))
-        (destructure-entry (entry)
-          (when (< last-entry published-parsed)
-            (setf (last-entry name) published-parsed)
-            (module-moonmat-message (conn *luna*) (rss-room name)
-                                    (format-rss-entry entry))))))))
+    (ignore-errors 
+     (destructure-rss ((feedparser:parse-feed (safe-dex (rss-feed name))
+                                              :max-entries 10))
+       (let ((newer 
+               (loop :for entry :in entries
+                     :when (destructure-entry (entry)
+                             (newer-entry-p last-entry published-parsed))
+                       :collect entry)))
+         (when newer
+           (log:info "~D new articles for ~A" (length newer) name)
+           (let ((latest (latest-published-date newer)))
+             (setf (last-entry name) latest)
+             (dolist (entry (reverse newer))
+               (module-moonmat-message (conn *luna*) (rss-room name)
+                                       "~A"
+                                       (format-rss-entry entry))))))))))
 
 (defmethod on-sync (luna (module rss-module) sync)
   (declare (ignore sync))
   (execute-stamp-n-after-luna ((find-timer (timers *module*) :check)
-                               600);600 seconds
-    (alexandria:doplist (rss-name rss-feed (rooms->feeds *module*))
-      (log:info "Checking for RSS updates for ~A" rss-name)
-      (handler-case 
-          (update-rss rss-name)
-        (error (c)
-          (report-condition-to-matrix c (format nil "Trying to update room ~A"
-                                                rss-name))
-          (log:error "Error ~A when trying to update RSS for room ~A"
-                     c (rss-room rss-name)))))))
+                               900);15 minutes
+    (let ((keys (loop :for key :in (rooms->feeds *module*) :by #'cddr :collect key)))
+      (mapc
+       (lambda (rss-name)       
+         (log:info "Checking for RSS updates for ~A" rss-name)
+         (handler-case 
+             (update-rss rss-name)
+           (error (c)
+             (report-condition-to-matrix c (format nil "Trying to update room ~A"
+                                                   rss-name))
+             (log:error "Error ~A when trying to update RSS for room ~A"
+                        c (rss-room rss-name)))))
+       keys))
+    (log:info "Done checking for RSS.")))
 
 (new-admin-rss-command get-information ((url (:minlen 10)))
     "reads the entries from a url"
@@ -168,16 +199,42 @@
         (format t "Title: ~A~%Link: ~A~%Date: ~A~%"
                 title link published)))))
 
-(new-admin-rss-command subscribe-to-rss ((name (:minlen 1)
-                                               (:maxlen 50))
-                                         (feed (:minlen 5)
-                                               (:maxlen 100))
-                                         (room-id (:minlen 1)
-                                                  (:maxlen 50)))
+(new-admin-rss-command subscribe ((name (:minlen 1)
+                                        (:maxlen 50))
+                                  (feed (:minlen 5)
+                                        (:maxlen 100))
+                                  (room-id (:minlen 1)
+                                           (:maxlen 50)))
     "Subscribes to the RSS feed FEED (the url) under the name NAME (unique identifier), and publishes new updates into ROOM-ID. On subscription will post the latest 10 entries."
   (let ((name (intern (string-upcase name) :keyword)))
-    (subscribe-to-rss name feed room)
-    (module-moonmat-message (conn *luna*) room "Success.")))
+    (subscribe-to-rss name feed (if (string-equal room-id "here")
+                                    room
+                                    room-id))))
+
+(new-admin-rss-command unsubscribe ((name (:minlen 1)
+                                          (:maxlen 50)))
+    "Unsubscribes from the RSS feed. This will remove its reference from Luna."
+  (let ((name (intern (string-upcase name) :keyword)))
+    (remf (rooms->feeds *module*) name))
+  (module-moonmat-message (conn *luna*) room "Success."))
+
+(new-admin-rss-command update-rss-room ((name (:minlen 1)
+                                              (:maxlen 50))
+                                        (new-room (:minlen 1)
+                                                  (:maxlen 50)))
+    "Changes the room that Luna publishes new RSS feed updates to NEW-ROOM."
+  (let ((feed (rss-entry (intern (string-upcase name) :keyword))))
+    (if feed
+        (progn (setf (rss-room name) new-room)
+               (module-moonmat-message (conn *luna*) room "Success."))
+        (module-moonmat-message (conn *luna*) room
+                                "Could not find entry by name: ~A" name))))
+
+(new-admin-rss-command all-feeds ()
+    "Returns the name of all the feeds."
+  (loop :for key :in (rooms->feeds *module*) :by #'cddr
+        :do (format t "~A~%" key)))
+
 
 
 

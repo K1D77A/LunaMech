@@ -30,7 +30,6 @@
         (stop *luna*))
       (sb-ext:quit))))
 
-
 (defun front-end-loop ()
   "systemd just restarts Luna if we enter the toplevel so instead we will just loop 
 and sleep over and over and over again."

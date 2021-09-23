@@ -54,12 +54,16 @@ and the name of its module subclass."))
   nil)
                                         ;(eval-when (:execute :load-toplevel :compile-toplevel) 
 (defmacro defmodule (name (package prefix privilege-required &rest module-args)
-                     command-class command-slots module-class module-slots)
+                     command-class command-slots module-class module-slots
+                     &key (module-superclass nil))
   `(let ((*package* (find-package ',package)))
      (defclass ,command-class (module-command)
        ,command-slots)
-     (defclass ,module-class (module)
-       ,module-slots)
+     ,(if module-superclass
+          `(defclass ,module-class ,module-superclass
+             ,module-slots)
+          `(defclass ,module-class (module)
+             ,module-slots))
      (register-module ',name ',package)
      (defvar ,(intern (string-upcase "*module*") package)
        (new-module ',module-class ',prefix
@@ -273,9 +277,40 @@ modules to perform operations just before a module is unloaded.")
                  "this is called before Moonbot is saved, this can be used by modules to
 perform operations at save time.")
 
-(new-module-hook on-sync (luna module sync)
-                 "This hook allows a module to perform some actions based on a sync list")
 ;;need an on-shutdown
+(defgeneric on-sync (luna module sync)
+  (:documentation "This hook allows a module to perform some actions based on a sync list"))
+
+(defmethod on-sync (luna module sync) nil)
+
+(defmacro %on-sync-body ()
+  `(handler-case (call-next-method)
+     ((or usocket:socket-condition usocket:ns-condition
+       usocket:socket-error usocket:timeout-error
+       usocket:unknown-error usocket:ns-error)
+       (c)
+       (log:error
+        "Module: ~A attempted some network activity that signalled some 
+form of usocket condition. Module is not being unloaded. Condition: ~A"
+        module c)
+       nil)
+     (error (c)
+       (log:error
+        "Module: ~A signalled the condition ~A When executing its self ~
+       defined '~A' method. Removing the module from Moonbot. Please fix this."
+        module c 'on-sync)
+       (report-condition-to-matrix c
+                                   "Encountered error with module.")
+       (trivial-backtrace:print-backtrace c))))
+
+(defmethod on-sync :around (luna module sync)
+  (%on-sync-body))
+
+(defmethod on-sync :around (luna (module background-module) sync)
+  "This is the most primitive version I could use. Those modules that subclass from 
+background-module will be executed entirely in their own thread."
+  (let ((thread (bt:make-thread (lambda () (%on-sync-body)))))
+    (setf (thread module) thread)))
 
 (defun execute-all-communications-between-modules (luna module sync)
   (let ((hash (gethash module (channel module))))

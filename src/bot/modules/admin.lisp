@@ -87,7 +87,6 @@
     (let* ((sender (pkv message :|sender|))
            (new-community (make-instance 'community
                                          :extra nil :members (list sender)
-                                         :listen-in (list room)
                                          :admins (list sender)
                                          :api *api* :url *url*
                                          :name (intern
@@ -175,11 +174,14 @@
   (format t "Success."))
 
 (new-admin-command make-user-admin-in-room ((room-id (:maxlen 50)
-                                                     (:minlen 10))
+                                                     (:minlen 4))
                                             (user-id (:maxlen 50)
                                                      (:minlen 1)))
     "Uses the Admin API to make USER-ID an admin in ROOM-ID."
-  (admin-make-user-id-room-admin (conn *luna*) user-id room-id)
+  (admin-make-user-id-room-admin (conn *luna*) user-id
+                                 (if (string-equal room-id "here")
+                                     room
+                                     room-id))
   (format t "Success."))
 
 (new-admin-command force-user ((room-id (:maxlen 50)
