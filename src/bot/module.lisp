@@ -311,6 +311,7 @@ form of usocket condition. Module is not being unloaded. Condition: ~A"
 background-module will be executed entirely in their own thread."
   (let ((thread (bt:make-thread (lambda () (%on-sync-body)))))
     (setf (thread module) thread)))
+;;(%on-sync-body))
 
 (defun execute-all-communications-between-modules (luna module sync)
   (let ((hash (gethash module (channel module))))

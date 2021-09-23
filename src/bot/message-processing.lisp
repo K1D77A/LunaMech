@@ -209,7 +209,7 @@ Finally at the end of every loop (timestamp ) is reset to (local-time:now)"
                         (funcall (if parallel-p #'lparallel:pmapc #'mapc)
                                  (lambda (module) 
                                    (handler-case
-                                       (bt:with-timeout (30)
+                                       (bt:with-timeout (60)
                                          ;;smashout after 30 seconds
                                          (on-sync moonbot module sync)
                                          (execute-all-communications-between-modules

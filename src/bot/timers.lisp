@@ -53,11 +53,14 @@ to another and choose whether it is time to execute or not"))
     (when timer
       (reset-timer timer))))
 
-(defmacro execute-stamp-n-after-luna ((timer time-in-seconds)
+(defmacro execute-stamp-n-after-luna ((timer time-in-seconds &key (position :after))
                                       &body body)
   `(when (>= (local-time:timestamp-difference (timestamp *luna*)
                                               (timestamp ,timer))
              ,time-in-seconds)
-     (unwind-protect
-          (locally ,@body)
-       (reset-timer ,timer))))
+     ,(if (eql position :after)
+          `(unwind-protect
+                (locally ,@body)
+             (reset-timer ,timer))
+          `(progn (reset-timer ,timer)
+                  (locally ,@body)))))

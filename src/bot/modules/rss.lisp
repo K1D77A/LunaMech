@@ -46,7 +46,7 @@
     (file-error ()
       (warn "config/rss-config.lisp does not exist.")
       nil)))
-
+()
 (defmethod on-load-up (moonbot (module rss-module))
   (log:info "Loading rss rooms from rss-config.lisp")
   (results-from-file))
@@ -133,9 +133,10 @@
 
 (defun safe-dex (url)
   (handler-case 
-      (let ((retry-request (dex:retry-request 3 :interval 1)))
+      (let ((retry-request (dex:retry-request 1 :interval 1)))
         (handler-bind ((dex:http-request-failed retry-request))
-          (dex:get url :use-connection-pool nil)))
+          (dex:get url :use-connection-pool nil
+                       :connect-timeout 3 :read-timeout 3)))
     (error (c)
       (log:error "Safe dex failed with URL: ~A" url)
       nil)))
@@ -162,7 +163,8 @@
 (defmethod on-sync (luna (module rss-module) sync)
   (declare (ignore sync))
   (execute-stamp-n-after-luna ((find-timer (timers *module*) :check)
-                               900);15 minutes
+                               900
+                               :position :before);15 minutes
     (let ((keys (loop :for key :in (rooms->feeds *module*) :by #'cddr :collect key)))
       (mapc
        (lambda (rss-name)       
