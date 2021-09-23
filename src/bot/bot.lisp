@@ -180,7 +180,7 @@ Luna will not evaluate any initiating functions and will login using the same de
                 (log:info "- Found ~D room~:P" (length rooms))
                 (setf (rooms community) rooms)
                 (log:info "- Done")))
-          (m-forbidden (c)
+          (m-forbidden ()
             (log:warn "Forbidden from checking for the rooms within Space ~A please remedy."
                       top-level-space)))
         (log:warn "No top-level-space set for ~A ignoring.." name))))

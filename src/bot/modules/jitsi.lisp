@@ -76,19 +76,15 @@
 
 (defmethod on-sync (luna (module jitsi-module) sync)
   (declare (ignorable luna module sync))
-  (when (>= (local-time:timestamp-difference (timestamp luna)
-                                             (timestamp
-                                              (find-timer (timers *module*) :check)))
-            
-            24);24 seconds
-    (unwind-protect 
-         (mapc (lambda (room-plist)
-                 (handler-case 
-                     (initiate-name-change luna room-plist)
-                   (jitsi-condition ()
-                     nil)));in case of signalled condition do nothing
-               (rooms *module*))
-      (find-and-reset-timer (timers *module*) :check))))
+  (execute-stamp-n-after-luna ((find-timer (timers *module*) :check)
+                               24)
+    (log:info "Checking if rooms need their names changed.")
+    (mapc (lambda (room-plist)
+            (handler-case
+                (initiate-name-change luna room-plist)
+              (jitsi-condition ()
+                nil)));in case of signalled condition do nothing
+          (rooms *module*))))
 
 (defun initiate-name-change (luna room-plist)
   "Given LUNA and a ROOM-PLIST (see (rooms *module*)) attemps to determine the number of

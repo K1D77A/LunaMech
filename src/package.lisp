@@ -37,6 +37,9 @@
            #:start-moonbot
            #:stop-moonbot
            #:add-room
+           #:%emergency-format
+           #:report-condition-to-matrix
+           #:execute-stamp-n-after-luna
            #:parallel-p
            #:add-rooms
            #:add-string->condition

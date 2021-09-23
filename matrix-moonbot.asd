@@ -6,7 +6,7 @@
   :build-operation "program-op"
   :build-pathname "./lunamech"
   :entry-point "matrix-moonbot:setup-and-go"
-  :version "0.0.11"
+  :version "0.0.12"
   :depends-on (#:jonathan
                #:alexandria
                #:str

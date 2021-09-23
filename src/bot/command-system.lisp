@@ -83,7 +83,7 @@ the prefix, the command and the community it was sent in."))
   (let ((event-id (getf message :|event_id|)))
     (if (%already-processed-message-p luna event-id)
         (error 'already-processed)
-        (push event-id (cycle-history luna)))))
+        (sb-ext:atomic-push event-id (slot-value luna 'cycle-history)))))
 
 (defmethod initiate-command-execution
     (luna privilege prefix/module invoker community room message rest)
@@ -126,6 +126,7 @@ the prefix, the command and the community it was sent in."))
              (safe-execution command community room message rest))))
 
 (defun safe-execution (command community room message args &optional (luna nil))
+  "Execute the given COMMAND and catch and format any errors."
   (check-type luna (or null luna))
   (catch-limit-exceeded
     (handler-case

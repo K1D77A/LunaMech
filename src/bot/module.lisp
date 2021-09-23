@@ -243,9 +243,10 @@ form of usocket condition. Module is not being unloaded. Condition: ~A" module c
               ;;quickly realize that the connection is broken and will simply initiate a
               ;;restart which should fix this.
               (error (c)
-                (log:warn "Module: ~A signalled the condition ~A When executing its self ~
+                (log:error "Module: ~A signalled the condition ~A When executing its self ~
        defined '~A' method. Removing the module from Moonbot. Please fix this."
-                          module c ',name)
+                           module c ',name)
+                (report-condition-to-matrix c "Encountered error with module.")
                 (trivial-backtrace:print-backtrace c))))))
 ;;  (setf (found-modules luna)
 ;;      (remove module (found-modules luna))))))))

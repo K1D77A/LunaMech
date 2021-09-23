@@ -40,7 +40,11 @@
 
 (new-normie-luna-command fuck ((arg))
     ""
-  (format t "No fuck ~A" arg))
+  (format t
+          (if (string-equal arg "you")
+              "No fuck ~A"
+              "Fuck ~A")
+          arg))
 
 (new-normie-luna-command stickers ()
     ""
