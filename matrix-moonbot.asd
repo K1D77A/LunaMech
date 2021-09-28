@@ -11,6 +11,7 @@
                #:alexandria
                #:str
                #:dexador
+               #:lunamech-matrix-api
                #:flexi-streams
                #:cl-megolm
                #:ironclad
@@ -41,18 +42,8 @@
                  (:file "helpers")
                  (:file "classes" :depends-on ("package"))
                  (:file "conditions")
-                 (:module "api"
-                  :depends-on ("package" "classes")
-                  :serial t
-                  :components ((:file "api-helpers")
-                               (:file "events")
-                               (:file "user-api")
-                               (:file "admin-api")
-                               (:file "filter-api")
-                               (:file "spaces")
-                               (:file "sync")))
                  (:module "bot"
-                  :depends-on ("package" "classes" "api" "compass")
+                  :depends-on ("package" "classes" "compass")
                   :serial t
                   :components ((:module "encryption"
                                 :serial t

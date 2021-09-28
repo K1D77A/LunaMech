@@ -1,6 +1,7 @@
 ;;;; package.lisp
 (defpackage #:matrix-moonbot
-  (:use #:cl)
+  (:use #:cl
+        #:lunamech-matrix-api)
   (:nicknames #:moonbot)
   (:export #:*commands*
            #:*api*
@@ -47,6 +48,7 @@
            #:safe-execution
            #:admin
            #:admin-change-a-users-device-data
+           #:admin-delete-room
            #:admin-shadow-ban-user-id
            #:admin-change-user-to/from-administrator
            #:admin-make-user-id-room-admin

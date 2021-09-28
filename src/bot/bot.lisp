@@ -151,7 +151,7 @@ Luna will not evaluate any initiating functions and will login using the same de
                          (run))))
         (handler-case
             (run)
-          (error (c)
+          (serious-condition (c)
             ;;in the most fatal conditions this will catch and stop the thread from
             ;;crashing and simply attempt a restart of the bot
             (log:error "Unhandled condition signalled~% ~A~

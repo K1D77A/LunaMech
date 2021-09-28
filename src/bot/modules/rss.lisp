@@ -166,12 +166,13 @@
                                900
                                :position :before);15 minutes
     (let ((keys (loop :for key :in (rooms->feeds *module*) :by #'cddr :collect key)))
-      (mapc
+
+      (lparallel:pmapc
        (lambda (rss-name)       
          (log:info "Checking for RSS updates for ~A" rss-name)
          (handler-case 
              (update-rss rss-name)
-           (error (c)
+           (serious-condition (c)
              (report-condition-to-matrix c (format nil "Trying to update room ~A"
                                                    rss-name))
              (log:error "Error ~A when trying to update RSS for room ~A"
@@ -209,9 +210,11 @@
                                            (:maxlen 50)))
     "Subscribes to the RSS feed FEED (the url) under the name NAME (unique identifier), and publishes new updates into ROOM-ID. On subscription will post the latest 10 entries."
   (let ((name (intern (string-upcase name) :keyword)))
-    (subscribe-to-rss name feed (if (string-equal room-id "here")
-                                    room
-                                    room-id))))
+    (if (rss-feed name)
+        (module-moonmat-message (conn *luna*) room "Already subscribed.")
+        (subscribe-to-rss name feed (if (string-equal room-id "here")
+                                        room
+                                        room-id)))))
 
 (new-admin-rss-command unsubscribe ((name (:minlen 1)
                                           (:maxlen 50)))

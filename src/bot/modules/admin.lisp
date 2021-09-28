@@ -184,6 +184,18 @@
                                      room-id))
   (format t "Success."))
 
+(new-admin-command make-me-admin-in-room ((room-id (:maxlen 50)
+                                                   (:minlen 4)))
+    "Uses the Admin API to make sender an admin in ROOM-ID."
+  (destructuring-bind (&key |sender| &allow-other-keys)
+      message
+    (admin-make-user-id-room-admin (conn *luna*) |sender|
+                                   (if (string-equal room-id "here")
+                                       room
+                                       room-id))
+    (format t "Success.")))
+
+
 (new-admin-command force-user ((room-id (:maxlen 50)
                                         (:minlen 10))
                                (user-id (:maxlen 50)
@@ -213,4 +225,10 @@ have the same homeserver as Luna and all of those who are already in the room."
                    (format t "Forced ~A successfully~%" member)))
                only-same-home)
     (format t "Success.")))
+
+(new-admin-command delete-room ((room-id (:maxlen 50)
+                                         (:minlen 5)))
+    "Deletes room denoted by ROOM-ID using the Admin API."
+  (admin-delete-room (conn *luna*) room-id)
+  (format t "Success."))
 

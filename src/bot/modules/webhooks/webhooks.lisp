@@ -84,21 +84,6 @@
    (lambda ()
      (mm-module.private-keys:get-key :webhook/send-messages))))
 
-(def-webhook upload-content ()
-  ((for-stickerpicker
-    :validator (lambda (filename content-type content-bytes)
-                 (declare (ignore filename content-type content-bytes))
-                 t)
-    :fn (lambda (filename content-type content-bytes)
-          (log:info filename)
-          (let ((uploaded 
-                  (upload-content (conn *luna*) filename content-type
-                                  (coerce content-bytes '(vector (unsigned-byte 8))))))
-            (getf uploaded :|content_uri|)))
-    :expected-args (filename content-type content-bytes)))
-  (:private-key
-   (lambda () (mm-module.private-keys:get-key :webhook/upload-content))))
-
 (def-webhook openid ()
   ((openid
     :validator (lambda () t)

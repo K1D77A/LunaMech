@@ -246,7 +246,7 @@ form of usocket condition. Module is not being unloaded. Condition: ~A" module c
               ;;chances are that if the condition above is called then Luna will very
               ;;quickly realize that the connection is broken and will simply initiate a
               ;;restart which should fix this.
-              (error (c)
+              (serious-condition (c)
                 (log:error "Module: ~A signalled the condition ~A When executing its self ~
        defined '~A' method. Removing the module from Moonbot. Please fix this."
                            module c ',name)
@@ -294,7 +294,7 @@ perform operations at save time.")
 form of usocket condition. Module is not being unloaded. Condition: ~A"
         module c)
        nil)
-     (error (c)
+     (serious-condition (c)
        (log:error
         "Module: ~A signalled the condition ~A When executing its self ~
        defined '~A' method. Removing the module from Moonbot. Please fix this."
@@ -309,9 +309,11 @@ form of usocket condition. Module is not being unloaded. Condition: ~A"
 (defmethod on-sync :around (luna (module background-module) sync)
   "This is the most primitive version I could use. Those modules that subclass from 
 background-module will be executed entirely in their own thread."
-  (let ((thread (bt:make-thread (lambda () (%on-sync-body)))))
+  (let ((thread (bt:make-thread (lambda ()
+                                  (ignore-errors
+                                   (%on-sync-body))))))
     (setf (thread module) thread)))
-;;(%on-sync-body))
+  ;;(%on-sync-body))
 
 (defun execute-all-communications-between-modules (luna module sync)
   (let ((hash (gethash module (channel module))))

@@ -200,7 +200,6 @@ Finally at the end of every loop (timestamp ) is reset to (local-time:now)"
       moonbot
     (loop :while (not (stopp moonbot))
           :do (mapc (lambda (connection)
-                      (sleep 0.000001)
                       (let ((sync (key-sync connection :junk-removed)))
                         (funcall (if parallel-p #'lparallel:pmapc #'mapc)
                                  (lambda (com)
