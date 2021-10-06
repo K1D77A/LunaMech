@@ -120,6 +120,8 @@ to chirp."
                      (log:error "Condition signalled when calling ImageMagick. ~
                              Make sure it is installed. ~A" c)
                      nil)
+                   (processor-condition ()
+                     (log:error "Caught resignalled processor error"))
                    (condition (c)
                      (log:error "Unknown error occurred. Chances are its network related. ~A"
                                 c))))
@@ -171,17 +173,31 @@ sent to the server. This sends two images, a big one and a small one."
                                      :filename filename
                                      :overwritep nil :user sender
                                      :server server))
-           (images (process-image-event top-image)))
-      (handler-case
-          (progn
-            (alexandria:doplist (size image images)
-              (upload-image-event image))
-            (module-moonmat-message con (symbol-name room-id)
-                                    "Success. Uploader: ~A. Server: ~A. Name: ~A~%"
-                                    sender server filename))
-        (dexador.error:http-request-failed (c)
-          (module-moonmat-message con  (symbol-name room-id) "~A"
-                                  (dexador.error:response-body c)))))))
+           (images
+             (handler-case
+                 (process-image-event top-image)
+               (processor-condition (c)
+                 (log:error "Processor condition encountered: ~A" c)
+                 (module-moonmat-message (conn *luna*) (symbol-name room-id)
+                                         (format nil "Encountered a processor error ~A" c))
+                 (error c)))))
+      (if images 
+          (handler-case
+              (progn
+                (alexandria:doplist (size image images)
+                  (upload-image-event image))
+                (module-moonmat-message con (symbol-name room-id)
+                                        "Success. Uploader: ~A. Server: ~A. Name: ~A~%"
+                                        sender server filename))
+            (dexador:http-request-failed (c)
+              (module-moonmat-message con (symbol-name room-id) "~A"
+                                      (dexador.error:response-body c)))
+            (condition (c)
+              (module-moonmat-message con (symbol-name room-id)
+                                      "Encountered ~A when processing." c)))
+          (module-moonmat-message con (symbol-name room-id)
+                                  "Encountered a condition when processing the image event.")))))
+
 
 (defun collect-images (room-id events)
   "Maps over the events within EVENTS and looks for events whose msgtype is m.image, when 
@@ -208,13 +224,14 @@ within the media object so that the correct sticker-api object can be found."
                      (stickerpicker-testing-url *module*)
                      (stickerpicker-url *module*))))))
 
-(defun upload-image (content)  
-  (dex:post (get-url :upload)
-            :headers `(("Content-Type" . "application/json")
-                       ("Authorization" .
-                                        ,(mm-module.private-keys:get-key :sticker/upload)))
-            :content (jojo:to-json content :from :plist)
-            :use-connection-pool nil))
+(defun upload-image (content)
+  (let ((content (jojo:to-json content :from :plist)))
+    (dex:post (get-url :upload)
+              :headers `(("Content-Type" . "application/json")
+                         ("Authorization" .
+                                          ,(mm-module.private-keys:get-key :sticker/upload)))
+              :content content 
+              :use-connection-pool nil)))
 
 (command-defining-macro-moonbot new-sticker-command 'sticker-command)
 

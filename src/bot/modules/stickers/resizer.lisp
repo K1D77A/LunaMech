@@ -53,7 +53,7 @@ its largest (height or width) to *wanted-size*  and the other proportionally"
   (wrap-imagemagick-call imagemagick-resize-condition
       (format nil "Attempted to resize filename ~A" filename)
     ;;need a timeout here...
-    (uiop:run-program (format nil "convert ~A -adaptive-resize ~Dx~D  ~A"
+    (uiop:run-program (format nil "convert '~A' -filter triangle -resize ~Dx~D  '~A'"
                               filename
                               wanted-x
                               wanted-y
@@ -69,7 +69,7 @@ its largest (height or width) to *wanted-size*  and the other proportionally"
                        (format nil "Attempted to get the image dimensions for filename ~A"
                                filename)
                      (uiop:run-program
-                      (format nil "identify -format \" %w %h %B \" ~A" filename)
+                      (format nil "identify -format \" %w %h %B \" '~A'" filename)
                       :output :string))
                    :omit-nulls t))))
     (let ((x (reduce #'max (loop :for n :in res :by #'cdddr :collect n)));max width

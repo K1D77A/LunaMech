@@ -1,5 +1,18 @@
 (in-package #:mm-module.sticker)
 
+(define-condition processor-condition (sticker-condition)
+  ())
+
+(define-condition bad-variable (processor-condition)
+  ((variable-in-q
+    :accessor variable-in-q
+    :initarg :variable-in-q))
+  (:documentation "Signalled when a value is not what is expected.")
+  (:report
+   (lambda (obj stream)
+     (format stream "Please remove the spaces from the images filename. ~A"
+             (variable-in-q obj)))))
+
 (defclass image-event ()
   ((server
     :accessor server
@@ -44,10 +57,19 @@
 (defclass big-image-event (sized-image-event)
   ())
 
-(defgeneric procoess-image-event (image-event)
+
+(defgeneric process-image-event (image-event)
   (:documentation "Processes the image-event correctly."))
 
+(defmethod validate-image-event ((image image-event))
+  (with-slots (filename)
+      image
+    (when (find #\Space filename)
+      (error 'bad-variable :variable-in-q filename
+                           :message "Please remove any spaces from the images filename."))))
+
 (defmethod process-image-event ((image image-event))
+  (validate-image-event image)
   (with-slots (server user overwritep filename bytes content-type
                height width url)
       image
@@ -61,6 +83,9 @@
       (process-image-event smol)
       (setf (thumb big) (url smol))
       (list :big big :small smol))))
+
+(defmethod process-image-event :around (image)
+  (call-next-method))
 
 (defmethod process-image-event ((image sized-image-event))
   "Resizes, and uploads the a size-image-event."
