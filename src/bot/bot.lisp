@@ -94,9 +94,9 @@ Luna will not evaluate any initiating functions and will login using the same de
                                     "Unknown error: ~A" c))))))
             (login con)
             (unless relog;only perform this on an initial login
-              (first-sync con)
-              (initiate-encryption con)
-              (initiate-filters con))))
+              (first-sync con))))
+        ;;              (initiate-encryption con)
+        ;;              (initiate-filters con))))
         (connections moonbot)))
 
 (defmethod logged-in-p ((moonbot moonbot))
@@ -127,37 +127,38 @@ Luna will not evaluate any initiating functions and will login using the same de
   (labels ((run ()
              (listen-and-process moonbot)))
     (catch 'bail;used to forcefully stop the thread
-      (handler-bind ((api-timeout
-                       ;;in the case of a DC mid request, then this will initiate
-                       ;;the process that attempts to reconnect to the server
-                       ;;once a new connection has been made then just retries
-                       ;;the call that was being made previously, meaning the bot
-                       ;;doesn't lose its position.
-                       (lambda (c)
-                         (log:error
-                          "Socket condition: ~A"
-                          (api-timeout-condition c))
-                         (log:error
-                          "Attempting a restart of Luna")
-                         (moonbot-restart moonbot)
-                         (when (find-restart 'try-again)
-                           (log:error "Successful reconnection")
-                           (invoke-restart 'try-again))))
-                     (api-error
-                       (lambda (c)
-                         (log:error "API Error made it through.")
-                         (log:error (api-timeout-condition c))
-                         (log:error "Restarting listen-and-process")
-                         (run))))
-        (handler-case
-            (run)
-          (serious-condition (c)
-            ;;in the most fatal conditions this will catch and stop the thread from
-            ;;crashing and simply attempt a restart of the bot
-            (log:error "Unhandled condition signalled~% ~A~
+      (handler-case 
+          (handler-bind ((api-timeout
+                           ;;in the case of a DC mid request, then this will initiate
+                           ;;the process that attempts to reconnect to the server
+                           ;;once a new connection has been made then just retries
+                           ;;the call that was being made previously, meaning the bot
+                           ;;doesn't lose its position.
+                           (lambda (c)
+                             (log:error
+                              "Socket condition: ~A"
+                              (api-timeout-condition c))
+                             (log:error
+                              "Attempting a restart of Luna")
+                             (moonbot-restart moonbot)
+                             (when (find-restart 'try-again)
+                               (log:error "Successful reconnection")
+                               (invoke-restart 'try-again))))
+                         (api-error
+                           (lambda (c)
+                             (log:error "API Error made it through.")
+                             (log:error (api-timeout-condition c))
+                             (log:error "Restarting listen-and-process")
+                             (run))))
+            (run))
+        (condition (c)
+          ;;in the most fatal conditions this will catch and stop the thread from
+          ;;crashing and simply attempt a restart of the bot
+          (log:error "Unhandled condition signalled~% ~A~
                                   Attempting to restart in 5 seconds" c)
-            (moonbot-restart moonbot)
-            (run)))))));;in the event of a catastrophic failure just restart
+          (moonbot-restart moonbot)
+          (run))))));;in the event of a catastrophic failure just restart
+
 
 (defmethod initiate-communities ((luna luna))
   (log:info "Initiating ")
@@ -296,7 +297,7 @@ second 'wait-60' recalls 'wait-for-stop' making it wait another 60 seconds."
                     (error 'moonbot-still-running
                            :moonbot-still-running-message
                            (format nil "Luna is still running despite ~
-                                          waiting 60 seconds"))))
+                                          waiting 10 seconds"))))
       (force-stop ()
         :report "Luna is still running, force stop?"
         (log:error "Luna is still running, force stopping.")
