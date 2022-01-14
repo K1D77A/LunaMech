@@ -2,7 +2,7 @@
 
 (defun extract-message (message)
   "Extracts the content for the key :|body| within the content for the key :|content|"
-  (getf (getf message :|content|) :|body|))
+  (get-key (get-key message :|content|) :|body|))
 
 (defun extract-messages (list-of-lists)
   (mapcar #'extract-message list-of-lists))
@@ -11,7 +11,7 @@
   "Normal - looks within the list to find the key :|user_id| and returns this.
 Exceptional - When SIGCON-WHEN-NIL-P is non nil signals a MISSING-EXPECTED-KEY 
 condition"
-  (destructuring-bind (&key |sender| |user_id| &allow-other-keys)
+  (with-hash-keys (|sender| |user_id|)
       message
     (let ((val (or |sender| |user_id|)))
       (if (and sigcon-when-nil-p (not val))
@@ -144,7 +144,7 @@ that the message type is unknown then signals the condition 'unknown-message-typ
                              (lambda (c)
                                (declare (ignore c))
                                (invoke-restart 'return-nil))))
-              (destructuring-bind (&key |type| |event_id| &allow-other-keys)
+              (with-hash-keys (|type| |event_id|)
                   message
                 (unless (%already-processed-message-p moonbot |event_id|)
                   (cond ((string= |type| "m.room.message")
@@ -169,7 +169,7 @@ passes them to process-messages"))
       (when messages
         (alexandria:doplist (room messages messages)
           (when messages
-            (process-messages moonbot community (symbol-name room) messages)))))))
+            (process-messages moonbot community room messages)))))))
 
 (defmethod listen-and-process ((moonbot moonbot))
   "This is the primary loop used to run Luna. 

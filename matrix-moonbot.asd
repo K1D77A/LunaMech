@@ -48,10 +48,10 @@
                   :components ((:module "encryption"
                                 :serial t
                                 :components ((:file "classes")))
-                               ;;                                             (:file "encryption")))
+                               ;;(:file "encryption")))
                                (:file "configparse")
                                (:file "module")
-                               ;;                               (:file "filters")
+                               ;;(:file "filters")
                                (:file "timers")
                                (:file "syncing")
                                (:file "validator")

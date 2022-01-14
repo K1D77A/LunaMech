@@ -38,7 +38,7 @@
 
 (new-admin-community-command remove-room ((removing :valid-room))
     "Removes a room from the community"
-  (let ((to-remove (getf (find-room community removing) :id)))
+  (let ((to-remove (get-key (find-room community removing) :id)))
     (format t "Removing ~A from community" to-remove)
     (setf (rooms community) (remove to-remove (rooms community)
                                     :test #'string=
@@ -167,9 +167,9 @@
 
 (new-admin-community-command populate-community ((room-id :valid-room))
     "Populates the community from the member list in a single room"
-  (let ((members (getf (members-in-room-ids (connection community)
-                                            (getf (find-room community room-id) :id))
-                       :|joined|)))
+  (let ((members (get-key (members-in-room-ids (connection community)
+                                               (getf (find-room community room-id) :id))
+                          :|joined|)))
     (when members
       (setf (members community) nil)
       (let ((new-members ()))
@@ -193,7 +193,7 @@
          invite-community (string-bool-to-bool community room invite-community))
   (unless (or (eql private :error)
               (eql invite-community :error))
-    (let ((id (getf
+    (let ((id (get-key
                (create-room (connection community) room-name room-alias
                             "Im a topic" :private private
                             :invite (when invite-community

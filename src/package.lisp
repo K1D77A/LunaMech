@@ -1,7 +1,7 @@
 ;;;; package.lisp
 (defpackage #:matrix-moonbot
   (:use #:cl
-        #:lmapi)
+        #:lmav2)
   (:nicknames #:moonbot)
   (:export #:*commands*
            #:*api*
