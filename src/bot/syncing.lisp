@@ -65,7 +65,8 @@ an invite. If the invite is valid and from an ubermensch user then joins the roo
         (let* ((events (traverse-sync rest '(:|invite_state| :|events|)))
                (from-uber (valid-senders events)))          
           (when from-uber
-            (let ((room.members (extract-events-of-type from-uber '("m.room.member"))))
+            (let ((room.members
+                    (lmapi::extract-events-of-type from-uber '("m.room.member"))))
               ;;this should hopefully produce a list of two.
               (when (loop :for event :in room.members
                             :thereis (valid-invite-p connection event))

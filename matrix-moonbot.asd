@@ -51,7 +51,7 @@
                                ;;                                             (:file "encryption")))
                                (:file "configparse")
                                (:file "module")
-;;                               (:file "filters")
+                               ;;                               (:file "filters")
                                (:file "timers")
                                (:file "syncing")
                                (:file "validator")

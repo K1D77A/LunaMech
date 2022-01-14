@@ -166,9 +166,8 @@
                                900
                                :position :before);15 minutes
     (let ((keys (loop :for key :in (rooms->feeds *module*) :by #'cddr :collect key)))
-
       (lparallel:pmapc
-       (lambda (rss-name)       
+       (lambda (rss-name)
          (log:info "Checking for RSS updates for ~A" rss-name)
          (handler-case 
              (update-rss rss-name)

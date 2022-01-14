@@ -155,7 +155,7 @@ Luna will not evaluate any initiating functions and will login using the same de
           ;;in the most fatal conditions this will catch and stop the thread from
           ;;crashing and simply attempt a restart of the bot
           (log:error "Unhandled condition signalled~% ~A~
-                                  Attempting to restart in 5 seconds" c)
+                      Attempting to restart in 5 seconds" c)
           (moonbot-restart moonbot)
           (run))))));;in the event of a catastrophic failure just restart
 

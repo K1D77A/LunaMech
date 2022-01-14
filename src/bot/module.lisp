@@ -311,7 +311,8 @@ form of usocket condition. Module is not being unloaded. Condition: ~A"
 background-module will be executed entirely in their own thread."
   (let ((thread (bt:make-thread (lambda ()
                                   (ignore-errors
-                                   (%on-sync-body))))))
+                                   (bt:with-timeout (300);force a timeout after 300 seconds
+                                     (%on-sync-body)))))))
     (setf (thread module) thread)))
   ;;(%on-sync-body))
 
