@@ -198,9 +198,9 @@ Returns a string."
 
 (defun change-name (connection room-id new-name)
   "Changes the name of ROOM-ID to NEW-NAME"
-  (let ((name-event (make-instance 'm-room-name :name new-name)))
-    ;;;need something to handle a m forbidden
-    (send-state-event-to-room connection room-id "m.room.name" name-event)))
+  (multiple-value-bind (event type)
+      (lmav2:object%m-room-name new-name)
+    (lmav2:send-state-event-to-room connection room-id type event)))
 
 (defun get-room-info (url &key (prefix "") (domain "meet.jitsi"))
   (handler-case 
