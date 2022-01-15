@@ -65,8 +65,8 @@ by 10."
   (let* ((id (pkv message :|sender|))
          (res (gethash id compass:*results*)))
     (if res
-        (let* ((x (pkv res :x))
-               (y (pkv res :y))
+        (let* ((x (getf res :x))
+               (y (getf res :y))
                (name (first (str:split ":" id :limit 2)))
                (str (compass:draw-compass t `((,x ,y ,name))))
                (vec (flexi-streams:get-output-stream-sequence str)))
@@ -78,8 +78,8 @@ by 10."
     "Receive a result by id"
   (let ((res (gethash user-id compass:*results*)))
     (if res
-        (let* ((x (pkv res :x))
-               (y (pkv res :y))
+        (let* ((x (getf res :x))
+               (y (getf res :y))
                (name (first (str:split ":" user-id :limit 2)))
                (str (compass:draw-compass t `((,x ,y ,name))))
                (vec (flexi-streams:get-output-stream-sequence str)))
@@ -91,8 +91,8 @@ by 10."
     "See all results plotted"
   (let ((list nil))
     (maphash (lambda (key val)
-               (let ((x (pkv val :x))
-                     (y (pkv val :y)))
+               (let ((x (getf val :x))
+                     (y (getf val :y)))
                  (push (list x y (first (str:split ":" key :limit 2))) list)))
              compass:*results*)
     (let* ((str (compass:draw-compass nil list))
