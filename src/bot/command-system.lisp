@@ -80,7 +80,7 @@ the prefix, the command and the community it was sent in."))
 ;;;store the message event in a short history to stop repeat executions.
 (defmethod initiate-command-execution :before
     (luna priv prefix invoker community room message rest)
-  (let ((event-id (getf message :|event_id|)))
+  (let ((event-id (gethash "event_id" message)))
     (if (%already-processed-message-p luna event-id)
         (error 'already-processed)
         (sb-ext:atomic-push event-id (slot-value luna 'cycle-history)))))

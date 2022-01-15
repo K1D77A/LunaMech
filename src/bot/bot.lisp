@@ -162,10 +162,13 @@ Luna will not evaluate any initiating functions and will login using the same de
 
 (defmethod initiate-communities ((luna luna))
   (log:info "Initiating ")
-  (lparallel:pmapc (lambda (community)
-                     (initiate-rooms luna community)
-                     (initiate-members luna community))
-                   (communities luna))
+  (funcall (if (parallel-p luna)
+               #'lparallel:pmapc
+               #'mapc)
+           (lambda (community)
+             (initiate-rooms luna community)
+             (initiate-members luna community))
+           (communities luna))
   (log:info "Communities initiated."))
 
 (defmethod initiate-rooms ((luna luna) (community community))
@@ -197,9 +200,11 @@ Luna will not evaluate any initiating functions and will login using the same de
         (log:info "- Checking for users in ~A" name)
         (handler-case
             (catch-limit-exceeded 
-              (let ((member-list (members-in-room%ids (conn luna) id)))
-                (dolist (member member-list)
-                  (pushnew member members :test #'string=))))
+              (let ((member-hash (gethash "joined" (members-in-room-ids (conn luna) id))))
+                (maphash (lambda (member hash)
+                           (declare (ignore hash))
+                           (pushnew member members :test #'string=))
+                         member-hash)))
           (m-forbidden (c)
             (log:warn "Forbidden " c)
             nil))))

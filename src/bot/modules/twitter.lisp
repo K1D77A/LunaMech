@@ -259,16 +259,16 @@ found converts them all into 'media objects and returns them in a list. ROOM-ID 
 within the media object so that the correct twitter-api object can be found."
   (let ((media nil))
     (mapc (lambda (event)
-            (let ((sender (getf event :|sender|))
-                  (content (getf event :|content|)))
-              (when (or (string= (getf content :|msgtype|) "m.image")
-                        (string= (getf content :|msgtype|) "m.video"))
+            (let ((sender (pkv event :|sender|))
+                  (content (pkv event :|content|)))
+              (when (or (string= (pkv content :|msgtype|) "m.image")
+                        (string= (pkv content :|msgtype|) "m.video"))
                 (push (make-instance 'media :sender sender
-                                            :mxc (getf content :|url|)
+                                            :mxc (pkv content :|url|)
                                             :room-id room-id
                                             :ext (car
                                                   (last
-                                                   (str:split #\. (getf content :|body|)
+                                                   (str:split #\. (pkv content :|body|)
                                                               :omit-nulls t))))
                       media))))
           events)

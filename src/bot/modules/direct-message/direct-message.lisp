@@ -176,7 +176,8 @@ of output-stream and sends it to room-id. This is repeated for all of room-ids i
 message-events"
   (alexandria:doplist (room-id messages message-events)
     (loop :for event :in messages
-          :do (let* ((sender (getf event :|sender|));;it would be possible to do a membership
+          :do (let* ((sender (pkv event :|sender|))
+                     ;;it would be possible to do a membership
                      ;;in room event to update but like thats a fucking slow arse thing to
                      ;;do if we tryna keep everything responsive
                      (private-room (find-private-room sender)))
@@ -233,7 +234,7 @@ message-events"
     (when set
       (if (eql (first dms) :NO-VALS)
           (setf (current-rooms *module*) nil)
-          (setf (current-rooms *module*) (getf dms :|content|))))
+          (setf (current-rooms *module*) (pkv dms :|content|))))
     dms))
 
 (defun leave-dm-room (proom connection)
@@ -357,7 +358,7 @@ function (gen-context ..). Returns t when successful, nil when not."
   (let ((cont (apply #'gen-context context args)))
     (if (and cont (valid-user-p connection user-id))
         (let* ((room (create-private-room connection (list user-id)))
-               (room-id (getf room :|room_id|)))
+               (room-id (pkv room :|room_id|)))
           (add-dm-room user-id room-id cont)
           (moonmat-message (first (communities matrix-moonbot::*luna*))
                            room-id "~A" (initial-message cont))

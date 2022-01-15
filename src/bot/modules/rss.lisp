@@ -46,7 +46,7 @@
     (file-error ()
       (warn "config/rss-config.lisp does not exist.")
       nil)))
-()
+
 (defmethod on-load-up (moonbot (module rss-module))
   (log:info "Loading rss rooms from rss-config.lisp")
   (results-from-file))

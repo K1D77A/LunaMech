@@ -36,11 +36,7 @@
   (moon-message community room message))
 
 (defun moon-message (community room message)
-  (let ((event (make-instance 'm-text
-                              :body message :msgtype "m.text"
-                              :mformat "org.matrix.custom.html"
-                              :formatted-body
-                              (format nil "~A" message))))
+  (let ((event (object%event/m-room-message/m-text message message)))
     (catch-limit-exceeded
       (send-message-event-to-room (connection community) room event))))
 ;;(format nil "~A>" message)))))

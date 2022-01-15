@@ -11,21 +11,6 @@
       (with-formatted-output-to-room (community room)
         (format t"message: ~D" (1+ i))))))
 
-;; (new-admin-community-command listen-in ()
-;;     "Prints out the rooms that this community is listening in"
-;;   (format t "Listening in:~%~{  ~A~%~}" (listen-in community)))
-
-;; (new-admin-community-command add-listen-in ((room-id :valid-room))
-;;     "Adds a room that the bot will listen in"
-;;   (push (getf (find-room community room-id) :id) (listen-in community))
-;;   (format t "Now listening in ~A" room-id))
-
-;; (new-admin-community-command remove-listen-in ((room-id :valid-listen-in))
-;;     "Removes a room that the bot listens in"
-;;   (setf (listen-in community)
-;;         (remove room-id (listen-in community) :test #'string=))
-;;   (format t "No longer listening in ~A" room-id))
-
 (new-admin-community-command message-community ((to-send (:maxlen 40) (:minlen 1)))
     "Sents a message to all rooms in a community"
   (moonmat-message community room "Sending ~A to all rooms in 5 seconds" to-send)
@@ -76,7 +61,7 @@
 (new-admin-community-command displayname ((user-id :valid-user (:minlen 1)))
     "displays a users displayname"  
   (let ((name (user-display-name (connection community) user-id)))
-    (format t  "Display name: ~A" (getf name :|displayname|))))
+    (format t  "Display name: ~A" (get-key name :|displayname|))))
 
 (new-admin-community-command kick ((user-id :valid-user)
                                    (reason (:maxlen 40)(:minlen 1)))
@@ -221,7 +206,7 @@
     (when (string/= top-level-space "")
       (format t "Spaces:~%~{ ~A~%~}"
               (mapcar (lambda (plist)
-                        (destructuring-bind (&key |name| |room_id| &allow-other-keys)
+                        (with-hash-keys (|name| |room_id|)
                             plist
                           (format nil "NAME: ~A  ID: ~A" |name| |room_id|)))
                       (spaces-in-a-space connection top-level-space))))))
@@ -236,7 +221,7 @@ a subspace within this community."
     (when (string/= top-level-space "")
       (let* ((spaces (spaces-in-a-space connection top-level-space))
              (space (find space spaces :test #'string-equal
-                                       :key (lambda (ele) (getf ele :|name|)))))
+                                       :key (lambda (ele) (get-key ele :|name|)))))
         (if space
             (format t "Rooms in that Space: ~%~{ ~A~%~}"
                     (mapcar (lambda (plist)
@@ -246,7 +231,7 @@ a subspace within this community."
                                 (format nil "NAME: ~A. ROOM-ID ~A. TYPE: ~A."
                                         name room-id room-type)))
                             (rooms-in-a-space connection
-                                              (getf space :|room_id|))))
+                                              (get-key space :|room_id|))))
             (format t "No subspace by the name ~A" space))))))
 
 

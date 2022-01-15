@@ -2,7 +2,7 @@
 
 ;;;parse the communities.lisp file into an object.
 
-(defparameter *default-config-location* #P"config/")
+(defparameter *default-config-location* #P"./config/")
 
 (defparameter *config-file* "communities.lisp")
 (defparameter *backup-config-file* "communities.lisp.backup")

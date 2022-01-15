@@ -78,7 +78,7 @@
            (c2 (find ct communities :key #'name)))
       (setf (admins c2) (copy-list (admins c1)))
       (format t "Set the admins of ~A to the admins of ~A" (name c2) (name c1)))))
-
+;;broke
 (new-admin-command create-local-community ((community-name (:maxlen 50)
                                                            (:minlen 1)))
     "Creates a new community by name. Don't include spaces."
@@ -140,13 +140,17 @@
 (new-admin-command shadowban ((user-id))
     "Shadow bans USER-ID"
   (format t "Attempting to Shadowban ~A" user-id)
-  (admin-shadow-ban-user-id (connection community) user-id)
+  (lmav2:call-api (make-instance 'lmav2:admin%shadowban-user
+                                 :user-id user-id
+                                 :connection (connection community)))
   (format t "Success."))
 
 (new-admin-command deactivate-account ((user-id))
     "Deactivates USER-ID's account."
   (format t "Attempting to deactivate ~A's account~%" user-id)
-  (admin-deactivate-account (connection community) user-id)
+  (lmav2:call-api (make-instance 'lmav2:admin%deactivate-account
+                                 :user-id user-id
+                                 :connection (connection community)))
   (format t "Success."))
 
 (new-admin-command add-alias ((community-name :valid-community)
@@ -178,22 +182,24 @@
                                             (user-id (:maxlen 50)
                                                      (:minlen 1)))
     "Uses the Admin API to make USER-ID an admin in ROOM-ID."
-  (admin-make-user-id-room-admin (conn *luna*) user-id
-                                 (if (string-equal room-id "here")
-                                     room
-                                     room-id))
+  (lmav2:call-api (make-instance 'lmav2:admin%make-user-admin-in-room
+                                 :connection (conn *luna*)
+                                 :room-id (if (string-equal room-id "here")
+                                              room
+                                              room-id)
+                                 :user-id user-id))
   (format t "Success."))
 
 (new-admin-command make-me-admin-in-room ((room-id (:maxlen 50)
                                                    (:minlen 4)))
     "Uses the Admin API to make sender an admin in ROOM-ID."
-  (destructuring-bind (&key |sender| &allow-other-keys)
-      message
-    (admin-make-user-id-room-admin (conn *luna*) |sender|
-                                   (if (string-equal room-id "here")
-                                       room
-                                       room-id))
-    (format t "Success.")))
+  (lmav2:call-api (make-instance 'lmav2:admin%make-user-admin-in-room
+                                 :connection (conn *luna*)
+                                 :room-id (if (string-equal room-id "here")
+                                              room
+                                              room-id)
+                                 :user-id (gethash "sender" message)))
+  (format t "Success."))
 
 
 (new-admin-command force-user ((room-id (:maxlen 50)
@@ -201,7 +207,10 @@
                                (user-id (:maxlen 50)
                                         (:minlen 1)))
     "Forces USER-ID into ROOM-ID. Luna must have invite perms in that room."
-  (admin-force-user-to-join-room (conn *luna*) user-id room-id)
+  (lmav2:call-api (make-instance 'lmav2:admin%edit-users-room-membership
+                                 :connection (conn *luna*)
+                                 :room-id-or-alias room-id 
+                                 :user-id user-id))
   (format t "Success."))
 
 (new-admin-command force-community ((community-name :valid-community)
@@ -210,7 +219,7 @@
     "Forces the members within COMMUNITY-NAME into ROOM-ID. Removes all users who do not
 have the same homeserver as Luna and all of those who are already in the room."
   (let* ((community (find-community community-name *luna*))
-         (members-in-room (members-in-room%ids (conn *luna*) room-id))
+         (members-in-room (members-in-room-ids (conn *luna*) room-id))
          (remainder (set-difference (members community) members-in-room :test #'string=))
          (only-same-home (remove-if-not (lambda (username)
                                           (same-homeserver-p (conn *luna*) username))
@@ -220,8 +229,10 @@ have the same homeserver as Luna and all of those who are already in the room."
     (moon-mapc community room
                (lambda (member)
                  (catch-limit-exceeded
-                   (admin-force-user-to-join-room (conn *luna*)
-                                                  member room-id)
+                   (lmav2:call-api (make-instance 'lmav2:admin%edit-users-room-membership
+                                                  :connection (conn *luna*)
+                                                  :room-id-or-alias room-id
+                                                  :user-id member))
                    (format t "Forced ~A successfully~%" member)))
                only-same-home)
     (format t "Success.")))
@@ -229,6 +240,8 @@ have the same homeserver as Luna and all of those who are already in the room."
 (new-admin-command delete-room ((room-id (:maxlen 50)
                                          (:minlen 5)))
     "Deletes room denoted by ROOM-ID using the Admin API."
-  (admin-delete-room (conn *luna*) room-id)
+  (lmav2:call-api (make-instance 'lmav2:admin%delete-room 
+                                 :connection (conn *luna*)
+                                 :room-id room-id))
   (format t "Success."))
 
