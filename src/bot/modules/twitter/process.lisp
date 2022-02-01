@@ -29,6 +29,43 @@ This file contains the code to process different types of messages received
                           :sender sender
                           :content content))))
 
+(defun process-events (room-id events)
+  (let ((twitter-api (find-api-from-room-id room-id)))
+    (mapc (lambda (hash)
+            (handler-case
+                (let ((event (event->object room-id hash)))
+                  (unless (is-me-p *luna* (sender event))
+                    (process-event event)
+                    (post-to-twitter twitter-api  event)))
+              (condition (c)
+                (report-twitter-condition room-id c))))
+          events)))
+
+(defgeneric report-twitter-condition (room-id condition)
+  (:documentation "Reports the condition caught when trying to post-to-twitter to room-id."))
+
+(defmethod report-twitter-condition :around (room-id condition)
+  (ignore-errors
+   (let ((message (call-next-method)))
+     (send-message-to-room (conn *luna*) room-id message))))
+
+(defmethod report-twitter-condition (room-id (c bad-status))
+  (format nil "'~A' is ~D long, it needs to be no greater than: ~D"
+          (status c)
+          (length (status c))
+          *char-count*))
+
+(defmethod report-twitter-condition (room-id (c send-failed))
+  (format nil "An unknown error has occurred while attempting to Tweet: ~A"
+          (c c)))
+
+(defmethod report-twitter-condition (room-id (c cant-process-type))
+  (format nil "I do not know how to process an event of that type.. sorry :( "))
+
+(defmethod report-twitter-condition (room-id c)
+  (format nil "An unknown error has occurred: ~A~%Please contact an administrator." c))
+
+
 (defgeneric process-event (event)
   (:method-combination progn :most-specific-last))
 
@@ -79,16 +116,19 @@ twitter-api object. ROOM-VAR is the variable name you want the room-id accessor 
 (defgeneric poster (twitter-api event)
   (:documentation "Posts EVENT to Twitter using the credentials in TWITTER-API"))
 
+(defmethod poster :around (twiter-api event)
+  (handler-case
+      (call-next-method)
+    (chirp:oauth-error (c)
+      (error 'send-failed :c c))))
+
 (defmethod poster (twitter-api (event media%text))
-  (with-accessors ((text text))
-      event 
-    (with-twitter-api (room twitter-api)
-      (let ((status (chirp:statuses/update text)))
-        (send-message-to-room (conn *luna*)
-                              room
-                              (chirp-objects:text status))))))
-
-
+  (with-twitter-api (room twitter-api)
+    (let ((status
+            (chirp:statuses/update (compose-status twitter-api event))))
+      (send-message-to-room (conn *luna*)
+                            room
+                            (form-response twitter-api event status)))))
 
 (defmethod poster (twitter-api (event media%image))
   (with-accessors ((data data)
@@ -106,21 +146,22 @@ twitter-api object. ROOM-VAR is the variable name you want the room-id accessor 
                        p)))
           (send-message-to-room (conn *luna*)
                                 room
-                                (chirp-objects:text status)))))))
+                                (form-response twitter-api event status)))))))
 
 (defmethod poster (twitter-api event)
   nil)
 
 (defun compose-status (twitter-api event)
-  (let ((composer (composer event)))
+  (let ((composer (composer twitter-api)))
     (generate-status composer twitter-api event)))
 
 (defgeneric generate-status (composer twitter-api event)
-  (:documentation ""))
+  (:documentation "Generates a status using COMPOSER for EVENT."))
 
 (defmethod generate-status :around (composer twitter-api event)
-  (let ((val (call-next-method)))
-    (validate-status ...)))
+  (let ((status (call-next-method)))
+    (validate-status status composer twitter-api event)
+    status))
 
 (defmethod generate-status (composer twitter-api (event media%image))
   (with-accessors ((sender sender))
@@ -128,23 +169,26 @@ twitter-api object. ROOM-VAR is the variable name you want the room-id accessor 
     (format nil "Sent by: ~A" (subseq (first (str:split ":" sender)) 1))))
 
 (defmethod generate-status (composer twitter-api (event media%text))
-  (with-accessors ((text text))
-      event
-    text))
-    
+  (text event))
 
 
+(defgeneric validate-status (status composer twitter-api event)
+  (:documentation "Makes sure that STATUS can actually send."))
+
+(defmethod validate-status (status componser twitter-api event)
+  (or (<= (length status) *char-count*)
+      (error 'bad-status :status status)))
 
 
+(defgeneric form-response (twitter-api event status)
+  (:documentation "Forms the response that is sent to the submitter."))
 
+(defmethod form-response (twitter-api (event media%image) status)
+  (format nil "Thank you for submitting your artwork. Tweet: ~A"
+          (first (last (str:split " " (chirp-objects:text status))))))
 
-
-
-
-
-
-
-
-
+(defmethod form-response (twitter-api (event media%text) status)
+  (format nil "Tweet: ~A"
+          (first (last (str:split " " (chirp-objects:text status))))))
 
 

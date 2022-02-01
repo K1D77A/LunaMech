@@ -184,20 +184,21 @@
     "Uses the Admin API to make USER-ID an admin in ROOM-ID."
   (lmav2:call-api (make-instance 'lmav2:admin%make-user-admin-in-room
                                  :connection (conn *luna*)
-                                 :room-id (if (string-equal room-id "here")
-                                              room
-                                              room-id)
+                                 :room-id-or-alias (if (string-equal room-id "here")
+                                                       room
+                                                       room-id)
                                  :user-id user-id))
   (format t "Success."))
 
 (new-admin-command make-me-admin-in-room ((room-id (:maxlen 50)
                                                    (:minlen 4)))
     "Uses the Admin API to make sender an admin in ROOM-ID."
+  (log:info room)
   (lmav2:call-api (make-instance 'lmav2:admin%make-user-admin-in-room
                                  :connection (conn *luna*)
-                                 :room-id (if (string-equal room-id "here")
-                                              room
-                                              room-id)
+                                 :room-id-or-alias (if (string-equal room-id "here")
+                                                       room
+                                                       room-id)
                                  :user-id (gethash "sender" message)))
   (format t "Success."))
 

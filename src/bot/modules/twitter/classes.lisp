@@ -94,3 +94,16 @@ these image events to Twitter."))
   ((event
     :accessor event
     :initarg :event)))
+
+(define-condition send-failed (twitter-condition)
+  ((c
+    :accessor c
+    :initarg :c)))
+
+(define-condition bad-status (twitter-condition)
+  ((status
+    :accessor status
+    :initarg :status))
+  (:report
+   (lambda (obj stream)
+   

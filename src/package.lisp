@@ -6,6 +6,7 @@
   (:export #:*commands*
            #:*api*
            #:module-moonmat-message
+           #:is-me-p
            #:request-open-id-token
            #:*url*
            #:*luna*

@@ -130,6 +130,11 @@ Luna will not evaluate any initiating functions and will login using the same de
                        (handle-conditions moonbot c))))
       (listen-and-process moonbot))))
 
+(defun is-me-p (luna string)
+  "Returns t if STRING matches any of the user-id's associated with open connections."  
+  (some (lambda (con)
+          (string-equal (user-id con) string))
+        (connections luna)))
 
 (defgeneric handle-conditions (luna c))
 

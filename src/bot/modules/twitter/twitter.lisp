@@ -6,6 +6,8 @@
 
 (in-package #:mm-module.twitter)
 
+(defparameter *char-count* 280)
+
 #||
 This module aims to achieve a relatively simple goal, we want the bot to grab all image 
 events from certain rooms and upload them to certain twitter accounts. 
@@ -124,27 +126,17 @@ that file must be of type twitter-api-list otherwise will signal a type conditio
   "ADMIN & TWITTER command."
   nil)
 
-
-
-(defun form-tweet (sender)
-  "Create a nice human readable text for a tweet using SENDER"
-  (format nil "Sent by: ~A" (subseq (first (str:split ":" sender)) 1)))
-
 (defun form-response (chirp-text)
   "Create a nice human readable response to the person who uploaded their image. Uses 
 CHIRP-TEXT which is the text returned from submitting a new status."
-  (format nil "Thank you for submitting your artwork. Tweet: ~A"
-          (first (last (str:split " " chirp-text)))))
 
-(defun special-room-room-ids ()
-  "Extract all of the room-ids from (special-rooms *module*)"
-  (mapcar #'room-id (special-rooms *module*)))
+  (defun special-room-room-ids ()
+    "Extract all of the room-ids from (special-rooms *module*)"
+    (mapcar #'room-id (special-rooms *module*)))
 
 (defun find-api-from-room-id (room-id)
   "Find a twitter-api object using ROOM-ID"
   (find room-id (special-rooms *module*) :key #'room-id :test #'string=))
-
-
 
 (defmethod on-sync (luna (mod twitter-module) sync)
   "Using on-sync we need to check for m.room.message events within the rooms marked for 
@@ -153,43 +145,11 @@ MXC's for that room and then upload them to the twitter API, this is done by fir
 downloading the image from Matrix, saving it to a tmp file and then passing the pathname 
 to chirp."
   (let ((rooms (find-types-in-rooms-timeline '("m.room.message")
-                                             (special-room-room-ids) sync))
-        (media nil))
-    (when rooms 
-      (print rooms) )
+                                             (special-room-room-ids) sync)))
     (when rooms
-      (alexandria:doplist  (room events rooms)
-        (when events 
-          (mapcar #'determine-media-type events))))))
-;; (when media;time to upload
-;;   (mapc (lambda (media-obj)
-;;           (with-twitter-api room-id (find-api-from-room-id (room-id media-obj))
-;;             (let* ((con (conn luna))
-;;                    (content (download-content con (mxc media-obj)))
-;;                    (path (pathname (format nil "/tmp/mm-module-twitter.~A"
-;;                                            (ext media-obj)))))
-;;               (setf (content media-obj)
-;;                     content)
-;;               (write-to-temp-file content path);hacky time
-;;               (unwind-protect 
-;;                    (handler-case 
-;;                        (let ((status 
-;;                                (chirp:statuses/update-with-media
-;;                                 (form-tweet (sender media-obj))
-;;                                 path)))
-;;                          (send-message-to-room con room-id 
-;;                                                (form-response
-;;                                                 (chirp-objects:text status))))
-;;                      (condition ()
-;;                        (send-message-to-room
-;;                         con room-id
-;;                         "[Luna] I encountered an error while uploading, sorry :(")))
-;;                 (handler-case (delete-file path)
-;;                   (file-error ()
-;;                     nil))))))
-;;         media))))
-
-
+      (alexandria:doplist (room events rooms)
+        (when events
+          (process-events room events))))))
 
 (defun new-twitter-api (api-key api-secret access-token access-secret)
   (let ((url (chirp:initiate-authentication :api-key api-key :api-secret api-secret)))
