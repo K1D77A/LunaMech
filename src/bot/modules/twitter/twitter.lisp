@@ -33,7 +33,8 @@ a twitter account so that images posted are automatically uploaded to that accou
        (find :access-token list)
        (find :access-secret list)
        (find :pin list)
-       (find :means list)))
+       (find :means list)
+       (find :composer list)))
 
 (deftype twitter-api-list () `(satisfies twitter-api-list))
 
@@ -47,7 +48,8 @@ a twitter account so that images posted are automatically uploaded to that accou
                  :access-token (getf list :access-token)
                  :access-secret (getf list :access-secret)
                  :pin (getf list :pin)
-                 :means (getf list :means)))
+                 :means (getf list :means)
+                 :composer (getf list :composer)))
 
 (defun twitter-api-object->list (obj)
   "Convert a twitter-api object into a twitter-api-list"
@@ -58,14 +60,13 @@ a twitter account so that images posted are automatically uploaded to that accou
                    (access-token access-token)
                    (access-secret access-secret)
                    (pin pin)
-                   (means means))
+                   (means means)
+                   (composer composer))
       obj
     `(:room-id ,room-id :api-key ,api-key
       :api-secret ,api-secret
       :access-token ,access-token :access-secret ,access-secret
-      :pin ,pin :means ,means)))
-
-
+      :pin ,pin :means ,means :composer ,composer)))
 
 (defun save-results ()
   "Converts all of the twitter-api objects into twitter-api-lists and saves them into 
@@ -123,10 +124,7 @@ that file must be of type twitter-api-list otherwise will signal a type conditio
   "ADMIN & TWITTER command."
   nil)
 
-(defun write-to-temp-file (array path)
-  (alexandria:write-byte-vector-into-file array path
-                                          :if-exists :supersede
-                                          :if-does-not-exist :create))
+
 
 (defun form-tweet (sender)
   "Create a nice human readable text for a tweet using SENDER"

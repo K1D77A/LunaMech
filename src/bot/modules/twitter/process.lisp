@@ -88,20 +88,58 @@ twitter-api object. ROOM-VAR is the variable name you want the room-id accessor 
                               room
                               (chirp-objects:text status))))))
 
+
+
 (defmethod poster (twitter-api (event media%image))
-  (with-accessors ((text text))
+  (with-accessors ((data data)
+                   (ext ext))
       event
-    (uiop:with-temporary-file )
-
-
-
-
-
-
-
+    (uiop:with-temporary-file (:stream stream
+                               :pathname p
+                               :element-type '(unsigned-byte 8)
+                               :type ext)
+      (write-sequence data stream)
+      (force-output stream)
+      (with-twitter-api (room twitter-api)
+        (let ((status (chirp:statuses/update-with-media
+                       (compose-status twitter-api event)
+                       p)))
+          (send-message-to-room (conn *luna*)
+                                room
+                                (chirp-objects:text status)))))))
 
 (defmethod poster (twitter-api event)
   nil)
+
+(defun compose-status (twitter-api event)
+  (let ((composer (composer event)))
+    (generate-status composer twitter-api event)))
+
+(defgeneric generate-status (composer twitter-api event)
+  (:documentation ""))
+
+(defmethod generate-status :around (composer twitter-api event)
+  (let ((val (call-next-method)))
+    (validate-status ...)))
+
+(defmethod generate-status (composer twitter-api (event media%image))
+  (with-accessors ((sender sender))
+      event
+    (format nil "Sent by: ~A" (subseq (first (str:split ":" sender)) 1))))
+
+(defmethod generate-status (composer twitter-api (event media%text))
+  (with-accessors ((text text))
+      event
+    text))
+    
+
+
+
+
+
+
+
+
 
 
 

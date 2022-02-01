@@ -31,7 +31,13 @@
     :initarg :means
     :initform ()
     :type list
-    :documentation "A list of keywords denoting the means these creds are going to be used"))
+    :documentation "A list of keywords denoting the means these creds are going to be used")
+   (composer
+    :accessor composer
+    :initarg :composer
+    :initform :DEFAULT
+    :type :keyword
+    :documentation "Used to compose status updates for the event types."))
   (:documentation "An object used to represent all of the parts required to access a 
 twitter account"))
 
