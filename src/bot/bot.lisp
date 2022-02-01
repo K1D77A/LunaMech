@@ -124,41 +124,47 @@ Luna will not evaluate any initiating functions and will login using the same de
   (mapc #'initiate-room-spellchecker (communities moonbot)))
 
 (defmethod thread-maintainer ((moonbot moonbot))
-  (labels ((run ()
-             (listen-and-process moonbot)))
-    (catch 'bail;used to forcefully stop the thread
-      (handler-case 
-          (handler-bind ((api-timeout
-                           ;;in the case of a DC mid request, then this will initiate
-                           ;;the process that attempts to reconnect to the server
-                           ;;once a new connection has been made then just retries
-                           ;;the call that was being made previously, meaning the bot
-                           ;;doesn't lose its position.
-                           (lambda (c)
-                             (log:error
-                              "Socket condition: ~A"
-                              (api-timeout-condition c))
-                             (log:error
-                              "Attempting a restart of Luna")
-                             (moonbot-restart moonbot)
-                             (when (find-restart 'try-again)
-                               (log:error "Successful reconnection")
-                               (invoke-restart 'try-again))))
-                         (api-error
-                           (lambda (c)
-                             (log:error "API Error made it through.")
-                             (log:error (api-timeout-condition c))
-                             (log:error "Restarting listen-and-process")
-                             (run))))
-            (run))
-        (condition (c)
-          ;;in the most fatal conditions this will catch and stop the thread from
-          ;;crashing and simply attempt a restart of the bot
-          (log:error "Unhandled condition signalled~% ~A~
-                      Attempting to restart in 5 seconds" c)
-          (moonbot-restart moonbot)
-          (run))))));;in the event of a catastrophic failure just restart
+  (catch 'bail;used to forcefully stop the thread
+    (handler-bind ((condition
+                     (lambda (c)
+                       (handle-conditions moonbot c))))
+      (listen-and-process moonbot))))
 
+
+(defgeneric handle-conditions (luna c))
+
+(defmethod handle-conditions :around (luna c)
+  (log:error c)
+  (call-next-method))
+
+(defmethod handle-conditions (luna (c api-timeout))
+  (log:error
+   "Socket condition: ~A"
+   (api-timeout-condition c))
+  (log:error
+   "Attempting a restart of Luna")
+  (moonbot-restart luna)
+  (when (find-restart 'try-again)
+    (log:error "Successful reconnection")
+    (invoke-restart 'try-again)))
+
+(defmethod handle-conditions (luna (c api-error))
+  (log:error "API Error made it through.")
+  (log:error "Restarting listen-and-process")
+  (listen-and-process luna))
+
+(defmethod handle-conditions (luna (c m-unknown))
+  (log:error "Unknown error")
+  (moonbot-restart luna)
+  (when (find-restart 'try-again)
+    (log:error "Successful reconnection")
+    (invoke-restart 'try-again)))
+
+(defmethod handle-conditions (luna c)
+  (log:error "Unhandled condition signalled~% ~A~
+                      Attempting to restart in 5 seconds" c)
+  (moonbot-restart luna)
+  (listen-and-process luna))
 
 (defmethod initiate-communities ((luna luna))
   (log:info "Initiating ")

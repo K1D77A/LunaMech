@@ -6,7 +6,7 @@
   :build-operation "program-op"
   :build-pathname "./lunamech"
   :entry-point "matrix-moonbot:setup-and-go"
-  :version "0.0.13"
+  :version "0.0.14"
   :depends-on (#:jonathan
                #:alexandria
                #:str
@@ -103,3 +103,6 @@ stickers to Lunamechs Stickerpicker."
                                (:file "message-processing")
                                (:file "bot")))
                  (:file "config-creation" :depends-on ("bot"))))))
+
+(defmethod asdf:perform ((o asdf:image-op) (c asdf:system))
+  (uiop:dump-image (asdf:output-file o c) :executable t :compression t))
