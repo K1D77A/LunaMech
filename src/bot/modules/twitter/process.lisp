@@ -188,7 +188,7 @@ twitter-api object. ROOM-VAR is the variable name you want the room-id accessor 
           (first (last (str:split " " (chirp-objects:text status))))))
 
 (defmethod form-response (twitter-api (event media%text) status)
-  (format nil "Tweet: ~A"
-          (first (last (str:split " " (chirp-objects:text status))))))
+  (format nil "I tweeted '~A' successfully" (chirp-objects:text status)))
+
 
 
