@@ -128,7 +128,7 @@ twitter-api object. ROOM-VAR is the variable name you want the room-id accessor 
             (chirp:statuses/update (compose-status twitter-api event))))
       (send-message-to-room (conn *luna*)
                             room
-                            (form-response twitter-api event status)))))
+                            (form-response (composer twitter-api) event status)))))
 
 (defmethod poster (twitter-api (event media%image))
   (with-accessors ((data data)
@@ -146,7 +146,7 @@ twitter-api object. ROOM-VAR is the variable name you want the room-id accessor 
                        p)))
           (send-message-to-room (conn *luna*)
                                 room
-                                (form-response twitter-api event status)))))))
+                                (form-response (composer twitter-api) event status)))))))
 
 (defmethod poster (twitter-api event)
   nil)
@@ -168,6 +168,9 @@ twitter-api object. ROOM-VAR is the variable name you want the room-id accessor 
       event
     (format nil "Sent by: ~A" (subseq (first (str:split ":" sender)) 1))))
 
+(defmethod generate-status ((composer (eql :SCYLDINGS)) twitter-api (event media%image))
+  "")
+
 (defmethod generate-status (composer twitter-api (event media%text))
   (text event))
 
@@ -180,15 +183,16 @@ twitter-api object. ROOM-VAR is the variable name you want the room-id accessor 
       (error 'bad-status :status status)))
 
 
-(defgeneric form-response (twitter-api event status)
+(defgeneric form-response (composer event status)
   (:documentation "Forms the response that is sent to the submitter."))
 
-(defmethod form-response (twitter-api (event media%image) status)
+(defmethod form-response (composer (event media%image) status)
   (format nil "Thank you for submitting your artwork. Tweet: ~A"
           (first (last (str:split " " (chirp-objects:text status))))))
 
-(defmethod form-response (twitter-api (event media%text) status)
+(defmethod form-response (composer (event media%text) status)
   (format nil "I tweeted '~A' successfully" (chirp-objects:text status)))
 
-
-
+(defmethod form-response ((composer (eql :scyldings)) (event media%image) status)
+  (format nil "Image submitted. Tweet: ~A"
+          (first (last (str:split " " (chirp-objects:text status))))))
