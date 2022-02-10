@@ -13,7 +13,6 @@ This file contains the code to process different types of messages received
 (new-type-map "m.image" 'media%image)
 
 (defun determine-media-type (event)
-  (push event *media*)
   (let ((type (pkv event :|type|)))
     (unless (string-equal type "m.room.message")
       (error 'unknown-event-type :event event))

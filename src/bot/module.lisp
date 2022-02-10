@@ -165,11 +165,16 @@ found but already loaded then 'module-already-loaded is signalled."
   (:documentation "Removes the module denoted by SYM from Luna, meaning all the 
 methods that would normally be called during the use of Luna will no longer be called."))
 
+(defmethod unload-module :around (luna sym)
+  (log:info "Attempting to unload module denoted by ~A from Luna" sym)
+  (report-to-matrix (format nil "Attempting to unload module denoted by ~A from Luna" sym))
+  (call-next-method)
+  (report-to-matrix "Module successfully unloaded")
+  (log:info "Module successfully unloaded"))
+
 (defmethod unload-module ((luna luna) sym)
   "Unload a module denoted by SYM from Luna. If the modules associated with SYM,
 cannot be found then the condition 'missing-module is signalled."
-  (format t "Attempting to unload module denoted by ~A from Luna~%" sym)
-  (log:info "Attempting to unload module denoted by ~A from Luna" sym)
   (let ((module-package (sym->module-name luna sym)))
     (with-accessors ((found found-modules)
                      (modules modules))
@@ -179,8 +184,11 @@ cannot be found then the condition 'missing-module is signalled."
           (on-module-unload luna module)
           (setf modules (remove module-package modules :key #'car)
                 found (remove module found :test #'eq)))
-        (format t "Module successfully unloaded~%")
-        (log:info "Module successfully unloaded")))))
+        (format t "Module successfully unloaded~%")))))
+
+(defmethod unload-module ((luna luna) (mod module))
+  (setf (found-modules luna)
+        (remove mod (found-modules luna))))
 
 (defmethod inform-command-is-missing (privilege (module module) community room)
   nil)
@@ -250,6 +258,7 @@ form of usocket condition. Module is not being unloaded. Condition: ~A" module c
                 (log:error "Module: ~A signalled the condition ~A When executing its self ~
        defined '~A' method. Removing the module from Moonbot. Please fix this."
                            module c ',name)
+                (unload-module luna module)
                 (report-condition-to-matrix c "Encountered error with module.")
                 (trivial-backtrace:print-backtrace c))))))
 ;;  (setf (found-modules luna)
@@ -299,6 +308,7 @@ form of usocket condition. Module is not being unloaded. Condition: ~A"
         "Module: ~A signalled the condition ~A When executing its self ~
        defined '~A' method. Removing the module from Moonbot. Please fix this."
         module c 'on-sync)
+       (unload-module luna module)
        (report-condition-to-matrix c
                                    "Encountered error with module.")
        (trivial-backtrace:print-backtrace c))))

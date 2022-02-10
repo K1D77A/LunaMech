@@ -80,11 +80,15 @@
                                   (%emergency-format condition)))
         (uber-rooms *luna*)))
 
+(defun report-to-matrix (message)
+  (mapc (lambda (uber)
+          (module-moonmat-message (conn *luna*) uber "~A" message))
+        (uber-rooms *luna*)))
+
 (defgeneric %emergency-format (condition))
 
 (defmethod %emergency-format ((condition condition))
   (format nil "Encountered condition ~A" condition))
-
 
 (defun moon-map-rooms (map-fun community message-room function &optional (exclude nil))
   (let* ((failures nil)

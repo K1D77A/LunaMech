@@ -1,3 +1,9 @@
+(defpackage #:mm-module.twitter
+  (:use #:cl #:matrix-moonbot)
+  (:export #:twitter-command
+           #:twitter-module
+           #:*module*))
+
 (in-package #:mm-module.twitter)
 
 (defclass twitter-api ()
@@ -36,7 +42,7 @@
     :accessor composer
     :initarg :composer
     :initform :DEFAULT
-    :type :keyword
+    :type keyword
     :documentation "Used to compose status updates for the event types."))
   (:documentation "An object used to represent all of the parts required to access a 
 twitter account"))
@@ -103,7 +109,5 @@ these image events to Twitter."))
 (define-condition bad-status (twitter-condition)
   ((status
     :accessor status
-    :initarg :status))
-  (:report
-   (lambda (obj stream)
+    :initarg :status)))
    

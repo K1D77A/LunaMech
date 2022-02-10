@@ -1,9 +1,3 @@
-(defpackage #:mm-module.twitter
-  (:use #:cl #:matrix-moonbot)
-  (:export #:twitter-command
-           #:twitter-module
-           #:*module*))
-
 (in-package #:mm-module.twitter)
 
 (defparameter *char-count* 280)
@@ -42,7 +36,7 @@ a twitter account so that images posted are automatically uploaded to that accou
 
 (defun twitter-api-list->object (list)
   "Convert a twitter-api-list into a twitter-api object"
-  (check-type list twitter-api-list)
+;;  (check-type list twitter-api-list)
   (make-instance 'twitter-api
                  :room-id (getf list :room-id)
                  :api-key (getf list :api-key)
@@ -55,7 +49,7 @@ a twitter account so that images posted are automatically uploaded to that accou
 
 (defun twitter-api-object->list (obj)
   "Convert a twitter-api object into a twitter-api-list"
-  (check-type obj twitter-api)
+  (check-type obj twitter-api-list)
   (with-accessors ((room-id room-id)
                    (api-key api-key)
                    (api-secret api-secret)
@@ -122,17 +116,13 @@ that file must be of type twitter-api-list otherwise will signal a type conditio
       (safe-execution command community room message rest moonbot)))
 
 (defmethod inform-command-is-missing
-    ((priv admin-privilege) (module twitter-module) community room)
+  ((priv admin-privilege) (module twitter-module) community room)
   "ADMIN & TWITTER command."
   nil)
 
-(defun form-response (chirp-text)
-  "Create a nice human readable response to the person who uploaded their image. Uses 
-CHIRP-TEXT which is the text returned from submitting a new status."
-
-  (defun special-room-room-ids ()
-    "Extract all of the room-ids from (special-rooms *module*)"
-    (mapcar #'room-id (special-rooms *module*)))
+(defun special-room-room-ids ()
+  "Extract all of the room-ids from (special-rooms *module*)"
+  (mapcar #'room-id (special-rooms *module*)))
 
 (defun find-api-from-room-id (room-id)
   "Find a twitter-api object using ROOM-ID"

@@ -6,7 +6,7 @@
   :build-operation "program-op"
   :build-pathname "./lunamech"
   :entry-point "matrix-moonbot:setup-and-go"
-  :version "0.0.14"
+  :version "0.0.16"
   :depends-on (#:jonathan
                #:alexandria
                #:str
@@ -67,7 +67,13 @@
                                          (:file "site")
                                          (:file "jitsi")
                                          (:file "rss")
-                                         (:file "twitter")
+                                         (:module "twitter"
+                                          :serial t
+                                          :description "Module for twitter"
+                                          :components
+                                                  ((:file "classes")
+                                                   (:file "process")
+                                                   (:file "twitter")))
                                          (:module "direct-message"
                                           :serial t
                                           :description "Module that implements the 
@@ -104,5 +110,5 @@ stickers to Lunamechs Stickerpicker."
                                (:file "bot")))
                  (:file "config-creation" :depends-on ("bot"))))))
 
-(defmethod asdf:perform ((o asdf:image-op) (c asdf:system))
-  (uiop:dump-image (asdf:output-file o c) :executable t :compression t))
+  (defmethod asdf:perform ((o asdf:image-op) (c asdf:system))
+    (uiop:dump-image (asdf:output-file o c) :executable t :compression t))

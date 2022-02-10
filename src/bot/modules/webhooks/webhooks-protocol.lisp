@@ -3,14 +3,12 @@
 
 (defclass webhook-api-slot (c2mop:slot-definition)
   ((fn
-    :accessor fn
-    :initarg :fn
-    :type (or symbol function)
-    :documentation "The function that is executed when this webhook is found.")
+       :accessor fn
+     :initarg :fn
+     :documentation "The function that is executed when this webhook is found.")
    (validator
     :accessor validator
     :initarg :validator
-    :type (or symbol function)
     :documentation "The argument validation function")
    (expected-args
     :accessor expected-args
@@ -31,7 +29,6 @@ later and check the result.")
    (private-key
     :accessor private-key
     :initarg :private-key
-    :type string
     :documentation "The private key used to execute this webhook."))
   (:documentation "A toplevel class used to define new webhooks."))
 

@@ -322,5 +322,3 @@ second 'wait-60' recalls 'wait-for-stop' making it wait another 60 seconds."
         :report "Luna is still running, wait 10 seconds?"
         (log:error "Luna is still running, waiting 10 seconds")
         (wait-for-stop luna)))))
-
-
