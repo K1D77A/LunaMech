@@ -18,7 +18,7 @@
                                                      :port 61111))))
 
 (defmethod on-load-up (moonbot (module webhook-module))
-  (log:info "Starting Luna's webhook listener on port 54002.")
+  (log:info "Starting Luna's webhook listener on port 61111.")
   (tbnl:start (webhook-server *module*)))
 
 (defmethod on-save (moonbot (module webhook-module))
@@ -95,11 +95,19 @@
    (lambda ()
      (mm-module.private-keys:get-key :webhook/openid))))
 
-;; (def-webhook basketweaving ()
-;;   ((invite
-;;     :validator (lambda () t)
-;;     :fn (lambda ()
-
+(def-webhook luna ()
+  ((force-restart
+    :validator (lambda () t)
+    :fn (lambda ()
+          (log:warn "Force restarting Luna from webhook")
+          (force-stop *luna*)
+          (sleep 1)
+          (start *luna*)
+          "t")
+    :expected-args nil))
+  (:private-key
+   (lambda ()
+     (mm-module.private-keys:get-key :webhook/force-restart))))
 
 (defun check-authorized-webhook-request (application private-key)
   "Checks if the APPLICATION provided (string) is valid, checks if a private-key exists
@@ -121,8 +129,10 @@ If the private-keys do not match signals 'bad-private-key."
         (authorization (tbnl:header-in* :private-key)))
     (handler-case
         (let ((hook (find-hook hook-type hook-name authorization))
-              (args (jojo:parse (babel:octets-to-string (tbnl:raw-post-data)))))
-          (apply #'execute-hook hook args))
+              (raw (tbnl:raw-post-data)))
+          (apply #'execute-hook hook
+                 (when raw
+                   (jojo:parse (babel:octets-to-string raw)))))
       (webhook-condition (c)
         (setf (tbnl:return-code*) 400)
         (format nil "~A" c))

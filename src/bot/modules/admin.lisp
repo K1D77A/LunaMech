@@ -245,4 +245,3 @@ have the same homeserver as Luna and all of those who are already in the room."
                                  :connection (conn *luna*)
                                  :room-id room-id))
   (format t "Success."))
-

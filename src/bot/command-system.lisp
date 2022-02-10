@@ -290,4 +290,3 @@ room. This is useful for responding to the invoker in the room they invoked Luna
                (,command (make-command ,',command-type ',name
                                        ,doc-string ',args ,fun)))
           (add-command ,command)))))
-

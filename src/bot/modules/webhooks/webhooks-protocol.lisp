@@ -13,6 +13,7 @@
    (expected-args
     :accessor expected-args
     :initarg :expected-args
+    :initform nil
     :type (or null list)
     :documentation "A list of arg names")
    (result
