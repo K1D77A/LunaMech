@@ -37,7 +37,8 @@
   (format t "There are ~r unique compass entr~@:p"
           (hash-table-count compass:*results*)))
 
-(new-compass-command plot-xy ((x :valid-compass) (y :valid-compass))
+(new-compass-command plot-xy ((x :valid-compass)
+                              (y :valid-compass))
     "Plots x and y on the compass"
   (let* ((parsedx (parse-integer x))
          (parsedy (parse-integer y))
@@ -47,7 +48,8 @@
     (send-image-bytes-to-room (connection community) room
                               "compass.png" "image/png" vec)))
 
-(new-compass-command add ((x :valid-compass)(y :valid-compass))
+(new-compass-command add ((x :valid-compass)
+                          (y :valid-compass))
     "Adds your X Y results to the bot. These are the default spekr.org results. Don't divide
 by 10."
   (let* ((id (pkv message :|sender|))

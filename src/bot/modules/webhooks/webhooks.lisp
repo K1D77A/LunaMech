@@ -21,6 +21,10 @@
   (log:info "Starting Luna's webhook listener on port 61111.")
   (tbnl:start (webhook-server *module*)))
 
+(defmethod on-shutdown (luna (module webhook-module))
+  (tbnl:stop (webhook-server *module*))
+  (log:info "Stopping Luna's webhook listener on port 61111."))
+
 (defmethod on-save (moonbot (module webhook-module))
   t)
 
@@ -103,8 +107,7 @@
           (force-stop *luna*)
           (sleep 1)
           (start *luna*)
-          "t")
-    :expected-args nil))
+          "t")))
   (:private-key
    (lambda ()
      (mm-module.private-keys:get-key :webhook/force-restart))))

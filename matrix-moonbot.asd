@@ -50,6 +50,7 @@
                                 :components ((:file "classes")))
                                ;;(:file "encryption")))
                                (:file "configparse")
+                               (:file "helpers")
                                (:file "module")
                                ;;(:file "filters")
                                (:file "timers")
@@ -110,5 +111,5 @@ stickers to Lunamechs Stickerpicker."
                                (:file "bot")))
                  (:file "config-creation" :depends-on ("bot"))))))
 
-  (defmethod asdf:perform ((o asdf:image-op) (c asdf:system))
-    (uiop:dump-image (asdf:output-file o c) :executable t :compression t))
+(defmethod asdf:perform ((o asdf:image-op) (c asdf:system))
+  (uiop:dump-image (asdf:output-file o c) :executable t :compression t))

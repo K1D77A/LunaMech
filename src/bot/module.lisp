@@ -187,6 +187,7 @@ cannot be found then the condition 'missing-module is signalled."
         (format t "Module successfully unloaded~%")))))
 
 (defmethod unload-module ((luna luna) (mod module))
+  (on-module-unload luna mod)
   (setf (found-modules luna)
         (remove mod (found-modules luna))))
 
@@ -281,6 +282,11 @@ form of usocket condition. Module is not being unloaded. Condition: ~A" module c
                  "This is called before a module is unloaded from Moonbot,
  this can be used by
 modules to perform operations just before a module is unloaded.")
+
+(new-module-hook on-shutdown (luna module)
+                 "This is called before Luna shuts down, is unloaded from Moonbot,
+ this can be used by
+modules to perform operations just before Luna goes down.")
 
 (new-module-hook on-save (luna module)
                  "this is called before Moonbot is saved, this can be used by modules to

@@ -49,7 +49,6 @@ a twitter account so that images posted are automatically uploaded to that accou
 
 (defun twitter-api-object->list (obj)
   "Convert a twitter-api object into a twitter-api-list"
-  (check-type obj twitter-api-list)
   (with-accessors ((room-id room-id)
                    (api-key api-key)
                    (api-secret api-secret)

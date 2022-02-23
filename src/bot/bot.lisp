@@ -19,7 +19,7 @@
                      (declare (ignore c))
                      (invoke-restart 'muffle-warning))))
     (setf *luna* (config->luna)))
-  (add-exit-hooks)
+  (add-exit-hooks *luna*)
   (log:info "Booting Luna.")
   (start *luna*)
   (log:info "Dropping into the SBCL Top Level.")
@@ -40,12 +40,13 @@ and sleep over and over and over again."
   (log:info "Starting daily logging to log/")
   (log:config :daily "logs/lunamech-log"))
 
-(defun add-exit-hooks ()
+(defun add-exit-hooks (luna)
   (log:info "Adding exit hooks for Luna.")
   (push (lambda ()
           (log:info "Exit hook invoked. Shutting down.")
-          (when (slot-boundp *luna* 'thread)
-            (stop *luna*)))
+          (mapc (lambda (mod) (on-shutdown luna mod)) (found-modules luna))
+          (when (slot-boundp luna 'thread)
+            (stop luna)))
         sb-ext:*exit-hooks*))
 
 (defun new-password ()
@@ -230,12 +231,10 @@ If Luna is not logged in then evaluates (login <luna>), executes 'on-login' for 
 found-module and then recalls start."
   (unless (found-modules luna)
     (find-modules luna)
-    (dolist (mod (found-modules luna))
-      (on-load-up luna mod)))
+    (mapc-found-modules luna #'on-load-up))
   (if (logged-in-p luna)
       (progn
-        (dolist (mod (found-modules luna))
-          (on-restart luna mod))
+        (mapc-found-modules luna #'on-restart)
         (log:info "Setting stopp to nil")
         (setf (stopp luna) nil)
         (log:info "Resetting cycle-history")
@@ -259,16 +258,14 @@ found-module and then recalls start."
       (progn (login luna)
              (log:info "Starting lparallel kernel now with ~r workers." 2)
              (setf lparallel:*kernel* (lparallel:make-kernel 2))
-             (dolist (mod (found-modules luna))
-               (on-login luna mod))
+             (mapc-found-modules luna #'on-login)
              (initiate-communities luna)
              (start luna))))
 
 (defmethod stop ((luna luna))
   (setf (stopp luna) t)
-  (mapc (lambda (room-id)
-          (module-moonmat-message (conn luna) room-id "I have been told to shutdown."))
-        (uber-rooms luna))
+  (ignore-errors 
+   (report-to-matrix "I have been told to shutdown"))
   (log:info "Waiting for Luna to stop on its own")
   (let ((err-count 0))
     (handler-bind ((moonbot-still-running
@@ -287,7 +284,7 @@ found-module and then recalls start."
 (defmethod force-stop ((luna luna))
   "In the event that Luna won't stop on her own then this can be evaluated and it will
 interrupt the main execution thread and cause Luan to stop."
-  (log:warn "Graceful shutdown failed. Forcing shutdown now.")
+  (mapc (lambda (mod) (on-shutdown luna mod)) (found-modules luna))
   (ignore-errors
    (bt:interrupt-thread (thread luna)
                         (lambda () (throw 'bail nil)))))

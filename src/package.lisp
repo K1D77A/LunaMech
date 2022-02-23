@@ -344,6 +344,7 @@
            #:api-timeout
            #:get-validator
            #:on-module-hotload
+           #:on-shutdown
            #:on-module-unload
            #:find-messages-from-rooms
            #:validation-failed
