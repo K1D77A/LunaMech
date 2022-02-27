@@ -161,3 +161,4 @@ to chirp."
 (new-twitter-command help ()
     "attempts an explanation of how commands work"
   (moonhelp 'twitter-command community room))
+
