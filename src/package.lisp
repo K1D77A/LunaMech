@@ -2,7 +2,7 @@
 (defpackage #:matrix-moonbot
   (:use #:cl
         #:lmav2)
-  (:nicknames #:moonbot)
+  (:nicknames #:moonbot #:lunamech)
   (:export #:*commands*
            #:*api*
            #:module-moonmat-message
@@ -27,6 +27,15 @@
            #:find-timer
            #:make-timer
            #:make-timers
+           #:make-ubermensch
+           #:remove-ubermensch
+           #:make-module-admin
+           #:retract-module-admin
+           #:update-permission
+           #:with-per-module-permissions
+           #:determine-permissions
+           #:find-permissions
+           
            #:find-and-reset-timer
            #:find-types-in-rooms-timeline
            #:homeserver
@@ -363,6 +372,12 @@
            #:module-already-loaded
            #:ubermensch
            #:ubermensch-privilege
+           #:me-privilege
+           #:permissions
+           #:can-remove-ubermensch-p
+           #:all-ubermensch
+           #:retract-module-admin
+           #:make-module-admin
            #:unban-user-from-room
            #:upload-content
            #:use-media-instead

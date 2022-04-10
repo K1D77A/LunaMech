@@ -20,26 +20,6 @@ condition"
                  :message-process-failure-message "Missing user_id or sender in list")
           val))))
 
-(defun ubermensch-p (moonbot string)
-  (and (find string (ubermensch moonbot) :test #'string=) t))
-
-(defun community-admin-p (community string)
-  (and (find string (admins community) :test #'string=) t))
-
-(defun determine-privilege (moonbot community message)
-  "Determines the privilege of a message sender by checking the name first against
-(ubermensch moonbot) then by checking if they are in (admins community) and finally
-defaulting to normie. Returns either an ubermensch, admin, or normie privilege 
-object"
-  (let ((sender (message-from? message t)))
-    (make-instance
-     (cond ((ubermensch-p moonbot sender)
-            'ubermensch-privilege)
-           ((community-admin-p community sender)
-            'admin-privilege)
-           (t 'normie-privilege))
-     :user-id sender)))
-
 (defun check-valid-prefix (string)
   "Attemps to determine if STRING has a valid prefix. Currently the prefix is just the 
 character #\. In the case that it does returns t otherwise signals condition 'invalid-prefix"
@@ -102,7 +82,7 @@ a 'invalid-prefix' condition."
           (format nil "~A (~D remaining)" trimmed rem))
         message)))
 
-(defun process-message (moonbot community room message)
+(defun process-message (luna community room message)
   "Normal - initially determines the privilege of the user from the message, then
 extracts the commands and arguments from the message, and starts the process for
 handling the command. Exceptional - There are two restarts available, return-nil
@@ -110,17 +90,18 @@ which returns nil and resignal, which causes the condition to be signalled again
   (let ((text (extract-message message)))
     (when text
       (restart-case
-          (let ((priv (determine-privilege moonbot community message)))
-            (destructuring-bind (prefix/module invoker &rest rest)
-                (extract-command-and-args moonbot community text)
-              (handler-bind ((missing-command
-                               (lambda (c)
-                                 (declare (ignore c))
-                                 (invoke-restart 'tell-user))))
-                (initiate-command-execution moonbot priv prefix/module
-                                            (intern (string-upcase invoker)
-                                                    :matrix-moonbot)
-                                            community room message rest))))
+          (let ((priv (determine-privilege luna community message)))
+            (unless (is-me-p luna priv)
+              (destructuring-bind (prefix/module invoker &rest rest)
+                  (extract-command-and-args luna community text)
+                (handler-bind ((missing-command
+                                 (lambda (c)
+                                   (declare (ignore c))
+                                   (invoke-restart 'tell-user))))
+                  (initiate-command-execution luna priv prefix/module
+                                              (intern (string-upcase invoker)
+                                                      :matrix-moonbot)
+                                              community room message rest)))))
         (return-nil ()
           :report "Return nil?"
           nil)

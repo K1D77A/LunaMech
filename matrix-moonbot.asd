@@ -6,7 +6,7 @@
   :build-operation "program-op"
   :build-pathname "./lunamech"
   :entry-point "matrix-moonbot:setup-and-go"
-  :version "0.0.16"
+  :version "0.0.17"
   :depends-on (#:jonathan
                #:alexandria
                #:str
@@ -19,7 +19,9 @@
                #:do-urlencode
                #:bordeaux-threads
                #:vecto
+               #:cl-store
                #:babel
+               #:trivia
                #:slynk
                #:lparallel
                #:local-time
@@ -51,6 +53,7 @@
                                ;;(:file "encryption")))
                                (:file "configparse")
                                (:file "helpers")
+                               (:file "permissions")
                                (:file "module")
                                ;;(:file "filters")
                                (:file "timers")

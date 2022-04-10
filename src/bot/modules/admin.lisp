@@ -46,21 +46,35 @@
 
 (new-admin-command add-ubermensch ((user-id :valid-user))
     "Adds a new ubermensch."
-  (push user-id (ubermensch moonbot))
+  (make-ubermensch moonbot user-id)
   (format t "Added ~A to list of ubermensch~%" user-id))
+
+(new-admin-command add-module-admin ((user-id :valid-user)
+                                     (module (:maxlen 50)
+                                             (:minlen 1)))
+    "Adds a new module admin."
+  (make-module-admin moonbot user-id module)
+  (format t "Added ~A to module administrators for ~A~%" user-id module))
+
+(new-admin-command remove-module-admin ((user-id :valid-user)
+                                        (module (:maxlen 50)
+                                                (:minlen 1)))
+    "Adds a new module admin."
+  (retract-module-admin moonbot user-id module)
+  (format t "Removed ~A from module administrators for ~A~%" user-id module))
 
 (new-admin-command remove-ubermensch ((user-id :valid-user))
     "Removes an ubermensch."
-  (with-accessors ((ubermensch ubermensch))
-      moonbot
-    (setf ubermensch (remove user-id ubermensch :test #'string=))
-    (format t "Removed ~A from list of ubermensch~%" user-id)))
+  (if (can-remove-ubermensch-p moonbot)
+      (remove-ubermensch moonbot user-id)
+      (error 'cannot-perform-action
+             :cannot-perform-action-action "Remove the last ubermensch"
+             :cannot-perform-action-message "I cannot remove the last ubermensch."))
+  (format t "Removed ~A from list of ubermensch~%" user-id))
 
 (new-admin-command print-ubermensch ()
     "Prints the ubermensch."
-  (with-accessors ((ubermensch ubermensch))
-      moonbot
-    (format t "Ubermensch: ~{~A ~}" (mapcar #'clean-user-id ubermensch))))
+  (format t "Ubermensch: ~{~A ~}" (mapcar #'clean-user-id (all-ubermensch moonbot))))
 
 (new-admin-command list-communities ()
     "Prints all the communities."

@@ -56,8 +56,6 @@ that can be used to grab the backup config."
          (admins (msoc :admins data))
          (aliases (msoc :aliases data nil));no need to worry if they dont have one
          (username (msoc :username data #'error))
-         ;; (rooms (msoc :rooms data))
-         ;; (members (msoc :members data))
          (extra (msoc :extra data nil)))
     ;;I could possibly do some mop wizardry here
     (make-instance 'community :extra extra :members nil :rooms nil
@@ -115,17 +113,17 @@ that can be used to grab the backup config."
             communities)
     (make-instance 'moonbot :communities communities
                             :connections connections
-                            :ubermensch (second (second global-config))
+                            :permissions (second (second global-config))
                             :modules (second (third global-config))
                             :uber-rooms (second (fourth global-config)))))
 
 (defmethod global-config-to-list (moonbot)
-  (with-accessors ((ubermensch ubermensch)
+  (with-accessors ((permissions permissions)
                    (modules modules)
                    (uber-rooms uber-rooms))
       moonbot
     (list :GLOBAL-CONFIG
-          (list :UBERMENSCH ubermensch)
+          (list :PERMISSIONS permissions)
           (list :MODULES modules)
           (list :UBER-ROOMS uber-rooms))))
 
@@ -143,8 +141,6 @@ that can be used to grab the backup config."
                    (top-level-space top-level-space)
                    (admins admins)
                    (aliases aliases)
-                   (rooms rooms)
-                   (members members);;might be able to just yeet this entire option
                    (extra extra))
       community
     `(,name
@@ -154,8 +150,6 @@ that can be used to grab the backup config."
        (:aliases ,aliases)
        (:top-level-space ,top-level-space)
        (:admins ,admins)
-     ;;  (:rooms ,rooms)
-      ;; (:members ,members)
        (:extra ,extra)))))
 
 (defun moonbot->config (moonbot &optional (dir *default-config-location*))

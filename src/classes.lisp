@@ -16,14 +16,13 @@
     :accessor communities
     :initarg :communities
     :type list
-    :documentation "A list of instances of community")
-   (ubermensch
-    :accessor ubermensch
-    :initarg :ubermensch
+    :documentation "A list of instances of community")   
+   (permissions
+    :accessor permissions
+    :initarg :permissions
     :initform nil
     :type list
-    :documentation "A list of users who will have ubermensch privilege. These are folks 
-who will be able to execute commands that can modify Luna herself.")
+    :documentation "A list structure mapping usernames to their various permissions.")
    (connections
     :accessor connections
     :initarg :connections
@@ -90,6 +89,12 @@ stop etc")
     :initarg :timers
     :initform (make-timers '(:clear-cycle :backup))
     :documentation "Timers for performing actions after a certain period of time.")
+   (module-permissions
+    :accessor module-permissions
+    :initarg :module-permissions
+    :initform ()
+    :documentation "Mapping between modules and those who have special permissions 
+for that module.")
    (%locks
     :reader %locks
     :type list
@@ -97,7 +102,7 @@ stop etc")
     :initform (flet ((nl (&rest names)
                        (loop :for name :in names
                              :appending (list name (bt:make-lock (format nil "~A" name))))))
-                (nl :found-modules :cycle-history :ubermensch :thread))))
+                (nl :found-modules :cycle-history :thread :permissions))))
   (:documentation "Luna (Moonbot here) is the primary class that is used to store all 
 information related to the operation and interaction with the Matrix api. It is an 
 instance of Luna (Moonbot here) that is created from the communities.lisp config file
@@ -118,7 +123,7 @@ and it is that same instance that is backed up to the same file."))
                    Command count: ~r~%"
             (mapcar #'name (communities luna))
             (mapcar #'prefix (found-modules luna))
-            (ubermensch luna)
+            (all-ubermensch luna)
             (length *commands*))))
 
 (defmethod conn ((luna luna))
@@ -143,12 +148,12 @@ and it is that same instance that is backed up to the same file."))
   (quicklock (luna :found-modules)
     (call-next-method)))
 
-(defmethod cycle-history :around ((luna luna))
-  (quicklock (luna :cycle-history)
+(defmethod permissions :around ((luna luna))
+  (quicklock (luna :permissions)
     (call-next-method)))
 
-(defmethod ubermensch :around ((luna luna))
-  (quicklock (luna :ubermensch)
+(defmethod cycle-history :around ((luna luna))
+  (quicklock (luna :cycle-history)
     (call-next-method)))
 
 (defmethod thread :around ((luna luna))
@@ -165,19 +170,9 @@ and it is that same instance that is backed up to the same file."))
         (setf found-modules no-dupes
               modules no-dupes)))))
 
-(defmethod (setf ubermensch) :before (new-val (moonbot moonbot))
-  "Makes sure that the user doesn't attempt to remove the last ubermensch from Luna.
-Signals 'cannot-perform-action if they try."
-  (unless new-val
-    (error 'cannot-perform-action
-           :cannot-perform-action-action "Remove the last ubermensch"
-           :cannot-perform-action-message "I cannot remove the last ubermensch.")))
-
-(defmethod (setf ubermensch) :after (new-val (moonbot moonbot))
-  "Remove the duplicates after the value has been changed."
-  (let ((ubermensch (slot-value moonbot 'ubermensch)))
-    (setf (slot-value moonbot 'ubermensch)
-          (remove-duplicates ubermensch :test #'string=))))
+(defmethod (setf permissions) :after (new-val (luna luna))
+  (setf (slot-value luna 'permissions)
+        (clean-permissions-tree luna)))
 
 (defclass module ()
   ((command-type
@@ -321,15 +316,28 @@ it is found the instance of privileged is changed into one of 'ubermensch-privil
   (:documentation "The privilege created when the user who sent the command is found 
 within (ubermensch luna). This allows the user to invoke any command."))
 
+(defun ubermensch-privilege-p (obj)
+  (typep obj 'ubermensch-privilege))
+
 (defclass admin-privilege (normie-privilege)
   ()
   (:documentation "The privilege created when the user who sent the command is found
 within (admins <community>). This will allow the execution of admin level commands."))
 
+(defclass module-privilege (ubermensch-privilege)
+  ()
+  (:documentation "The privilege used to allow per module permissions. For example if you 
+want to be let a user execute commands in the RSS module but you dont want them to 
+have the perms to power the whole bot then is the privilege they need."))
+
 (defclass normie-privilege (privilege)
   ()
   (:documentation "The privilege created when the user is not found to be either an 
 ubermensch of admin. They can only execute normie commands."))
+
+(defclass me-privilege (privilege)
+  ()
+  (:documentation "Its me! I have no permissions to perform any commands!"))
 
 (defclass community ()
   ((username

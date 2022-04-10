@@ -106,9 +106,8 @@ to chirp."
                                              (sticker-rooms *module*) sync))
         (media nil))
     (when rooms
-      (maphash (lambda (room events)
-                 (setf media (append media (collect-images room events))))
-               rooms))
+      (alexandria:doplist (room events rooms)
+        (setf media (append media (collect-images room events)))))
     (when media
       ;;can put lparallel mapc here
       (funcall (if (parallel-p *luna*)

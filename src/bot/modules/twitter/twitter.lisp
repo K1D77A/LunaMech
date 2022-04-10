@@ -21,6 +21,13 @@ upload them to the twitter-api associated with that rooms id.
  associating a room with 
 a twitter account so that images posted are automatically uploaded to that account")))
 
+(defparameter *tweetp* t)
+
+(defun enable-tweeting ()
+  (setf *tweetp* t))
+
+(defun disable-tweeting ()
+  (setf *tweetp* nil))
 
 (defun twitter-api-list (list)
   (and (find :room-id list)
@@ -161,4 +168,14 @@ to chirp."
 (new-twitter-command help ()
     "attempts an explanation of how commands work"
   (moonhelp 'twitter-command community room))
+
+(new-twitter-command enable-tweeting ()
+    "Enables tweeting"
+  (enable-tweeting))
+
+(new-twitter-command disable-tweeting ()
+    "Disable tweeting"
+  (disable-tweeting))
+
+
 

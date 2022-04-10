@@ -85,6 +85,14 @@ the prefix, the command and the community it was sent in."))
         (error 'already-processed)
         (sb-ext:atomic-push event-id (slot-value luna 'cycle-history)))))
 
+(defmethod initiate-command-execution :around
+    (luna privilege (module module) invoker community room message rest)
+  (with-per-module-permissions (luna module privilege new)
+                               (call-next-method luna new module
+                                                 invoker community room message rest)
+                               (call-next-method luna privilege module invoker
+                                                 community room message rest)))
+
 (defmethod initiate-command-execution
     (luna privilege prefix/module invoker community room message rest)
   (restart-case      

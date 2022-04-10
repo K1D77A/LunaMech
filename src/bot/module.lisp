@@ -33,6 +33,9 @@ An example is like so:
 t)
 
 
+I need a way to have persistent per module extra perms.
+I guess we can just store mappings between modules and 
+
 ||#
 
 (defun register-module (name package)
@@ -52,7 +55,7 @@ and the name of its module subclass."))
 (defmethod module-information (module)
   "Default fallback."
   nil)
-                                        ;(eval-when (:execute :load-toplevel :compile-toplevel) 
+
 (defmacro defmodule (name (package prefix privilege-required &rest module-args)
                      command-class command-slots module-class module-slots
                      &key (module-superclass nil))
@@ -202,7 +205,7 @@ cannot be found then the condition 'missing-module is signalled."
           (string-downcase (prefix module))))
 
 (defmethod locate-command ((module module) priv invoker community)
-  "Signall missing command by default."
+  "Signal missing command by default."
   (error 'missing-command))
 
 (defmethod locate-command ((module module) (priv ubermensch-privilege)
@@ -218,6 +221,7 @@ cannot be found then the condition 'missing-module is signalled."
   (if (string-equal (first rest) "help")
       (print-command-information command community room)
       (safe-execution command community room message rest)))
+
 
 (defgeneric pass-to-module (module key &rest args)
   (:documentation "Stores data within lunas module-channel so that it can be accessed 

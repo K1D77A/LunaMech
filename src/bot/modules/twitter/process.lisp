@@ -115,9 +115,13 @@ twitter-api object. ROOM-VAR is the variable name you want the room-id accessor 
 (defgeneric poster (twitter-api event)
   (:documentation "Posts EVENT to Twitter using the credentials in TWITTER-API"))
 
-(defmethod poster :around (twiter-api event)
+(defmethod poster :around (twitter-api event)
   (handler-case
-      (call-next-method)
+      (if *tweetp* 
+          (call-next-method)
+          (send-message-to-room (conn *luna*)
+                                (room-id twitter-api)
+                                "Tweeting disabled"))
     (chirp:oauth-error (c)
       (error 'send-failed :c c))))
 
