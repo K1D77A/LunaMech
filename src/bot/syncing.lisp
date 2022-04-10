@@ -56,21 +56,19 @@ an invite. If the invite is valid and from an ubermensch user then joins the roo
   (flet ((valid-senders (events)
            (remove-if-not (lambda (event)                            
                             (let ((sender (get-key event :|sender|)))
-                              (some (lambda (uber)                                      
-                                      (string= sender uber))
-                                    (ubermensch luna))))
+                              (will-accept-invite-p luna sender)))
                           events)))
     (let ((invites (room-invite sync)))
       (when invites 
         (maphash (lambda (room rest)
                    (let* ((events (traverse-sync rest '("invite_state" "events")))
-                          (from-uber (valid-senders events)))          
+                          (from-uber (valid-senders events)))
                      (when from-uber
                        (let ((room.members
                                (extract-events-of-type from-uber '("m.room.member"))))
                          ;;this should hopefully produce a list of two.
                          (when (loop :for event :in room.members
-                                       :thereis (valid-invite-p connection event))
+                                     :thereis (valid-invite-p connection event))
                            (log:info "Accepting invite and joining room" room)
                            (join-room connection room))))))
                  invites)))))

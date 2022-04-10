@@ -76,6 +76,10 @@
     "Prints the ubermensch."
   (format t "Ubermensch: ~{~A ~}" (mapcar #'clean-user-id (all-ubermensch moonbot))))
 
+(new-admin-command print-permissions ()
+    "Prints the permissions tree."
+  (format t "~S" (permissions moonbot)))
+
 (new-admin-command list-communities ()
     "Prints all the communities."
   (with-accessors ((communities communities))

@@ -19,6 +19,10 @@ This will introduce a new execute-command for modules that want per module perms
 (defmethod find-permissions (luna (user privilege))
   (find-permissions luna (user-id user)))
 
+(defun find-permission (luna user permission)
+  (let ((permissions (find-permissions luna user)))
+    (cdr (assoc permission permissions :test #'string-equal))))
+
 (defun ubermensch-p (luna string)
   (let ((perms (find-permissions luna string)))
     (cdr (assoc :ubermensch perms :test #'eq))))
@@ -109,6 +113,14 @@ the body, then restores the user to their previous permission level after execut
 (defmethod retract-module-admin (luna user-id (mod-sym string))
   (retract-module-admin luna user-id (intern (string-upcase mod-sym))))
 
+(defmethod accept-invites-from (luna user-id)
+  (unless (will-accept-invite-p luna user-id)
+    (update-permission luna user-id 'invite t)))
+
+(defmethod stop-accepting-invites-from (luna user-id)
+  (when (will-accept-invite-p luna user-id)
+    (update-permission luna user-id 'invite nil)))
+
 (defun clean-permissions-tree (luna)
   "Removes duplicates from the permissions tree for each entry."
   (mapcar (lambda (list)
@@ -122,3 +134,9 @@ the body, then restores the user to their previous permission level after execut
   (loop :for id :in (mapcar #'first (permissions luna))
         :when (ubermensch-p luna id)
           :collect id))
+
+(defun will-accept-invite-p (luna user-id)
+  (or (ubermensch-p luna user-id)
+      (find-permission luna user-id 'invite)))
+
+      
