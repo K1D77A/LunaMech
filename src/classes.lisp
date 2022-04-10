@@ -39,7 +39,6 @@ is used to send data to the server. So best not rely on this functionality.")
    (cycle-history
     :accessor cycle-history
     :initform nil
-    :type list
     :documentation "This is a list of event-ids that is reset every 100 cycles. This makes 
 sure that no event is handled twice by the command execution system.")
    (modules
@@ -150,10 +149,6 @@ and it is that same instance that is backed up to the same file."))
 
 (defmethod permissions :around ((luna luna))
   (quicklock (luna :permissions)
-    (call-next-method)))
-
-(defmethod cycle-history :around ((luna luna))
-  (quicklock (luna :cycle-history)
     (call-next-method)))
 
 (defmethod thread :around ((luna luna))

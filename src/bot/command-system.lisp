@@ -75,11 +75,11 @@ the prefix, the command and the community it was sent in."))
 
 (defun %already-processed-message-p (luna event-id)
   "Checks if a message has already been processed within LUNA."
-  (and (find event-id (cycle-history luna) :test #'string=) t))
+  (find event-id (cycle-history luna) :test #'string=))
 
 ;;;store the message event in a short history to stop repeat executions.
 (defmethod initiate-command-execution :before
-    (luna priv prefix invoker community room message rest)
+    (luna priv (prefix module) invoker community room message rest)
   (let ((event-id (gethash "event_id" message)))
     (if (%already-processed-message-p luna event-id)
         (error 'already-processed)

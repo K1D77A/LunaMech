@@ -189,7 +189,7 @@ Finally at the end of every loop (timestamp ) is reset to (local-time:now)"
                                  (lambda (module) 
                                    (handler-case
                                        (bt:with-timeout (60)
-                                         ;;smashout after 30 seconds
+                                         ;;smashout after 60 seconds
                                          (on-sync moonbot module sync)
                                          (execute-all-communications-between-modules
                                           moonbot module sync))
