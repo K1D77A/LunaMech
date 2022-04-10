@@ -80,6 +80,23 @@
     "Prints the permissions tree."
   (format t "~S" (permissions moonbot)))
 
+(new-admin-command users-permissions ((user-id :valid-user))
+    "Prints the permissions tree for USER-ID."
+  (format t "~S" (find-permissions moonbot user-id)))
+
+(new-admin-command accept-invites-from ((user-id :valid-user))
+    "Luna will accept invites from USER-ID."
+  (accept-invites-from moonbot user-id)
+  (format t "Luna will now accept invites from ~A" user-id))
+
+(new-admin-command stop-accepting-invites-from ((user-id :valid-user))
+    "Luna will no longer accept invites from USER-ID."
+  (stop-accepting-invites-from moonbot user-id)
+  (format t "Luna will no longer accept invites from ~A" user-id))
+
+
+
+
 (new-admin-command list-communities ()
     "Prints all the communities."
   (with-accessors ((communities communities))

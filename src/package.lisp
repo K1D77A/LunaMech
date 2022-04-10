@@ -35,7 +35,8 @@
            #:with-per-module-permissions
            #:determine-permissions
            #:find-permissions
-           
+           #:accept-invites-from
+           #:stop-accepting-invites-from
            #:find-and-reset-timer
            #:find-types-in-rooms-timeline
            #:homeserver
