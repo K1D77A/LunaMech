@@ -5,7 +5,8 @@
            #:save-results
            #:add-results
            #:results-from-file
-           #:result-set-p))
+           #:result-set-p
+           #:sort-results))
 
 (in-package #:compass)
 
@@ -24,6 +25,11 @@
                (push val lst))
              *results*)
     lst))
+
+(defun sort-results (fun)
+  (let ((lst (alexandria:hash-table-values *results*)))
+    (sort lst fun :key (lambda (val) (getf val :time)))))
+
 
 (defun add-results (x y id)
   (setf (gethash id *results*) (list :x x :y y :id id :time (get-universal-time))))

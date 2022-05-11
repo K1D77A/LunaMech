@@ -102,6 +102,18 @@ by 10."
       (send-image-bytes-to-room (connection community) room
                                 "compass.png" "image/png" vec))))
 
+(new-compass-command latest-results ((count))
+    "See all results plotted"
+  (let ((list (subseq (compass:sort-results #'>) 0 (parse-integer count))))
+    (let* ((to-draw (mapcar (lambda (list)
+                              (destructuring-bind (&key id x y &allow-other-keys)
+                                  list
+                                (list x y (first (str:split ":" id :limit 2)))))
+                            list))
+           (str (compass:draw-compass nil to-draw))           
+           (vec (flexi-streams:get-output-stream-sequence str)))
+      (send-image-bytes-to-room (connection community) room
+                                "compass.png" "image/png" vec))))
 
 (new-compass-command test ()
     "The URL for the test"
