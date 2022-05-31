@@ -6,7 +6,7 @@
   :build-operation "program-op"
   :build-pathname "./lunamech"
   :entry-point "matrix-moonbot:setup-and-go"
-  :version "0.0.17"
+  :version "0.0.18"
   :depends-on (#:jonathan
                #:alexandria
                #:str
@@ -36,6 +36,7 @@
                #:validate-list)
   :components ((:module "config"
                 :components ((:static-file "communities.lisp")))
+               
                (:module "src"
                 :components
                 ((:module "compass"

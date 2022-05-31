@@ -255,7 +255,8 @@ found-module and then recalls start."
           :name "luna-main"
           :initial-bindings `((*package* . ,*package*)
                               (*error-output* . ,*error-output*)
-                              (*standard-output* . ,*standard-output*))))
+                              (*standard-output* . ,*standard-output*)
+                              (dex:*connection-pool* . ,dex:*connection-pool*))))
         (log:info "Done.")
         (mapc (lambda (room-id)
                 (module-moonmat-message (conn luna) room-id "I have started."))

@@ -135,8 +135,7 @@
   (handler-case 
       (let ((retry-request (dex:retry-request 1 :interval 1)))
         (handler-bind ((dex:http-request-failed retry-request))
-          (dex:get url :use-connection-pool nil
-                       :connect-timeout 3 :read-timeout 3)))
+          (dex:get url :connect-timeout 3 :read-timeout 3)))
     (error (c)
       (log:error "Safe dex failed with URL: ~A" url)
       nil)))

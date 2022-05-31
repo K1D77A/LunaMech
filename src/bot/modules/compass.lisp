@@ -110,7 +110,7 @@ by 10."
                                   list
                                 (list x y (first (str:split ":" id :limit 2)))))
                             list))
-           (str (compass:draw-compass nil to-draw))           
+           (str (compass:draw-compass t to-draw))           
            (vec (flexi-streams:get-output-stream-sequence str)))
       (send-image-bytes-to-room (connection community) room
                                 "compass.png" "image/png" vec))))

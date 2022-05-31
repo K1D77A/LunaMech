@@ -207,12 +207,10 @@ Returns a string."
       (let ((res nil))
         (if (string= prefix "")
             (setf res (dex:get (concatenate 'string (fixurl (list url))
-                                            "/status?domain=" domain)
-                               :use-connection-pool nil))
+                                            "/status?domain=" domain)))
             (setf res (dex:get
                        (concatenate 'string (fixurl (list url)) "/"
-                                    prefix "/" "status?domain=" domain)
-                       :use-connection-pool nil)))
+                                    prefix "/" "status?domain=" domain))))
         (let ((parsed (jojo:parse (babel:octets-to-string res))))
           (if (null (first parsed))
               nil
@@ -222,7 +220,6 @@ Returns a string."
                               :jitsi-condition-domain domain
                               :jitsi-condition-prefix prefix
                               :jitsi-condition-message "Dexador errored on request"))))
-
 
 (defun valid-jitsi-room-p (id)
   (let ((rooms (getf (first (rooms *module*)) :rooms)))    
