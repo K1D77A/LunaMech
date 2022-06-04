@@ -48,6 +48,9 @@ to another and choose whether it is time to execute or not"))
 (defmethod reset-timer ((timer timer))
   (setf (timestamp timer) (local-time:now)))
 
+(defmethod reset-timers ((module module))
+  (mapc #'reset-timer (timers module)))
+
 (defmethod find-and-reset-timer ((timers timers) key)
   (let ((timer (find-timer timers key)))
     (when timer

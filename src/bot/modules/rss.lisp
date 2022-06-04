@@ -48,6 +48,7 @@
       nil)))
 
 (defmethod on-load-up (moonbot (module rss-module))
+  (setf (timers module) (make-timers '(:check)))
   (log:info "Loading rss rooms from rss-config.lisp")
   (results-from-file))
 

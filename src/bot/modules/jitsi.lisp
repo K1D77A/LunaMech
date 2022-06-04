@@ -51,6 +51,7 @@
       nil)))
 
 (defmethod on-load-up (moonbot (module jitsi-module))
+  (setf (timers module) (make-timers '(:check)))
   (log:info "Loading Jitsi rooms from jitsi-rooms.lisp")
   (results-from-file))
 
@@ -78,7 +79,7 @@
   (declare (ignorable luna module sync))
   (execute-stamp-n-after-luna ((find-timer (timers *module*) :check)
                                24)
-;;    (log:info "Checking if rooms need their names changed.")
+;;   (log:info "Checking if rooms need their names changed.")
     (mapc (lambda (room-plist)
             (handler-case
                 (initiate-name-change luna room-plist)
