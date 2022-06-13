@@ -210,6 +210,8 @@
                                            (:maxlen 50)))
     "Subscribes to the RSS feed FEED (the url) under the name NAME (unique identifier), and publishes new updates into ROOM-ID. On subscription will post the latest 10 entries."
   (let ((name (intern (string-upcase name) :keyword)))
+    (unless (str:starts-with-p "http" feed)
+      (error "Not a URL"))
     (if (rss-feed name)
         (module-moonmat-message (conn *luna*) room "Already subscribed.")
         (subscribe-to-rss name feed (if (string-equal room-id "here")
