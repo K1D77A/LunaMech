@@ -337,16 +337,19 @@ background-module will be executed entirely in their own thread."
   ;;(%on-sync-body))
 
 (defun execute-all-communications-between-modules (luna module sync)
-  (let ((hash (gethash module (channel module))))
-    (when hash
-      (maphash (lambda (keyword queue)
-                 (when keyword
-                   (unwind-protect 
-                        (apply #'execute-module-communications luna module sync keyword
-                               (lparallel.queue:pop-queue queue))
-                     (when (lparallel.queue:queue-empty-p (gethash keyword hash))
-                       (remhash keyword hash)))))
-               hash))))
+  (with-accessors ((channel channel))
+      module
+    (unless (zerop (hash-table-count channel))
+      (let ((hash (gethash module channel)))
+        (when hash 
+          (maphash (lambda (keyword queue)
+                     (when keyword
+                       (unwind-protect 
+                            (apply #'execute-module-communications luna module sync keyword
+                                   (lparallel.queue:pop-queue queue))
+                         (when (lparallel.queue:queue-empty-p (gethash keyword hash))
+                           (remhash keyword hash)))))
+                   hash))))))
 
 (new-module-hook execute-module-communications (luna module sync key &rest arguments)
                  "allows for communication between modules. This is called after on-sync.")

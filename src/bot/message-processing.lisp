@@ -151,7 +151,7 @@ passes them to process-messages"))
           (when messages
             (process-messages moonbot community room messages)))))))
 
-(defmethod listen-and-process ((moonbot moonbot))
+(defmethod listen-and-process ((luna luna))
   "This is the primary loop used to run Luna. 
 It executes in the following order. 
 First it checks if Lunas (stopp ) accessor is non nil, in the case it is it stops.
@@ -177,36 +177,52 @@ Finally at the end of every loop (timestamp ) is reset to (local-time:now)"
                    (cycle-history cycle-history)
                    (connections connections)
                    (communities communities))
-      moonbot
-    (loop :while (not (stopp moonbot))
+      luna
+    (loop :while (not (stopp luna))
           :do (mapc (lambda (connection)
                       (let ((sync (sync connection)));;(key-sync connection :junk-removed)))
-                        (funcall (if parallel-p #'lparallel:pmapc #'mapc)
-                                 (lambda (com)
-                                   (grab-messages-and-process moonbot com sync))
-                                 communities)
-                        (funcall (if parallel-p #'lparallel:pmapc #'mapc)
-                                 (lambda (module) 
-                                   (handler-case
-                                       (bt:with-timeout (60)
-                                         ;;smashout after 60 seconds
-                                         (on-sync moonbot module sync)
-                                         (execute-all-communications-between-modules
-                                          moonbot module sync))
-                                     (sb-ext:timeout ()
-                                       (log:error "An on-sync method timed out."))))
-                                 found-modules)
-                        (process-invites moonbot connection sync)))
+                        (%grab-and-process-messages luna sync)
+                        (%process-modules luna sync)
+                        (process-invites luna connection sync)))
                     connections)
               (execute-stamp-n-after-luna ((find-timer timers :clear-cycle)
                                            5)
-                (setf cycle-history nil))
+                (%reset-cycle-history luna))
               (execute-stamp-n-after-luna ((find-timer timers :backup)
                                            300)
-                (log:info "Backing up Luna to ~A" *config-file*)
-                (dolist (mod found-modules)
-                  (on-save moonbot mod))
-                (moonbot->config moonbot)
-                (log:info "Luna backed up"))
-              (setf timestamp (local-time:now))
+                (%backup-luna luna))
+              (%reset-timestamp luna)
           :finally (log:info "Luna going down"))))
+
+(defun %grab-and-process-messages (luna sync)
+  (maybe-pmapc luna 
+               (lambda (com)
+                 (grab-messages-and-process luna com sync))
+               (communities luna)))
+
+(defun %process-modules (luna sync)
+  (maybe-pmapc luna 
+               (lambda (module) 
+                 (handler-case
+                     (bt:with-timeout (60)
+                       ;;smashout after 60 seconds
+                       (on-sync luna module sync))
+                   (bt:timeout ()
+                     (log:error "An on-sync method timed out.")))
+                 (execute-all-communications-between-modules luna module sync))
+               (found-modules luna)))
+
+(defun %reset-cycle-history (luna)
+  (setf (cycle-history luna) nil))
+
+(defun %backup-luna (luna)
+  (log:info "Backing up Luna to ~A" *config-file*)
+  (dolist (mod (found-modules luna))
+    (on-save luna mod))
+  (moonbot->config luna)
+  (log:info "Luna backed up"))
+
+(defun %reset-timestamp (luna)
+  (setf (timestamp luna) (local-time:now)))
+
+

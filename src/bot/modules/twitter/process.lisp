@@ -35,7 +35,7 @@ This file contains the code to process different types of messages received
                 (let ((event (event->object room-id hash)))
                   (unless (is-me-p *luna* (sender event))
                     (process-event event)
-                    (post-to-twitter twitter-api  event)))
+                    (post-to-twitter twitter-api event)))
               (condition (c)
                 (report-twitter-condition room-id c))))
           events)))

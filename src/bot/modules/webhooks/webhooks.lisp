@@ -21,8 +21,13 @@
   (log:info "Starting Luna's webhook listener on port 61111.")
   (tbnl:start (webhook-server *module*)))
 
+(defmethod on-restart (moonbot (module webhook-module))
+  (log:info "Restarting Luna's webhook listener on port 61111.")
+  (tbnl:start (webhook-server *module*)))
+
 (defmethod on-shutdown (luna (module webhook-module))
-  (tbnl:stop (webhook-server *module*))
+  (ignore-errors 
+   (tbnl:stop (webhook-server *module*)))
   (log:info "Stopping Luna's webhook listener on port 61111."))
 
 (defmethod on-save (moonbot (module webhook-module))
