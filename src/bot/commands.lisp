@@ -156,12 +156,10 @@
                                                (getf (find-room community room-id) :id))
                           :|joined|)))
     (when members
-      (setf (members community) nil)
-      (let ((new-members ()))
-        (alexandria:doplist (user userplist members)
-          (push (string user) new-members))
-        (setf (members community) new-members)
-        (format t "Adding ~r member~:p to the community" (length (members community)))))))
+      (let ((clean-members (remove-if #'bot-member-id-p
+                                      (alexandria:hash-table-keys members))))
+        (setf (members community) clean-members)
+        (format t "Adding ~r member~:p to the community" (length clean-members))))))
 
 (new-admin-community-command create-room ((private :string-bool
                                                    (:maxlen 5) (:minlen 1))

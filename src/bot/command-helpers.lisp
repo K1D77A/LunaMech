@@ -39,7 +39,6 @@
   (let ((event (object%event/m-room-message/m-text message message)))
     (catch-limit-exceeded
       (send-message-event-to-room (connection community) room event))))
-;;(format nil "~A>" message)))))
 
 (defun module-moonmat-message (connection room control-string &rest args)
   (catch-limit-exceeded
@@ -198,7 +197,8 @@
 
 (defun bot-member-id-p (id)
   "Checks if a string is a bot member. This is really just testing for _discord_ in the name"
-  (str:containsp "_discord_" id))
+  (or (str:containsp "_discord_" id)
+      (str:containsp "_webhook_" id)))
 
 (defun non-bot-members (community)
   "Attempts to remove members that appear to be bots from the list of (members COMMUNITY)"

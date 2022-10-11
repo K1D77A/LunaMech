@@ -35,7 +35,8 @@
 
 (defmethod on-module-unload (moonbot (module webhook-module))
   (log:info "Stopping Luna's webhook listener.")
-  (tbnl:stop (webhook-server *module*))
+  (ignore-errors 
+   (tbnl:stop (webhook-server *module*)))
   t)
 
 (defmethod locate-command ((module webhook-module) (priv ubermensch-privilege)

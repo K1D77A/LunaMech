@@ -6,7 +6,7 @@
   :build-operation "program-op"
   :build-pathname "./lunamech"
   :entry-point "matrix-moonbot:setup-and-go"
-  :version "0.0.19"
+  :version "0.0.20"
   :depends-on (#:jonathan
                #:alexandria
                #:str
@@ -81,8 +81,9 @@
                                                    (:file "twitter")))
                                          (:module "direct-message"
                                           :serial t
-                                          :description "Module that implements the 
-construction and execution of direct messages with individual users."
+                                          :description #.(format nil "Module that implements the ~
+                                                         construction and execution of direct ~
+                                                         messages with individual users.")
                                           :components
                                                   ((:file "package")
                                                    (:file "direct-message")
@@ -102,8 +103,8 @@ construction and execution of direct messages with individual users."
                                                        (:file "webhooks"))) 
                                          (:module "stickers"
                                           :serial t
-                                          :description "Module that implements uploading
-stickers to Lunamechs Stickerpicker."
+                                          :description #.(format nil "Module that implements uploading ~
+                                                         stickers to Lunamechs Stickerpicker.")
                                           :components ((:file "package")
                                                        (:file "classes")
                                                        (:file "resizer")

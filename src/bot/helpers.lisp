@@ -7,3 +7,4 @@
 
 (defmacro maybe-pmapc (luna fun seq)
   `(funcall (if (parallel-p ,luna) #'lparallel:pmapc #'mapc) ,fun ,seq))
+

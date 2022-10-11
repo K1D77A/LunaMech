@@ -280,3 +280,31 @@ have the same homeserver as Luna and all of those who are already in the room."
                                  :connection (conn *luna*)
                                  :room-id room-id))
   (format t "Success."))
+
+(new-admin-command invite-everyone ((room-id (:maxlen 50)
+                                             (:minlen 5)))
+    "Invites every unique nonbot user into ROOM-ID."
+  (with-accessors ((communities communities))
+      moonbot
+    (let* ((room-id-members
+             (remove-if #'bot-member-id-p
+                         (alexandria:hash-table-keys
+                          (pkv (members-in-room-ids (conn *luna*) room-id) :|joined|))))
+           (members (mapcar #'members communities))
+           (unique (remove-duplicates (apply #'append members) :test #'string=))
+           (not-in (set-difference unique room-id-members :test #'string=)))
+      (format t "There are ~D server users. ~D who are not in ~A"
+              (length unique) (length not-in) room-id)
+      (lparallel:pmapc
+       (lambda (user-id)
+         (log:info "Inviting ~A to ~A" user-id room-id)
+         (handler-case
+             (bt:with-timeout (5)
+               (catch-limit-exceeded
+                 (invite-member-to-room (conn *luna*) user-id room-id)))
+           (bt:timeout ()
+             (log:error "Timeout when inviting ~A to ~A" user-id room-id))
+           (serious-condition (c)
+             (log:error "Serious condition when inviting ~A to ~A" user-id room-id)
+             (log:error c))))
+       not-in))))

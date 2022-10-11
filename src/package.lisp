@@ -295,6 +295,7 @@
            #:room-id
            #:rooms
            #:mimetype
+           #:bot-member-id-p 
            #:non-bot-members
            #:send-image-bytes-to-room
            #:send-file-bytes-to-room
