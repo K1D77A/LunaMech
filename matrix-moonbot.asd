@@ -13,7 +13,7 @@
                #:dexador
                #:lunamech-matrix-api
                #:flexi-streams
-               #:cl-megolm
+;;             #:cl-megolm
                #:ironclad
                #:parse-float
                #:do-urlencode
@@ -36,7 +36,6 @@
                #:validate-list)
   :components ((:module "config"
                 :components ((:static-file "communities.lisp")))
-               
                (:module "src"
                 :components
                 ((:module "compass"
@@ -81,10 +80,13 @@
                                                    (:file "twitter")))
                                          (:module "direct-message"
                                           :serial t
-                                          :description #.(format nil "Module that implements the ~
-                                                         construction and execution of direct ~
+                                          :description #.(format nil
+                                                                 "Module that ~
+                                                                 implements the ~
+                                                                construction and execution ~
+                                                                 of direct ~
                                                          messages with individual users.")
-                                          :components
+                                                  :components
                                                   ((:file "package")
                                                    (:file "direct-message")
                                                    (:file "context-generator")
@@ -92,8 +94,7 @@
                                                    (:file "collect")
                                                    (:file "room-commands")
                                                    (:file "to-file")
-                                                   (:file "commands")
-                                                   ))
+                                                   (:file "commands")))
                                          (:module "webhooks"
                                           :serial t
                                           :components ((:file "package")
@@ -103,14 +104,16 @@
                                                        (:file "webhooks"))) 
                                          (:module "stickers"
                                           :serial t
-                                          :description #.(format nil "Module that implements uploading ~
-                                                         stickers to Lunamechs Stickerpicker.")
-                                          :components ((:file "package")
-                                                       (:file "classes")
-                                                       (:file "resizer")
-                                                       (:file "processor")
-                                                       (:file "stickers")
-                                                       (:file "from-website")))))
+                                          :description #.(format nil "Module that ~
+                                                                      implements uploading ~
+                                                                    stickers to Lunamechs ~
+                                                                      Stickerpicker.")
+                                                  :components ((:file "package")
+                                                               (:file "classes")
+                                                               (:file "resizer")
+                                                               (:file "processor")
+                                                               (:file "stickers")
+                                                               (:file "from-website")))))
                                (:file "commands")
                                (:file "message-processing")
                                (:file "bot")))

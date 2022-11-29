@@ -266,3 +266,20 @@ a subspace within this community."
             (join-room (connection community) room))
           rooms)))
     
+(new-admin-community-command set-powerlevel ((user-id :valid-user)
+                                             (powerlevel (:maxlen 3)
+                                                         (:minlen 1)))
+                                             
+    "Luna attempts to set the powerlevel of USER-ID to POWERLEVEL in every room in the community"
+  (let ((rooms (mapcar (lambda (room-list)
+                         (getf room-list :ID))
+                       (rooms community))))
+    (moonmat-message community room "Changing powerlevel of ~A in ~:p"
+                     user-id (length rooms))
+    (mapc (lambda (room)
+            (multiple-value-bind (event type)
+                  (object%event/m-room-power_levels
+                   :users (lmav2:%quick-hash `((,user-id . ,(parse-integer powerlevel))))))
+            (lmav2:send-event-to-room (conn luna) room type event))
+          rooms)))
+    
