@@ -318,10 +318,10 @@ form of usocket condition. Module is not being unloaded. Condition: ~A"
         "Module: ~A signalled the condition ~A When executing its self ~
        defined '~A' method. Removing the module from Moonbot. Please fix this."
         module c 'on-sync)
-       (unload-module luna module)
-       (report-condition-to-matrix c
-                                   "Encountered error with module.")
-       (trivial-backtrace:print-backtrace c))))
+       (report-condition-to-matrix c "Encountered error with module.")
+       (trivial-backtrace:print-backtrace c)
+       (unless (typep module 'mm-module.rss:rss-module)         
+         (unload-module luna module)))))
 
 (defmethod on-sync :around (luna module sync)
   (%on-sync-body))
