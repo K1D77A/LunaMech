@@ -46,7 +46,16 @@ hash-table *validators*. On success returns the validator, on failure signals th
   (check-type entry string)
   (let ((interned (intern (string-upcase entry) :keyword)))
     (not (loop :for community :in (communities luna)
-                 :thereis (find interned  (aliases community))))))
+               :thereis (find interned  (aliases community))))))
+
+(create-new-validator validator-loaded-module :loaded-module
+    "Checks to make sure that arg passed is a loaded module."
+    "The arg provided is not a loaded module."
+  (check-type entry string)
+  (find entry (found-modules *luna*)
+        :key (lambda (o)
+               (class-name (class-of o)))
+        :test #'string-equal))
 
 (create-new-validator validator-min-len :minlen
     "Checks to make sure that the entry is longer than minlen"

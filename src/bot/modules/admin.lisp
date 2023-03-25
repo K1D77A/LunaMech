@@ -308,3 +308,24 @@ have the same homeserver as Luna and all of those who are already in the room."
              (log:error "Serious condition when inviting ~A to ~A" user-id room-id)
              (log:error c))))
        not-in))))
+
+(new-admin-command found-modules ()
+    "Returns a list of currently loaded modules."
+  (with-accessors ((found-modules found-modules))
+      *luna*
+    (format t "Loaded Modules:~% ~{~A~^~%~}" (mapcar (lambda (module)
+                                                     (class-name (class-of module)))
+                                                     found-modules))))
+
+(new-admin-command describe-module ((module :loaded-module))
+    "Returns a list of currently loaded modules."
+  (with-accessors ((found-modules found-modules))
+      *luna*
+    (let ((mod (find module found-modules
+                     :key (lambda (o) (class-name (class-of o)))
+                     :test #'string-equal)))
+      (format t "~A" (describe mod nil)))))
+
+
+
+

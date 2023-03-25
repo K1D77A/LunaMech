@@ -233,7 +233,7 @@ a subspace within this community."
             (format t "No subspace by the name ~A" space))))))
 
 
-(new-admin-community-command populate-rooms ()
+(new-admin-community-command update-rooms-using-space ()
     "Fills all of the rooms in the community using the top-level-space."
   (with-accessors ((top-level-space top-level-space)
                    (connection connection))
@@ -282,4 +282,8 @@ a subspace within this community."
                    :users (lmav2:%quick-hash `((,user-id . ,(parse-integer powerlevel))))))
             (lmav2:send-event-to-room (conn luna) room type event))
           rooms)))
+
+
+    
+
     

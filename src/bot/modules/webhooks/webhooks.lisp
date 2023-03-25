@@ -63,6 +63,11 @@
     "attempts an explanation of how commands work"
   (moonhelp 'webhook-command community room))
 
+(new-webhook-command restart ()
+    "Attempts to start/restart Luna' webhook listener."
+  (ignore-errors (tbnl:start (webhook-server *module*)))
+  (format t "Done."))
+  
 (defmethod hunchentoot:acceptor-dispatch-request ((acceptor luna-acceptor) request)
   (when (allow-webhooks-p *module*)
     (call-next-method)))
@@ -148,3 +153,4 @@ If the private-keys do not match signals 'bad-private-key."
       (error (c)
         (setf (tbnl:return-code*) 400)
         (format nil "~A" c)))))
+

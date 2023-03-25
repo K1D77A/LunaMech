@@ -320,8 +320,7 @@ form of usocket condition. Module is not being unloaded. Condition: ~A"
         module c 'on-sync)
        (report-condition-to-matrix c "Encountered error with module.")
        (trivial-backtrace:print-backtrace c)
-       (unless (typep module 'mm-module.rss:rss-module)         
-         (unload-module luna module)))))
+       (unload-module luna module))))
 
 (defmethod on-sync :around (luna module sync)
   (%on-sync-body))
