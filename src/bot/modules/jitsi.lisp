@@ -150,15 +150,17 @@ to be sent, if it does then changes the name to '(<participant count>) <name>'. 
 change will happen if the room is not registered within a community in Luna."
   (with-accessors ((previous-counts previous-counts))
       *module*
-    (let* ((id (getf processed :id))
-           (jitsi-id (getf processed :room-name))
-           (parts (getf processed :participants))
-           (matrix-room (find-room-by-id luna id)))
-      (when (and matrix-room (not (eql (gethash jitsi-id previous-counts)
-                                       (parse-integer parts))))
-        (let ((name (clean-name (getf matrix-room :name))))
-          (change-name (conn luna) id (format nil "(~A) ~A" parts name))
-          (setf (gethash jitsi-id previous-counts) (parse-integer parts)))))))
+    (destructuring-bind (&key id room-name participants &allow-other-keys)
+        processed 
+    (let* ((matrix-room (find-room-by-id luna id))
+           (parsed-parts (parse-integer participants)))
+      (symbol-macrolet ((previous (gethash room-name previous-counts)))
+        (when (and matrix-room (not (eql previous parsed-parts)))
+          (destructuring-bind (&key name &allow-other-keys)
+              matrix-room 
+            (let ((name (clean-name name)))
+              (change-name (conn luna) id (format nil "(~D) ~A" parsed-parts name))
+              (setf previous parsed-parts)))))))))
 
 ;;;module methods
 
@@ -189,7 +191,7 @@ change will happen if the room is not registered within a community in Luna."
 
 ;;;a few helpers
 (defun fixurl (urls &key (https nil))
-  "Concatenates 'http://' or 'https:// do the start of urls if it does not already exist.
+  "Concatenates 'http://' or 'https:// to the start of urls if it does not already exist.
 Returns a string."
   (check-type urls list)
   (if (or (str:starts-with-p "http://" (first urls))
@@ -204,15 +206,15 @@ Returns a string."
     (lmav2:send-state-event-to-room connection room-id type event)))
 
 (defun get-room-info (url &key (prefix "") (domain "meet.jitsi"))
+  (flet ((build-prefix (prefix)
+           (if (string= prefix "")
+               ""
+               (format nil "/~A/" prefix))))
   (handler-case 
-      (let ((res nil))
-        (if (string= prefix "")
-            (setf res (dex:get (concatenate 'string (fixurl (list url))
-                                            "/status?domain=" domain)))
-            (setf res (dex:get
-                       (concatenate 'string (fixurl (list url)) "/"
-                                    prefix "/" "status?domain=" domain))))
-        (let ((parsed (jojo:parse (babel:octets-to-string res))))
+      (let* ((url (concatenate 'string (fixurl (list url))
+                               (build-prefix prefix) "status?domain=" domain))
+             (res (dex:get url)))
+        (let ((parsed (jojo:parse  res)))
           (if (null (first parsed))
               nil
               parsed)))
@@ -220,7 +222,7 @@ Returns a string."
       (error 'jitsi-condition :jitsi-condition-url url
                               :jitsi-condition-domain domain
                               :jitsi-condition-prefix prefix
-                              :jitsi-condition-message "Dexador errored on request"))))
+                              :jitsi-condition-message "Dexador errored on request")))))
 
 (defun valid-jitsi-room-p (id)
   (let ((rooms (getf (first (rooms *module*)) :rooms)))    
