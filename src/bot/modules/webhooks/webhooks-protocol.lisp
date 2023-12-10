@@ -149,6 +149,11 @@ Execute-validator has the "
   (when (slot-boundp slot 'result)
     (slot-value slot 'result)))
 
+
+(defmethod no-applicable-method ((gf (eql #'find-hook)) &rest args)
+  (when (every #'null args)
+    "I'm alive"))
+
 (defmethod find-hook ((class string) slot-name private-key)
   (find-hook (find-class (intern (string-upcase class) :mm-module.webhook))
              slot-name private-key))
