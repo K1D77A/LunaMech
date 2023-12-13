@@ -157,10 +157,11 @@ change will happen if the room is not registered within a community in Luna."
       (symbol-macrolet ((previous (gethash room-name previous-counts)))
         (when (and matrix-room (not (eql previous parsed-parts)))
           (destructuring-bind (&key name &allow-other-keys)
-              matrix-room 
-            (let ((name (clean-name name)))
-              (change-name (conn luna) id (format nil "(~D) ~A" parsed-parts name))
-              (setf previous parsed-parts)))))))))
+              matrix-room
+            (when name 
+              (let ((name (clean-name name)))
+                (change-name (conn luna) id (format nil "(~D) ~A" parsed-parts name))
+                (setf previous parsed-parts))))))))))
 
 ;;;module methods
 
