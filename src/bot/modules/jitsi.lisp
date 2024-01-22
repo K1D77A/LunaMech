@@ -151,17 +151,25 @@ change will happen if the room is not registered within a community in Luna."
   (with-accessors ((previous-counts previous-counts))
       *module*
     (destructuring-bind (&key id room-name participants &allow-other-keys)
-        processed 
-    (let* ((matrix-room (find-room-by-id luna id))
-           (parsed-parts (parse-integer participants)))
-      (symbol-macrolet ((previous (gethash room-name previous-counts)))
-        (when (and matrix-room (not (eql previous parsed-parts)))
-          (destructuring-bind (&key name &allow-other-keys)
-              matrix-room
-            (when name 
-              (let ((name (clean-name name)))
-                (change-name (conn luna) id (format nil "(~D) ~A" parsed-parts name))
-                (setf previous parsed-parts))))))))))
+        processed
+      (let* ((matrix-room (find-room-by-id luna id))
+             (parsed-parts (typecase participants
+                             (string 
+                              (parse-integer participants))
+                             (null 0)
+                             (otherwise (error 'type-error
+                                               :expected-type 'string
+                                               :datum (format nil "PARTICIPANTS needs to ~
+                                                                   be a string. ~S"
+                                                              participants))))))
+        (symbol-macrolet ((previous (gethash room-name previous-counts)))
+          (when (and matrix-room (not (eql previous parsed-parts)))
+            (destructuring-bind (&key name &allow-other-keys)
+                matrix-room
+              (when name 
+                (let ((name (clean-name name)))
+                  (change-name (conn luna) id (format nil "(~D) ~A" parsed-parts name))
+                  (setf previous parsed-parts))))))))))
 
 ;;;module methods
 
@@ -215,7 +223,7 @@ Returns a string."
       (let* ((url (concatenate 'string (fixurl (list url))
                                (build-prefix prefix) "status?domain=" domain))
              (res (dex:get url)))
-        (let ((parsed (jojo:parse  res)))
+        (let ((parsed (jojo:parse res)))
           (if (null (first parsed))
               nil
               parsed)))
@@ -290,7 +298,8 @@ check and change the name of this room depending on the number of people within 
                                       (jitsi-id (:minlen 1) (:maxlen 50)))
     "Gets Luna to modify the name of ROOM-ID based on the number of people in the JITSI-ID."
   (let ((list (list :ID room-id :JITSI-ID jitsi-id))
-        (rooms (find url (rooms *module*) :test #'string= :key (lambda (ele) (getf ele :url)))))
+        (rooms (find url (rooms *module*) :test #'string=
+                                          :key (lambda (ele) (getf ele :url)))))
     (if rooms
         (progn 
           (pushnew list (getf rooms :rooms) :test #'string=

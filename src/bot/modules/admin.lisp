@@ -123,7 +123,8 @@
            (new-community (make-instance 'community
                                          :extra nil :members (list sender)
                                          :admins (list sender)
-                                         :api *api* :url *url*
+                                         :api "/_matrix/client/r0/"
+                                         :url "https://matrix.scyldings.com"
                                          :name (intern
                                                 (string-upcase community-name)
                                                 :keyword)
