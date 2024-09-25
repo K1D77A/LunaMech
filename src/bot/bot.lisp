@@ -2,17 +2,17 @@
 
 (defparameter *luna* "The toplevel instance of Luna :)")
 
-(defun setup-and-go ()
+(defun setup-and-go (&key (slynk t))
   "This is the default entry function for the dumped lisp image."
-  (ql:quickload :slynk)
   (setup-log4cl)
   (log:info "Luna is booting.")
-  (slynk:create-server :port 54000 :dont-close t);primary sly connection
-  (log:info "Starting primary Slynk server.")
-  (slynk:create-server :port 54001 :dont-close t);backup sly
-  (log:info "Starting backup Slynk server.")
-  (setf slynk:*use-dedicated-output-stream* nil)
-  (log:info "You can now connect with Slynk.")
+  (when slynk
+    (log:info "Starting primary Slynk server.")
+    (slynk:create-server :port 54000 :dont-close t);primary sly connection
+    (log:info "Starting backup Slynk server.")
+    (slynk:create-server :port 54001 :dont-close t);backup sly
+    (setf slynk:*use-dedicated-output-stream* nil)
+    (log:info "You can now connect with Slynk."))
   (log:info "Restoring Luna from config...")
   (handler-bind ((warning
                    (lambda (c)

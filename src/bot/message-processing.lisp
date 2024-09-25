@@ -180,7 +180,7 @@ Finally at the end of every loop (timestamp ) is reset to (local-time:now)"
       luna
     (loop :while (not (stopp luna))
           :do (mapc (lambda (connection)
-                      (let ((sync (sync connection)));;(key-sync connection :junk-removed)))
+                      (let ((sync (sync connection)))
                         (%grab-and-process-messages luna sync)
                         (%process-modules luna sync)
                         (process-invites luna connection sync)))
@@ -192,6 +192,7 @@ Finally at the end of every loop (timestamp ) is reset to (local-time:now)"
                                            300)
                 (%backup-luna luna))
               (%reset-timestamp luna)
+              (sleep 3)
           :finally (log:info "Luna going down"))))
 
 (defun %grab-and-process-messages (luna sync)

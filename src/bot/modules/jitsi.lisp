@@ -227,7 +227,7 @@ Returns a string."
           (if (null (first parsed))
               nil
               parsed)))
-    (dexador.error:http-request-failed ()
+    ((or dexador.error:http-request-failed jojo:<jonathan-incomplete-json-error>) ()
       (error 'jitsi-condition :jitsi-condition-url url
                               :jitsi-condition-domain domain
                               :jitsi-condition-prefix prefix

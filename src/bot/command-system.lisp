@@ -180,6 +180,10 @@ and COMMAND."))
           (str:replace-all #.(string #\Newline) " " (format nil "~A" condition))
           (type-of condition)))
 
+(defmethod format-condition (community room (condition lunamech-matrix-api/v2:api-error)
+                             command)
+  (format t "Some form of api error has occurred. ~S ~A" condition condition))
+
 (defgeneric execute (command &rest args)
   (:documentation "Executes the COMMAND using ARGS. ARGS should be a list of 
 community room message args and optionally luna. If luna is provided it should 

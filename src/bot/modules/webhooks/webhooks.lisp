@@ -144,9 +144,11 @@ If the private-keys do not match signals 'bad-private-key."
     (handler-case
         (let ((hook (find-hook hook-type hook-name authorization))
               (raw (tbnl:raw-post-data)))
-          (apply #'execute-hook hook
-                 (when raw
-                   (jojo:parse (babel:octets-to-string raw)))))
+          (if (stringp hook)
+              hook
+              (apply #'execute-hook hook
+                     (when raw
+                       (jojo:parse (babel:octets-to-string raw))))))
       (webhook-condition (c)
         (setf (tbnl:return-code*) 400)
         (format nil "~A" c))

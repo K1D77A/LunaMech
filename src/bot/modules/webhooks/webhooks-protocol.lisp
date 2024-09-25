@@ -149,34 +149,34 @@ Execute-validator has the "
   (when (slot-boundp slot 'result)
     (slot-value slot 'result)))
 
+(defgeneric find-hook (c slot-name private-key)
+  (:documentation
+     "Looks for a webhook denoted by slot-name within the class, if found then validates 
+the provided PRIVATE-KEY against the one stored within the found webhook, if they are 
+the same then returns the slot, otherwise signals 'bad-private-key. If no slot can be 
+found by the name SLOT-NAME signals 'webhook-not-found.")
+  (:method ((class string) slot-name private-key)
+    (find-hook (find-class (intern (string-upcase class) :mm-module.webhook))
+               slot-name private-key))
+  (:method ((class webhook) (slot-name string) private-key)
+    (find-hook class (intern (string-upcase slot-name) :mm-module.webhook) private-key))
+  (:method ((class webhook) slot-name pkey)
+    (let ((hook (find slot-name (c2mop:class-direct-slots class)
+                      :key #'c2mop:slot-definition-name)))
+      (unless hook
+        (error 'webhook-not-found :webhook slot-name))
+      (with-slots (private-key)
+          hook
+        (if (string= (typecase private-key
+                       (string private-key)
+                       (function (funcall private-key)))
+                     pkey)
+            (if (slot-boundp hook 'result)
+                (progn (slot-makunbound hook 'result))
+                hook)
+            (error 'bad-private-key :private-key private-key :webhook slot-name))))))
 
 (defmethod no-applicable-method ((gf (eql #'find-hook)) &rest args)
   (when (every #'null args)
     "I'm alive"))
 
-(defmethod find-hook ((class string) slot-name private-key)
-  (find-hook (find-class (intern (string-upcase class) :mm-module.webhook))
-             slot-name private-key))
-
-(defmethod find-hook ((class webhook) (slot-name string) private-key)
-  (find-hook class (intern (string-upcase slot-name) :mm-module.webhook) private-key))
-
-(defmethod find-hook ((class webhook) slot-name pkey)
-  "Looks for a webhook denoted by slot-name within the class, if found then validates 
-the provided PRIVATE-KEY against the one stored within the found webhook, if they are 
-the same then returns the slot, otherwise signals 'bad-private-key. If no slot can be 
-found by the name SLOT-NAME signals 'webhook-not-found."
-  (let ((hook (find slot-name (c2mop:class-direct-slots class)
-                    :key #'c2mop:slot-definition-name)))
-    (unless hook
-      (error 'webhook-not-found :webhook slot-name))
-    (with-slots (private-key)
-        hook
-      (if (string= (typecase private-key
-                     (string private-key)
-                     (function (funcall private-key)))
-                   pkey)
-          (if (slot-boundp hook 'result)
-              (progn (slot-makunbound hook 'result))
-              hook)
-          (error 'bad-private-key :private-key private-key :webhook slot-name)))))

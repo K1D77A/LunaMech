@@ -1,4 +1,4 @@
-;;;; admin.asd
+ ;;;; admin.asd
 (asdf:defsystem #:matrix-moonbot
   :description "LunaMech is a featureful bot for use on Matrix."
   :author "K1D77A"
@@ -10,6 +10,7 @@
   :depends-on (#:jonathan
                #:alexandria
                #:str
+               #:slynk
                #:dexador
                #:lunamech-matrix-api
                #:flexi-streams
@@ -22,7 +23,6 @@
                #:cl-store
                #:babel
                #:trivia
-               #:slynk
                #:lparallel
                #:local-time
                #:ubiquitous-concurrent
