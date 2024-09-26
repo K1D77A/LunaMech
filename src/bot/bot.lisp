@@ -121,15 +121,22 @@ Luna will not evaluate any initiating functions and will login using the same de
                (string-downcase (pkv room-plist :NAME)))
              rooms))))
 
-(defmethod initiate-spellcheckers ((moonbot moonbot))
-  (mapc #'initiate-room-spellchecker (communities moonbot)))
+(defmethod initiate-spellcheckers ((luna luna))
+  (mapc #'initiate-room-spellchecker (communities luna)))
 
-(defmethod thread-maintainer ((moonbot moonbot))
+(defmethod thread-maintainer ((luna luna))
   (catch 'bail;used to forcefully stop the thread
-    (handler-bind ((condition
-                     (lambda (c)
-                       (handle-conditions moonbot c))))
-      (listen-and-process moonbot))))
+    (labels ((l-and-p ()
+               (restart-case 
+                   (listen-and-process luna)
+                 (listen-and-process ()
+                   :report "Just listen-and-process again?"
+                   (listen-and-process luna)))))
+      (handler-bind ((condition
+                       (lambda (c)
+                         (handle-conditions luna c))))
+        (l-and-p)))))
+
 
 (defmethod is-me-p (luna (string string))
   "Returns t if STRING matches any of the user-id's associated with open connections."  
@@ -144,11 +151,10 @@ Luna will not evaluate any initiating functions and will login using the same de
   nil)
 
 
-(defgeneric handle-conditions (luna c))
-
-(defmethod handle-conditions :around (luna c)
-  (log:error c)
-  (call-next-method))
+(defgeneric handle-conditions (luna c)
+  (:method :around (luna c)
+    (log:error c)
+    (call-next-method)))
 
 (defmethod handle-conditions (luna (c api-timeout))
   (log:error
@@ -161,10 +167,20 @@ Luna will not evaluate any initiating functions and will login using the same de
     (log:error "Successful reconnection")
     (invoke-restart 'try-again)))
 
+(defmethod handle-conditions (luna (c api-no-connection))
+  (log:error "Socket condition: ~A" c)
+  (log:error "Waiting and trying to restart.")
+  (moonbot-restart luna)
+  (when (find-restart 'try-again)
+    (log:error "Successful reconnection")
+    (invoke-restart 'try-again)))
+  
+
 (defmethod handle-conditions (luna (c api-error))
   (log:error "API Error made it through.")
   (log:error "Restarting listen-and-process")
-  (listen-and-process luna))
+  (when (find-restart 'listen-and-process)    
+    (invoke-restart 'listen-and-process)))
 
 (defmethod handle-conditions (luna (c m-unknown))
   (log:error "Unknown error")
@@ -177,7 +193,9 @@ Luna will not evaluate any initiating functions and will login using the same de
   (log:error "Unhandled condition signalled~% ~A~
                       Attempting to restart in 5 seconds" c)
   (moonbot-restart luna)
-  (listen-and-process luna))
+  (when (find-restart 'listen-and-process)    
+    (invoke-restart 'listen-and-process)))
+
 
 (defmethod initiate-communities ((luna luna))
   (log:info "Initiating ")

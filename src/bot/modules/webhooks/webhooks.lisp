@@ -17,27 +17,46 @@
                                                      :address "0.0.0.0"
                                                      :port 61111))))
 
-(defmethod on-load-up (moonbot (module webhook-module))
+(defmethod on-load-up (luna (module webhook-module))
   (log:info "Starting Luna's webhook listener on port 61111.")
-  (tbnl:start (webhook-server *module*)))
+  (handler-case 
+      (tbnl:start (webhook-server *module*))
+    (hunchentoot::hunchentoot-simple-error (c)
+      (log:warn "Webhook listener already listening. ~A" c))
+    (serious-condition (c)
+      (log:error "Error starting webhook server on load up. ~A" c))))
 
-(defmethod on-restart (moonbot (module webhook-module))
+(defmethod on-restart (luna (module webhook-module))
   (log:info "Restarting Luna's webhook listener on port 61111.")
-  (tbnl:start (webhook-server *module*)))
+  (on-shutdown luna module) ;;shutdown the server if possible.
+  (handler-case 
+      (tbnl:start (webhook-server *module*))
+    (hunchentoot::hunchentoot-simple-error (c)
+      (log:warn "Webhook listener already listening. ~A" c))
+    (serious-condition (c)
+      (log:error "Error restarting webhook-module. ~A" c))))
+    
 
 (defmethod on-shutdown (luna (module webhook-module))
-  (ignore-errors 
-   (tbnl:stop (webhook-server *module*)))
-  (log:info "Stopping Luna's webhook listener on port 61111."))
+  (log:info "Stopping Luna's webhook listener on port 61111.")
+  (handler-case 
+      (tbnl:stop (webhook-server *module*))
+    (unbound-slot (c)
+      (log:error "Webhook listener was not on while trying to shutdown. ~A" c))
+    (serious-condition (c)
+      (log:error "Error shutting down wehbook-module. ~A" c))))
 
 (defmethod on-save (moonbot (module webhook-module))
   t)
 
 (defmethod on-module-unload (moonbot (module webhook-module))
   (log:info "Stopping Luna's webhook listener.")
-  (ignore-errors 
-   (tbnl:stop (webhook-server *module*)))
-  t)
+  (handler-case 
+      (tbnl:stop (webhook-server *module*))
+    (unbound-slot (c)
+      (log:error "Webhook listener was not on while trying to unload. ~A" c))
+    (serious-condition (c)
+      (log:error "Error unloading wehbook-module. ~A" c))))
 
 (defmethod locate-command ((module webhook-module) (priv ubermensch-privilege)
                            invoker community)
@@ -144,15 +163,16 @@ If the private-keys do not match signals 'bad-private-key."
     (handler-case
         (let ((hook (find-hook hook-type hook-name authorization))
               (raw (tbnl:raw-post-data)))
+          (log:info "Executing hook. Type ~S. Name: ~S. Rawlen: ~S"
+                    hook-type hook-name (if raw (length raw) 0))
           (if (stringp hook)
               hook
               (apply #'execute-hook hook
                      (when raw
                        (jojo:parse (babel:octets-to-string raw))))))
-      (webhook-condition (c)
-        (setf (tbnl:return-code*) 400)
-        (format nil "~A" c))
-      (error (c)
+      (serious-condition (c)
+        (log:error "Serious condition ~A caught in /webhook."
+                   c c)
         (setf (tbnl:return-code*) 400)
         (format nil "~A" c)))))
 

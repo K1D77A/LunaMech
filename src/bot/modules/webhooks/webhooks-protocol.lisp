@@ -1,6 +1,8 @@
 (in-package #:mm-module.webhook)
 ;;;;this file contains a MOP for webhooks
 
+(defparameter *hook-types* (make-hash-table :test #'equal))
+
 (defclass webhook-api-slot (c2mop:slot-definition)
   ((fn
        :accessor fn
@@ -65,7 +67,6 @@ later and check the result.")
 (defmethod c2mop:compute-effective-slot-definition :after ((class webhook) name dslots)
   (with-accessors ((private-key private-key))
       class
-    ;; (print (first private-key))
     (when (listp private-key)
       (setf private-key (compile nil (first private-key))))
     (mapc (lambda (slot)
@@ -107,7 +108,8 @@ later and check the result.")
             ,direct-slots
             (:metaclass webhook)
             ,@options)
-          (c2mop:finalize-inheritance (find-class ',name))))
+          (c2mop:finalize-inheritance (find-class ',name))
+          (setf (gethash ',name *hook-types*) (find-class ',name))))
 
 
 ;;;inheritance from superclasses isn't creating direct slots
@@ -128,7 +130,6 @@ later and check the result.")
 (defmethod execute-function ((slot webhook-api-slot) &rest args)
   (with-slots (fn result)
       slot
-    (print fn)
     (handler-case (setf result (apply fn args))
       (condition (c)
         (setf result c)))))
@@ -171,10 +172,11 @@ found by the name SLOT-NAME signals 'webhook-not-found.")
                        (string private-key)
                        (function (funcall private-key)))
                      pkey)
-            (if (slot-boundp hook 'result)
-                (progn (slot-makunbound hook 'result))
-                hook)
-            (error 'bad-private-key :private-key private-key :webhook slot-name))))))
+            (progn (when (slot-boundp hook 'result)
+                     (slot-makunbound hook 'result))
+                   hook)
+            (error 'bad-private-key :private-key private-key
+                                    :webhook slot-name))))))
 
 (defmethod no-applicable-method ((gf (eql #'find-hook)) &rest args)
   (when (every #'null args)

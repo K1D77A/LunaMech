@@ -83,7 +83,9 @@
     (mapc (lambda (room-plist)
             (handler-case
                 (initiate-name-change luna room-plist)
-              (jitsi-condition ()
+              (jitsi-condition (c)
+                (log:error
+                 "jitsi condition ~A signalled in body of jitsi-module #'on-sync" c)
                 nil)));in case of signalled condition do nothing
           (rooms *module*))))
 
@@ -162,11 +164,13 @@ change will happen if the room is not registered within a community in Luna."
                                                :datum (format nil "PARTICIPANTS needs to ~
                                                                    be a string. ~S"
                                                               participants))))))
-        (symbol-macrolet ((previous (gethash room-name previous-counts)))
+        (symbol-macrolet ((previous (gethash room-name previous-counts)))          
           (when (and matrix-room (not (eql previous parsed-parts)))
             (destructuring-bind (&key name &allow-other-keys)
-                matrix-room
-              (when name 
+                matrix-room              
+              (when name
+                (log:info "Changing room name change. Room-name: ~A. New: ~A. Old. ~A"
+                          room-name parsed-parts previous)
                 (let ((name (clean-name name)))
                   (change-name (conn luna) id (format nil "(~D) ~A" parsed-parts name))
                   (setf previous parsed-parts))))))))))
@@ -210,6 +214,7 @@ Returns a string."
 
 (defun change-name (connection room-id new-name)
   "Changes the name of ROOM-ID to NEW-NAME"
+  (log:info "New room name ~S for Room-id: ~S." new-name room-id)
   (multiple-value-bind (event type)
       (lmav2:object%m-room-name new-name)
     (lmav2:send-state-event-to-room connection room-id type event)))
@@ -227,11 +232,13 @@ Returns a string."
           (if (null (first parsed))
               nil
               parsed)))
-    ((or dexador.error:http-request-failed jojo:<jonathan-incomplete-json-error>) ()
+    (serious-condition (c)
+      (log:error "Error signalled trying to get room info. ~A" c)
       (error 'jitsi-condition :jitsi-condition-url url
                               :jitsi-condition-domain domain
                               :jitsi-condition-prefix prefix
-                              :jitsi-condition-message "Dexador errored on request")))))
+                              :jitsi-condition-message
+                              (format nil "~A" c))))))
 
 (defun valid-jitsi-room-p (id)
   (let ((rooms (getf (first (rooms *module*)) :rooms)))    

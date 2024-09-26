@@ -103,7 +103,7 @@ which returns nil and resignal, which causes the condition to be signalled again
                                                       :matrix-moonbot)
                                               community room message rest)))))
         (return-nil ()
-          :report "Return nil?"
+          :report "Return nil?" 
           nil)
         (resignal (c)
           :report "Resignal the condition?"
