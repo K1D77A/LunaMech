@@ -192,7 +192,7 @@ Finally at the end of every loop (timestamp ) is reset to (local-time:now)"
                                            300)
                 (%backup-luna luna))
               (%reset-timestamp luna)
-              (sleep 3)
+              (sleep 1)
           :finally (log:info "Luna going down"))))
 
 (defun %grab-and-process-messages (luna sync)

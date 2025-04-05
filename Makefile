@@ -1,7 +1,7 @@
 LISP ?= sbcl
 
 build:
-		sbcl \
+		sbcl --core '/home/josh/documents/lisp/sbcl/sbcl.core' \
         --load matrix-moonbot.asd  \
 		--eval '(ql:quickload "matrix-moonbot")' \
 		--eval '(asdf:make "matrix-moonbot")' \

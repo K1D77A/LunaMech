@@ -161,18 +161,17 @@ If the private-keys do not match signals 'bad-private-key."
         (hook-name (tbnl:header-in* :hook-name))
         (authorization (tbnl:header-in* :private-key)))
     (handler-case
-        (let ((hook (find-hook hook-type hook-name authorization))
-              (raw (tbnl:raw-post-data)))
-          (log:info "Executing hook. Type ~S. Name: ~S. Rawlen: ~S"
-                    hook-type hook-name (if raw (length raw) 0))
+        (let* ((hook (find-hook hook-type hook-name authorization))
+               (raw (tbnl:raw-post-data))
+               (parsed (when raw
+                         (jojo:parse (babel:octets-to-string raw)))))
+          (log:info "Executing hook. Type ~S. Name: ~S. Rawlen: ~S. Parsed: ~%~S"
+                    hook-type hook-name (if raw (length raw) 0) parsed)
           (if (stringp hook)
               hook
-              (apply #'execute-hook hook
-                     (when raw
-                       (jojo:parse (babel:octets-to-string raw))))))
+              (apply #'execute-hook hook parsed)))
       (serious-condition (c)
-        (log:error "Serious condition ~A caught in /webhook."
-                   c c)
+        (log:error "Serious condition ~A caught in /webhook." c)
         (setf (tbnl:return-code*) 400)
         (format nil "~A" c)))))
 

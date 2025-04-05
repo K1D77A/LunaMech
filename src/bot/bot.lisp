@@ -7,12 +7,9 @@
   (setup-log4cl)
   (log:info "Luna is booting.")
   (when slynk
-    (log:info "Starting primary Slynk server.")
-    (slynk:create-server :port 54000 :dont-close t);primary sly connection
-    (log:info "Starting backup Slynk server.")
-    (slynk:create-server :port 54001 :dont-close t);backup sly
-    (setf slynk:*use-dedicated-output-stream* nil)
-    (log:info "You can now connect with Slynk."))
+    (log:info "Starting primary Swank server.")
+    (swank:create-server :port 54000 :dont-close t);primary sly connection
+    (log:info "You can now connect with Swank."))
   (log:info "Restoring Luna from config...")
   (handler-bind ((warning
                    (lambda (c)
@@ -126,17 +123,16 @@ Luna will not evaluate any initiating functions and will login using the same de
 
 (defmethod thread-maintainer ((luna luna))
   (catch 'bail;used to forcefully stop the thread
-    (labels ((l-and-p ()
-               (restart-case 
-                   (listen-and-process luna)
-                 (listen-and-process ()
-                   :report "Just listen-and-process again?"
-                   (listen-and-process luna)))))
-      (handler-bind ((condition
-                       (lambda (c)
-                         (handle-conditions luna c))))
-        (l-and-p)))))
-
+    (tagbody main
+       (handler-bind ((condition
+                        (lambda (c)
+                          (sleep 1)
+                          (handle-conditions luna c))))
+         (restart-case 
+             (listen-and-process luna)
+           (listen-and-process ()
+             :report "Just listen-and-process again?"
+             (go main)))))))
 
 (defmethod is-me-p (luna (string string))
   "Returns t if STRING matches any of the user-id's associated with open connections."  
@@ -157,11 +153,8 @@ Luna will not evaluate any initiating functions and will login using the same de
     (call-next-method)))
 
 (defmethod handle-conditions (luna (c api-timeout))
-  (log:error
-   "Socket condition: ~A"
-   (api-timeout-condition c))
-  (log:error
-   "Attempting a restart of Luna")
+  (log:error "Socket condition: ~A" (api-timeout-condition c))
+  (log:error "Attempting a restart of Luna")
   (moonbot-restart luna)
   (when (find-restart 'try-again)
     (log:error "Successful reconnection")
@@ -178,9 +171,16 @@ Luna will not evaluate any initiating functions and will login using the same de
 
 (defmethod handle-conditions (luna (c api-error))
   (log:error "API Error made it through.")
-  (log:error "Restarting listen-and-process")
-  (when (find-restart 'listen-and-process)    
-    (invoke-restart 'listen-and-process)))
+  (cond ((find-restart 'listen-and-process)
+         (log:error "Restarting listen-and-process..")
+         (invoke-restart 'listen-and-process))        
+        ((find-restart 'try-again)
+         (log:error "Trying again...")
+         (invoke-restart 'try-again))
+        (t (log:error "Unable to find either restart... going to die."))))
+
+
+
 
 (defmethod handle-conditions (luna (c m-unknown))
   (log:error "Unknown error")

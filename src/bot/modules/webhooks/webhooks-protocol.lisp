@@ -5,7 +5,7 @@
 
 (defclass webhook-api-slot (c2mop:slot-definition)
   ((fn
-       :accessor fn
+     :accessor fn
      :initarg :fn
      :documentation "The function that is executed when this webhook is found.")
    (validator

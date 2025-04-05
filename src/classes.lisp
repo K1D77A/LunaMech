@@ -77,7 +77,7 @@ complete listening cycle. This can be used to implement timers.")
     :documentation "This is the primary thread that the entire command system runs on.")
    (parallel-p
     :accessor parallel-p
-    :initform t
+    :initform nil
     :documentation "Set to t and actions will be performed concurrently using lparallel.")
    (controller-thread
     :accessor cotroller-thread

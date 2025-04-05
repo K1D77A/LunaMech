@@ -10,7 +10,7 @@
   :depends-on (#:jonathan
                #:alexandria
                #:str
-               #:slynk
+               #:swank
                #:dexador
                #:lunamech-matrix-api
                #:flexi-streams
