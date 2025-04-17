@@ -6,7 +6,7 @@
 
 (in-package #:mm-module.jitsi)
 
-(defmodule jitsi (mm-module.jitsi JITSI ubermensch-privilege)
+(defmodule jitsi (mm-module.jitsi jitsi ubermensch-privilege)
            jitsi-command ()
            jitsi-module
            ((timers
@@ -219,6 +219,14 @@ Returns a string."
       (lmav2:object%m-room-name new-name)
     (lmav2:send-state-event-to-room connection room-id type event)))
 
+(defun safe-dex (url)
+  (handler-case
+      (dex:get url)
+    (dexador.error:http-request-forbidden ()
+      (log:error "Request forbidden for whatever reason.. Gonna try HTTP if possible.")
+      (let ((url (second (str:split "https" url))))
+        (dex:get (format nil "http" url))))))
+
 (defun get-room-info (url &key (prefix "") (domain "meet.jitsi"))
   (flet ((build-prefix (prefix)
            (if (string= prefix "")
@@ -227,7 +235,7 @@ Returns a string."
   (handler-case 
       (let* ((url (concatenate 'string (fixurl (list url))
                                (build-prefix prefix) "status?domain=" domain))
-             (res (dex:get url)))
+             (res (safe-dex url)))
         (let ((parsed (jojo:parse res)))
           (if (null (first parsed))
               nil
