@@ -225,7 +225,8 @@ Returns a string."
     (dexador.error:http-request-forbidden ()
       (log:error "Request forbidden for whatever reason.. Gonna try HTTP if possible.")
       (let ((url (second (str:split "https" url))))
-        (dex:get (format nil "http" url))))))
+        (when url 
+          (dex:get (format nil "http~A" url)))))))
 
 (defun get-room-info (url &key (prefix "") (domain "meet.jitsi"))
   (flet ((build-prefix (prefix)
@@ -236,10 +237,11 @@ Returns a string."
       (let* ((url (concatenate 'string (fixurl (list url))
                                (build-prefix prefix) "status?domain=" domain))
              (res (safe-dex url)))
-        (let ((parsed (jojo:parse res)))
-          (if (null (first parsed))
-              nil
-              parsed)))
+        (when res 
+          (let ((parsed (jojo:parse res)))
+            (if (null (first parsed))
+                nil
+                parsed))))
     (serious-condition (c)
       (log:error "Error signalled trying to get room info. ~A" c)
       (error 'jitsi-condition :jitsi-condition-url url
