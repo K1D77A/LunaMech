@@ -67,9 +67,11 @@ and recall login."
       (setf (password connection) pass)
       (login connection))))
 
+(defparameter *sync-timeout* 30000)
+
 (defmethod first-sync ((connection connection))
   (log:info "Performing initial sync for device-id ~A" (device-id connection))
-  (sync connection))
+  (sync con :timeout *sync-timeout*))
 
 (defgeneric login (moonbot &optional relog))
 
