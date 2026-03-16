@@ -71,7 +71,7 @@ and recall login."
 
 (defmethod first-sync ((connection connection))
   (log:info "Performing initial sync for device-id ~A" (device-id connection))
-  (sync con :timeout *sync-timeout*))
+  (sync connection :timeout *sync-timeout*))
 
 (defgeneric login (moonbot &optional relog))
 
@@ -193,7 +193,7 @@ Luna will not evaluate any initiating functions and will login using the same de
 
 (defmethod handle-conditions (luna c)
   (log:error "Unhandled condition signalled~% ~A~
-                      Attempting to restart in 5 seconds" c)
+              Attempting to restart in 5 seconds" c)
   (moonbot-restart luna)
   (when (find-restart 'listen-and-process)    
     (invoke-restart 'listen-and-process)))

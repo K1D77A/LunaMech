@@ -20,8 +20,8 @@
   (format nil "~{[<font color='#cc8aca'>Luna</font>] ~A<br>~}" strings))
 ;;(format nil "~{[Luna] ~A~%~}" strings)
 
-(defmacro with-formatted-output-to-room ((community room) &body body)
-  (alexandria:with-gensyms (res string formatted-string)
+(defmacro with-formatted-output-to-room ((community room &key reply-event-id) &body body)
+  (alexandria:with-gensyms (res string formatted-string)    
     `(let* ((,res nil)
             (,string
               (with-output-to-string (*standard-output*)
@@ -29,14 +29,20 @@
        (when (string/= ,string "")
          (let ((,formatted-string (str:split #\Newline ,string :omit-nulls t)))
            (luna-message ,community ,room
-                         (%format-strings ,formatted-string))))
+                         (%format-strings ,formatted-string)
+                         :reply-event-id ,reply-event-id)))
        ,res)))
 
-(defun luna-message (community room message)
-  (moon-message community room message))
+(defun luna-message (community room message &key reply-event-id)
+  (moon-message community room message :reply-event-id reply-event-id))
 
-(defun moon-message (community room message)
-  (let ((event (object%event/m-room-message/m-text message message)))
+(defparameter *o* nil)
+
+(defun moon-message (community room message &key reply-event-id)
+  (let ((event (if reply-event-id
+                   (object%event/m-room-message/m-text%reply message message reply-event-id)
+                   (object%event/m-room-message/m-text message message))))
+    (when reply-event-id (setf *o* event))
     (catch-limit-exceeded
       (send-message-event-to-room (connection community) room event))))
 

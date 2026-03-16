@@ -30,6 +30,8 @@
                #:log4cl
                #:trivial-backtrace
                #:cl-feedparser
+               #:plump
+               #:clss
                #:spellcheck
                #:spinneret
                #:hunchentoot
@@ -69,6 +71,7 @@
                                          (:file "luna")
                                          (:file "huginn")
                                          (:file "site")
+                                         (:file "opengraph")
                                          (:file "jitsi")
                                          (:file "rss")
                                          (:module "twitter"
@@ -113,7 +116,7 @@
                                                                (:file "resizer")
                                                                (:file "processor")
                                                                (:file "stickers")
-                                                               (:file "from-website")))))
+                                                               (:file "from-website")))))                               
                                (:file "commands")
                                (:file "message-processing")
                                (:file "bot")))

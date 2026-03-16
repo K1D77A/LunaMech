@@ -158,7 +158,7 @@ found but already loaded then 'module-already-loaded is signalled."
                :module-error-message "Already found module in Luna"))
       (push module found-modules) 
       (on-module-hotload luna module)
-      (format t "Hotload of ~A~%Successful~%" module)
+      (format t "Hotload of ~S~%Successful~%" module)
       (log:info "Hotload of ~A~%Successful" module))))
 
 (defmethod sym->module-name ((luna luna) sym)
@@ -295,6 +295,10 @@ modules to perform operations just before Luna goes down.")
 (new-module-hook on-save (luna module)
                  "this is called before Moonbot is saved, this can be used by modules to
 perform operations at save time.")
+
+(new-module-hook on-message (luna module community room privilege message text)
+                 "This is called when the privilege for a message is determined.")
+
 
 ;;need an on-shutdown
 (defgeneric on-sync (luna module sync)

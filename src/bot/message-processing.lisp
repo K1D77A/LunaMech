@@ -92,6 +92,9 @@ which returns nil and resignal, which causes the condition to be signalled again
       (restart-case
           (let ((priv (determine-privilege luna community message)))
             (unless (is-me-p luna priv)
+              (mapc (lambda (mod)
+                      (on-message luna mod community room priv message text))
+                    (found-modules luna))
               (destructuring-bind (prefix/module invoker &rest rest)
                   (extract-command-and-args luna community text)
                 (handler-bind ((missing-command

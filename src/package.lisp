@@ -12,6 +12,7 @@
            #:*luna*
            #:setup-and-go
            #:moonmat-message
+           #:with-formatted-output-to-room
            #:lunamat-message
            #:luna-message
            #:timer
@@ -344,6 +345,7 @@
            #:download-content
            #:user-profile-url
            #:on-sync
+           #:on-message
            #:on-save
            #:on-cycle
            #:moonbot-condition
