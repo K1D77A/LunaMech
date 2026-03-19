@@ -157,7 +157,7 @@ Youtube
   (let ((title (gethash "title" parsed))
         (author (gethash "author_name" parsed)))
     (when (and title author)
-      (format t "~A -- ~A" title author))))
+      (format stream "~A -- ~A" title author))))
 
 
 (defmethod on-message (luna (module og-module) community room privilege message text)

@@ -36,13 +36,11 @@
 (defun luna-message (community room message &key reply-event-id)
   (moon-message community room message :reply-event-id reply-event-id))
 
-(defparameter *o* nil)
 
 (defun moon-message (community room message &key reply-event-id)
   (let ((event (if reply-event-id
                    (object%event/m-room-message/m-text%reply message message reply-event-id)
                    (object%event/m-room-message/m-text message message))))
-    (when reply-event-id (setf *o* event))
     (catch-limit-exceeded
       (send-message-event-to-room (connection community) room event))))
 
