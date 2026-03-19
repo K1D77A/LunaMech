@@ -167,6 +167,31 @@ Youtube
       (format stream "~A -- ~A" title author))))
 
 
+#||
+
+Nitter
+
+||#
+
+(defclass nitter (x)
+  ())
+
+(map-domain-to-og-getter 'nitter
+                         "nitter.net")
+
+
+(defparameter *x* nil)
+
+(defmethod fetch-opengraph-info ((o nitter) stream)
+  (with-accessors ((url url))       
+      o
+    (multiple-value-bind (match groups)
+        (cl-ppcre:scan-to-strings "\\.net/(.+)" url)
+      (unless (zerop (length match))
+        (let ((path (aref groups 0)))
+          (let ((url (format nil "https://x.com/~A" path)))
+            (fetch-opengraph-info (make-instance 'x :url url) stream)))))))
+                       
 (defmethod on-message (luna (module og-module) community room privilege message text)
   (multiple-value-bind (starts-with-http-p url)
       (extract-url text)
