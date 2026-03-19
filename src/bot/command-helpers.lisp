@@ -17,7 +17,7 @@
          (progn ,@body)))))
 
 (defun moonmat (control-string &rest args)
-  (format nil "[Luna] ~A" (apply #'format nil control-string args)))
+  (format nil "[<font color='#cc8aca'>Luna</font>] ~A" (apply #'format nil control-string args)))
 
 (defun %format-strings (strings)
   (format nil "~{[<font color='#cc8aca'>Luna</font>] ~A<br>~}" strings))
