@@ -22,7 +22,8 @@
 
 
 (defun extract-url (text)
-  (first (cl-ppcre:all-matches-as-strings "https?://\\S+" text)))
+  (values (str:starts-with-p "http" text :ignore-case nil)
+          (first (cl-ppcre:all-matches-as-strings "https?://\\S+" text))))
 
 (defun extract-domain (url)
   (cl-ppcre:scan-to-strings "https?://([^/]+)" url))
@@ -120,6 +121,18 @@ X
                      t)))
             children)
        (format stream " -- ~A" author)))))
+
+
+(defun extract-opengraph (dom)
+  (let* ((nodes (clss:select "meta[property^='og:']" dom))
+         (result (make-hash-table :test 'equal)))
+    (map nil (lambda (node)
+               (let ((prop (plump:attribute node "property"))
+                     (content (plump:attribute node "content")))
+                 (when (and prop content)
+                   (setf (gethash prop result) content))))
+         nodes)
+    result))
 #||
 
 Youtube
@@ -148,7 +161,8 @@ Youtube
 
 
 (defmethod on-message (luna (module og-module) community room privilege message text)
-  (let ((url (extract-url text)))
+  (multiple-value-bind (starts-with-http-p url)
+      (extract-url text)
     (when url
       (log:info "Trying to get opengraph info for URL: ~S" url)
       (multiple-value-bind (with-https domain-vec)
@@ -159,5 +173,9 @@ Youtube
             (log:info "Domain: ~S" domain?)
             (let ((og-getter (get-opengraph-getter domain? url))
                   (event-id (gethash "event_id" message)))
-              (with-formatted-output-to-room (community room :reply-event-id event-id)
-                (fetch-opengraph-info og-getter *standard-output*)))))))))
+              (if (and starts-with-http-p
+                       (not (find #\Space text :test #'char=)))
+                  (with-formatted-output-to-room (community room :reply-event-id event-id)
+                    (fetch-opengraph-info og-getter *standard-output*))
+                  (with-formatted-output-to-room (community room)
+                    (fetch-opengraph-info og-getter *standard-output*))))))))))
