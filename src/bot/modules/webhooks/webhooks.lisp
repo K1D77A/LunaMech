@@ -165,11 +165,16 @@ If the private-keys do not match signals 'bad-private-key."
                (raw (tbnl:raw-post-data))
                (parsed (when raw
                          (jojo:parse (babel:octets-to-string raw)))))
-          (log:info "Executing hook. Type ~S. Name: ~S. Rawlen: ~S. Parsed: ~%~S"
-                    hook-type hook-name (if raw (length raw) 0) parsed)
-          (if (stringp hook)
+          (with-slots (lock)
               hook
-              (apply #'execute-hook hook parsed)))
+            (bt2:with-lock-held (lock :timeout 30)
+              (when (slot-boundp hook 'result)
+                (slot-makunbound hook 'result))              
+              (log:info "Executing hook. Type ~S. Name: ~S. Rawlen: ~S. Parsed: ~%~S"
+                        hook-type hook-name (if raw (length raw) 0) parsed)
+              (if (stringp hook)
+                  hook
+                  (apply #'execute-hook hook parsed)))))
       (serious-condition (c)
         (log:error "Serious condition ~A caught in /webhook." c)
         (setf (tbnl:return-code*) 400)

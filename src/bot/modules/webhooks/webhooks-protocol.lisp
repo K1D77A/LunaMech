@@ -12,6 +12,10 @@
     :accessor validator
     :initarg :validator
     :documentation "The argument validation function")
+   (lock
+    :accessor lock
+    :initarg :lock
+    :initform (bt2:make-lock))
    (expected-args
     :accessor expected-args
     :initarg :expected-args
@@ -132,6 +136,7 @@ later and check the result.")
       slot
     (handler-case (setf result (apply fn args))
       (condition (c)
+        (log:error "Condition signalled: ~A" c)
         (setf result c)))))
 
 (defmethod execute-hook :around ((slot webhook-api-slot) &rest args)
@@ -172,9 +177,7 @@ found by the name SLOT-NAME signals 'webhook-not-found.")
                        (string private-key)
                        (function (funcall private-key)))
                      pkey)
-            (progn (when (slot-boundp hook 'result)
-                     (slot-makunbound hook 'result))
-                   hook)
+            hook
             (error 'bad-private-key :private-key private-key
                                     :webhook slot-name))))))
 
