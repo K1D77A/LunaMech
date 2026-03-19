@@ -104,23 +104,30 @@ X
                          "mobile.twitter.com"
                          "m.twitter.com")
 
+(defparameter *message* nil)
+
 (defmethod extract-oembed-info ((o x) parsed stream)  
   (let* ((html (gethash "html" parsed))
          (plumped (plump:parse html))
          (elements (plump-dom:get-elements-by-tag-name plumped "p"))
          (author (gethash "author_name" parsed)))   
-   (when (listp elements)
-     (let* ((content (first elements))
-            (children (plump-dom:children content)))
-       (map nil (lambda (element)
-                  (typecase element
-                    (plump-dom:text-node (format stream "~A" (plump:text element)))
-                    (plump-dom:element
-                     (if (string= (plump:tag-name element) "br")
-                         (format stream "~%"))
-                     t)))
-            children)
-       (format stream " -- ~A" author)))))
+    (when (listp elements)
+      (setf *message* elements)
+      (let* ((content (first elements))
+             (children (plump-dom:children content)))
+        (map nil (lambda (element)
+                   (typecase element
+                     (plump-dom:text-node (format stream "~A" (plump:text element)))
+                     (plump-dom:element
+                      (let ((tag (plump:tag-name element)))
+                      (cond ((string= tag "br")
+                             (format stream "~%"))
+                            ((string= tag "a")
+                             (format stream "~A" (plump:text element)))
+                            (t nil))))
+                     (otherwise nil)))                                      
+             children)
+        (format stream " -- ~A" author)))))
 
 
 (defun extract-opengraph (dom)
