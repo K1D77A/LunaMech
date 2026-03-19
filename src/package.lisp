@@ -104,7 +104,7 @@
            #:ban-user-from-room
            #:banning-from
            #:bytes
-           #:catch-limit-exceeded
+           #:catch-potential-conditions
            #:command
            #:command-type
            #:commands

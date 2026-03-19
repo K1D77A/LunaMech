@@ -27,7 +27,7 @@
                            (arg-list command))))))
 
 (defun print-command-information (command community room)
-  (catch-limit-exceeded
+  (catch-potential-conditions
     (with-formatted-output-to-room (community room)
       (format-command t command))))
 
@@ -136,7 +136,7 @@ the prefix, the command and the community it was sent in."))
 (defun safe-execution (command community room message args &optional (luna nil))
   "Execute the given COMMAND and catch and format any errors."
   (check-type luna (or null luna))
-  (catch-limit-exceeded
+  (catch-potential-conditions
     (handler-case
         (let ((connection (connection community))
               (community community)

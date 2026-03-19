@@ -46,7 +46,7 @@ straight to the direct message room through these streams."
 condition and reports that exact condition, validation-failed and reports it and any 
 unhandled conditions which are also reported with the exception of api-timeout which is 
 allowed to pass."
-  (catch-limit-exceeded
+  (catch-potential-conditions 
     (handler-case (progn
                     (let ((private-room (find-room (room-id proom))))
                       (log:info "with: ~A in: ~A command: ~A args: ~A"

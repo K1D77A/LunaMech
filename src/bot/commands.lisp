@@ -7,7 +7,7 @@
 (new-admin-community-command rate-limit ((count))
     "hits rate limit"
   (dotimes (i (parse-integer count))
-    (catch-limit-exceeded 
+    (catch-potential-conditions
       (with-formatted-output-to-room (community room)
         (format t"message: ~D" (1+ i))))))
 

@@ -2,12 +2,15 @@
 
 (defparameter *hex-colour* "'#cc8aca'")
 
-(defmacro catch-limit-exceeded (&body body)
+(defmacro catch-potential-conditions (&body body)
   "executes BODY like normal, if m-limit-exceeded is signalled this handles the
   condition by waiting the required time and then attempts to execute
   body again"
   `(handler-case
        (progn ,@body)
+     (api-no-connection (c)
+       (log:error "Api no connection: ~A~%Attempting to relog." c)
+       (login *luna* t))
      (m-limit-exceeded (c)
        (let ((arg (api-error-args c)))
          (sleep (/ (+ 10 arg) 1000));ms to s
@@ -41,11 +44,11 @@
   (let ((event (if reply-event-id
                    (object%event/m-room-message/m-text%reply message message reply-event-id)
                    (object%event/m-room-message/m-text message message))))
-    (catch-limit-exceeded
+    (catch-potential-conditions
       (send-message-event-to-room (connection community) room event))))
 
 (defun module-moonmat-message (connection room control-string &rest args)
-  (catch-limit-exceeded
+  (catch-potential-conditions
     (send-message-to-room connection room (apply #'moonmat control-string args))))
 
 (defun lunamat-message (community room control-string &rest args)
@@ -100,7 +103,7 @@
                          (let ((%room-name (getf room :name))
                                (%room-id (getf room :id)))
                            (handler-case
-                               (catch-limit-exceeded
+                               (catch-potential-conditions
                                  (funcall function %room-name %room-id))
                              (m-forbidden (c)
                                (moonmat-message community message-room "~A"
@@ -218,7 +221,7 @@
   (unless (find new-val (rooms community)  :key (lambda (x) (getf x :id))
                                            :test #'string=)
     (let ((room-name
-            (catch-limit-exceeded
+            (catch-potential-conditions
               (get-room-events (connection community)
                                new-val "m.room.name"))))
       (push (list :id new-val :name (second room-name)) (rooms community)))))

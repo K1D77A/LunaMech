@@ -5,7 +5,7 @@
     "Initiates a DM with USER-ID within a given CONTEXT"
   (log:info  (intern (string-upcase  context)))
   (format t "Starting a DM with ~A." (subseq user-id 1))
-  (catch-limit-exceeded 
+  (catch-potential-conditions 
     (let* ((context (gen-context (intern (string-upcase context) :keyword)))
            (room (create-private-room (connection community)
                                       (list user-id)))
@@ -112,7 +112,7 @@ does check those who have already given results."
                (no-res (remove-if #'compass:result-set-p online)))
           (mapc (lambda (user-id)
                   (format t "Starting DM with ~A" (subseq user-id 1))
-                  (catch-limit-exceeded 
+                  (catch-potential-conditions
                     (let* ((context (gen-context :COMPASS))
                            (room (create-private-room (connection community)
                                                       (list user-id)))

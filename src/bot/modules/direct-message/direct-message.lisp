@@ -196,7 +196,7 @@ message-events"
                       (execute-context proom)
                       (let ((output-string (get-output-stream-string (output-stream proom))))
                         (unless (string= output-string "")
-                          (catch-limit-exceeded 
+                          (catch-potential-conditions
                             (moonmat-message (first (communities luna))
                                              (symbol-name room-id)
                                              "~A" output-string))))

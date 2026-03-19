@@ -217,7 +217,7 @@ Luna will not evaluate any initiating functions and will login using the same de
     (log:info "Collecting rooms for " name)
     (if top-level-space
         (handler-case
-            (catch-limit-exceeded 
+            (catch-potential-conditions 
               (let ((rooms (rooms-in-a-space (conn luna) top-level-space)))
                 (log:info "- Found ~D room~:P" (length rooms))
                 (setf (rooms community) rooms)
@@ -238,7 +238,7 @@ Luna will not evaluate any initiating functions and will login using the same de
           room
         (log:info "- Checking for users in ~A" name)
         (handler-case
-            (catch-limit-exceeded 
+            (catch-potential-conditions 
               (let ((member-hash (gethash "joined" (members-in-room-ids (conn luna) id))))
                 (maphash (lambda (member hash)
                            (declare (ignore hash))

@@ -265,7 +265,7 @@ have the same homeserver as Luna and all of those who are already in the room."
                      (length only-same-home) room-id)
     (moon-mapc community room
                (lambda (member)
-                 (catch-limit-exceeded
+                 (catch-potential-conditions 
                    (lmav2:call-api (make-instance 'lmav2:admin%edit-users-room-membership
                                                   :connection (conn *luna*)
                                                   :room-id-or-alias room-id
@@ -301,7 +301,7 @@ have the same homeserver as Luna and all of those who are already in the room."
          (log:info "Inviting ~A to ~A" user-id room-id)
          (handler-case
              (bt:with-timeout (5)
-               (catch-limit-exceeded
+               (catch-potential-conditions
                  (invite-member-to-room (conn *luna*) user-id room-id)))
            (bt:timeout ()
              (log:error "Timeout when inviting ~A to ~A" user-id room-id))
