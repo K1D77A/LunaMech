@@ -181,8 +181,6 @@ Nitter
                          "nitter.net")
 
 
-(defparameter *x* nil)
-
 (defmethod fetch-opengraph-info ((o nitter) stream)
   (with-accessors ((url url))       
       o

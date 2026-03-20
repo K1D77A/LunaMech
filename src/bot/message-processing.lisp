@@ -9,8 +9,8 @@
 
 (defun message-from? (message &optional (sigcon-when-nil-p nil))
   "Normal - looks within the list to find the key :|user_id| and returns this.
-Exceptional - When SIGCON-WHEN-NIL-P is non nil signals a MISSING-EXPECTED-KEY 
-condition"
+   Exceptional - When SIGCON-WHEN-NIL-P is non nil signals a MISSING-EXPECTED-KEY 
+   condition"
   (with-hash-keys (|sender| |user_id|)
       message
     (let ((val (or |sender| |user_id|)))
@@ -22,7 +22,7 @@ condition"
 
 (defun check-valid-prefix (string)
   "Attemps to determine if STRING has a valid prefix. Currently the prefix is just the 
-character #\. In the case that it does returns t otherwise signals condition 'invalid-prefix"
+   character #\. In the case that it does returns t otherwise signals condition 'invalid-prefix"
   (or (char= (aref string 0) #\.)
       (let ((trimmed (%trim-message 25 string)))
         (error 'invalid-prefix
@@ -40,13 +40,13 @@ character #\. In the case that it does returns t otherwise signals condition 'in
 
 (defun extract-command-and-args (moonbot community string)
   "Normal - Takes in an instance of moonbot a community and a string and
-splits it by #\Space and removes nulls, then checks if the
-string is a community-prefix-p, if so returns a list of an interned prefix 
-and the args to the functions. If it not community-prefix-p then checks if the
-interned prefix can be found within any of the modules associated with MOONBOT.
-If one is found then returns a list of the module and the remainder of the split.
-Exceptional - If neither community-prefix-p or part of a module then signals
-a 'invalid-prefix' condition."
+   splits it by #\Space and removes nulls, then checks if the
+   string is a community-prefix-p, if so returns a list of an interned prefix 
+   and the args to the functions. If it not community-prefix-p then checks if the
+   interned prefix can be found within any of the modules associated with MOONBOT.
+   If one is found then returns a list of the module and the remainder of the split.
+   Exceptional - If neither community-prefix-p or part of a module then signals
+   a 'invalid-prefix' condition."
   (handler-case
       (when (check-valid-prefix string)
         (let* ((split (str:split " " (str:trim (str:collapse-whitespaces string)) :limit 3))
@@ -84,9 +84,9 @@ a 'invalid-prefix' condition."
 
 (defun process-message (luna community room message)
   "Normal - initially determines the privilege of the user from the message, then
-extracts the commands and arguments from the message, and starts the process for
-handling the command. Exceptional - There are two restarts available, return-nil
-which returns nil and resignal, which causes the condition to be signalled again."
+   extracts the commands and arguments from the message, and starts the process for
+   handling the command. Exceptional - There are two restarts available, return-nil
+   which returns nil and resignal, which causes the condition to be signalled again."
   (let ((text (extract-message message)))
     (when text
       (restart-case
@@ -141,9 +141,10 @@ that the message type is unknown then signals the condition 'unknown-message-typ
                                   "Unknown type"))))))))
 
 (defgeneric grab-messages-and-process (luna community sync)
-  (:documentation "Given Luna a community and a sync list, attempts to find all of 
-the messages from the rooms that luna is listening in for that community and then 
-passes them to process-messages"))
+  (:documentation
+   "Given Luna a community and a sync list, attempts to find all of 
+    the messages from the rooms that luna is listening in for that community and then 
+    passes them to process-messages"))
 
 (defmethod grab-messages-and-process ((moonbot moonbot) (community community) sync)
   (with-accessors ((connection connect))
@@ -156,22 +157,22 @@ passes them to process-messages"))
 
 (defmethod listen-and-process ((luna luna))
   "This is the primary loop used to run Luna. 
-It executes in the following order. 
-First it checks if Lunas (stopp ) accessor is non nil, in the case it is it stops.
-Second it maps over all of the connections within (connections ) and performs a 
-sync with the :junk-removed filter, within this same map it
-uses this new sync to then map over the (communities ) calling 
-grab-messages-and-process with that community and the sync object.
-Once again within the same map Luna maps over each module in (found-modules ) and calls 
-the on-sync method with the latest sync object. 
-Now that map is complete.
-Next if 50 loops have been completed then Luna will map over (connections ) and 
-check for any invites by syncing using the :invites filter, this sync object is 
-then passed to process-invites.
-Next if 100 loops have been completed then Luna resets the (cycle-history ) variable.
-Next if 2000 loops have been completed then Luna will backup to file and call 
-the on-save method for all found-modules.
-Finally at the end of every loop (timestamp ) is reset to (local-time:now)"
+   It executes in the following order. 
+   First it checks if Lunas (stopp ) accessor is non nil, in the case it is it stops.
+   Second it maps over all of the connections within (connections ) and performs a 
+   sync with the :junk-removed filter, within this same map it
+   uses this new sync to then map over the (communities ) calling 
+   grab-messages-and-process with that community and the sync object.
+   Once again within the same map Luna maps over each module in (found-modules ) and calls 
+   the on-sync method with the latest sync object. 
+   Now that map is complete.
+   Next if 50 loops have been completed then Luna will map over (connections ) and 
+   check for any invites by syncing using the :invites filter, this sync object is 
+   then passed to process-invites.
+   Next if 100 loops have been completed then Luna resets the (cycle-history ) variable.
+   Next if 2000 loops have been completed then Luna will backup to file and call 
+   the on-save method for all found-modules.
+   Finally at the end of every loop (timestamp ) is reset to (local-time:now)"
   (with-accessors ((stopp stopp)
                    (parallel-p parallel-p)
                    (timers timers)
