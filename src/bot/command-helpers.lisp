@@ -89,7 +89,8 @@
 (defun report-to-matrix (message)
   (mapc (lambda (uber)
           (module-moonmat-message (conn *luna*) uber "~A" message))
-        (uber-rooms *luna*)))
+        (uber-rooms *luna*))
+  nil)
 
 (defgeneric %emergency-format (condition))
 

@@ -67,6 +67,7 @@
         (call-next-method)
       (serious-condition (c)
         (log:error "Condition: ~S~A" c c)
+        (report-to-matrix (format nil "Problem with opengraph module:~%~S" c))
         nil))))
 
 (defmethod fetch-opengraph-info (o stream)

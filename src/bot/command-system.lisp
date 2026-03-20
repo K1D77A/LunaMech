@@ -37,7 +37,8 @@ before checking for equality. useful for searching for only certain
 instances of a class in a sequence. Because it is checking the type of objects
 :key no longer functions like normal, instead :key is called on the object when
 it matches the desired type."
-  (find item sequence :from-end from-end :start start
+  (find item sequence :from-end from-end
+                      :start start
                       :end end 
                       :test (lambda (item ele)
                               (when (typep ele type)
@@ -62,7 +63,7 @@ the prefix, the command and the community it was sent in."))
 
 (defmethod locate-command (prefix priv invoker community)
   "Default. Just search for community based, non privileged commands."
-  (or (type-find 'community-command invoker *commands* '
+  (or (type-find 'community-command invoker *commands*
                  :key #'name :test #'string-equal)
       ;;need to check within the communities local commands
       (error 'missing-command)))
@@ -88,10 +89,10 @@ the prefix, the command and the community it was sent in."))
 (defmethod initiate-command-execution :around
     (luna privilege (module module) invoker community room message rest)
   (with-per-module-permissions (luna module privilege new)
-                               (call-next-method luna new module
-                                                 invoker community room message rest)
-                               (call-next-method luna privilege module invoker
-                                                 community room message rest)))
+    (call-next-method luna new module
+                      invoker community room message rest)
+    (call-next-method luna privilege module invoker
+                      community room message rest)))
 
 (defmethod initiate-command-execution
     (luna privilege prefix/module invoker community room message rest)
@@ -123,7 +124,7 @@ the prefix, the command and the community it was sent in."))
     ((priv admin-privilege) prefix community room)
   "ADMIN & COMMUNITY command."
   (format t "Community admin, that community command is missing, ~
-                                try .<community> help"))
+             try .<community> help"))
 
 (defmethod execute-command ((luna luna) priv command community
                             room message rest)

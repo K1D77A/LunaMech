@@ -403,5 +403,6 @@
            #:command-defining-macro-no-moonbot
            #:command-defining-macro-moonbot
            #:rooms-id
-           #:rooms-name))
+           #:rooms-name
+           #:report-to-matrix))
 
