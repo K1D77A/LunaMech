@@ -59,7 +59,8 @@ and recall login."
   (declare (ignore relog))
   (log:info "Attempting login at url ~A with username ~A"
             (url connection) (username connection))
-  (restart-case (progn (password-login connection)
+  (restart-case (progn (catch-limit-exceeded ()
+                         (password-login connection))
                        (log:info "Successful login"))
     (new-password (pass)
       :report "Password is incorrect, enter another?"
