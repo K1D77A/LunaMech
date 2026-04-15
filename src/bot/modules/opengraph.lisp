@@ -191,22 +191,32 @@ Nitter
           (let ((url (format nil "https://x.com/~A" path)))
             (fetch-opengraph-info (make-instance 'x :url url) stream)))))))
                        
+(defparameter *message* nil)
+
+(defun reply-to-someone-p (message)
+  (handler-case 
+      (not (zerop (hash-table-count (gethash "m.relates.to" (gethash "content" message)))))
+    (serious-condition ()
+      nil)))
+    
+
 (defmethod on-message (luna (module og-module) community room privilege message text)
-  (multiple-value-bind (starts-with-http-p url)
-      (extract-url text)
-    (when url
-      (log:info "Trying to get opengraph info for URL: ~S" url)
-      (multiple-value-bind (with-https domain-vec)
-          (extract-domain url)
-        (declare (ignore with-https))
-        (let ((domain? (aref domain-vec 0)))
-          (when domain?
-            (log:info "Domain: ~S" domain?)
-            (let ((og-getter (get-opengraph-getter domain? url))
-                  (event-id (gethash "event_id" message)))
-              (if (and starts-with-http-p
-                       (not (find #\Space text :test #'char=)))
-                  (with-formatted-output-to-room (community room :reply-event-id event-id)
-                    (fetch-opengraph-info og-getter *standard-output*))
-                  (with-formatted-output-to-room (community room)
-                    (fetch-opengraph-info og-getter *standard-output*))))))))))
+  (unless (reply-to-someone-p message)
+    (multiple-value-bind (starts-with-http-p url)
+        (extract-url text)
+      (when url
+        (log:info "Trying to get opengraph info for URL: ~S" url)
+        (multiple-value-bind (with-https domain-vec)
+            (extract-domain url)
+          (declare (ignore with-https))
+          (let ((domain? (aref domain-vec 0)))
+            (when domain?
+              (log:info "Domain: ~S" domain?)
+              (let ((og-getter (get-opengraph-getter domain? url))
+                    (event-id (gethash "event_id" message)))
+                (if (and starts-with-http-p
+                         (not (find #\Space text :test #'char=)))
+                    (with-formatted-output-to-room (community room :reply-event-id event-id)
+                      (fetch-opengraph-info og-getter *standard-output*))
+                    (with-formatted-output-to-room (community room)
+                      (fetch-opengraph-info og-getter *standard-output*)))))))))))

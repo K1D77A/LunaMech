@@ -1,31 +1,6 @@
 (in-package #:matrix-moonbot)
 
 (defparameter *hex-colour* "'#cc8aca'")
-
-(defmacro catch-potential-conditions (&body body)
-  "executes BODY like normal, if m-limit-exceeded is signalled this handles the
-  condition by waiting the required time and then attempts to execute
-  body again"
-  (alexandria:with-gensyms (repeat tag)    
-    `(let ((,repeat 3))
-       (tagbody ,tag
-          (handler-case
-              (locally ,@body)
-            (api-no-connection (c)
-              (log:error "Api no connection: ~A~%Attempting to relog." c)
-              (login *luna* t)
-              (unless (zerop ,repeat)
-                (sleep 5)
-                (log:info "Retries: ~D" ,repeat)
-                (decf ,repeat)
-                (go ,tag)))
-            (m-limit-exceeded (c)
-              (let ((arg (api-error-args c)))
-                (sleep (/ (+ 10 arg) 1000))
-                (unless (zerop ,repeat)
-                  (log:info "Retries: ~D" ,repeat)                  
-                  (decf ,repeat)
-                  (go ,tag)))))))))
       
 (defun moonmat (control-string &rest args)
   (format nil "[<font color='#cc8aca'>Luna</font>] ~A" (apply #'format nil control-string args)))
