@@ -47,7 +47,6 @@
     :initarg :oembed-url
     :allocation :class)))
 
-
 (defun map-domain-to-og-getter (class &rest domains)
   (let ((class (find-class class)))
     (mapc (lambda (domain)
@@ -97,6 +96,12 @@ X
   ((%oembed-url
     :initform "https://publish.twitter.com/oembed?url=~A")))
 
+(defclass alternative-x (x)
+  ((%regex
+    :accessor regex
+    :initarg :regex)))
+
+
 (map-domain-to-og-getter 'x 
                          "x.com"
                          "www.x.com"
@@ -121,14 +126,15 @@ X
                      (plump-dom:text-node (format stream "~A" (plump:text element)))
                      (plump-dom:element
                       (let ((tag (plump:tag-name element)))
-                      (cond ((string= tag "br")
-                             (format stream "~%"))
-                            ((string= tag "a")
-                             (format stream "~A" (plump:text element)))
-                            (t nil))))
+                        (cond ((string= tag "br")
+                               (format stream "~%"))
+                              ((string= tag "a")
+                               (format stream "~A" (plump:text element)))
+                              (t nil))))
                      (otherwise nil)))                                      
-             children)
-        (format stream " -- ~A" author)))))
+             children)        
+        (format stream " -- ~A" author)
+        author))))
 
 
 (defun extract-opengraph (dom)
@@ -170,28 +176,51 @@ Youtube
 
 #||
 
+X alteratives
+
+||#
+
+(defmethod fetch-opengraph-info ((o alternative-x) stream)
+  (with-accessors ((url url)
+                   (regex regex))
+      o
+    (multiple-value-bind (match groups)
+        (cl-ppcre:scan-to-strings regex url)
+      (unless (zerop (length match))
+        (let ((path (aref groups 0)))
+          (let ((url (format nil "https://x.com/~A" path)))
+            (fetch-opengraph-info (make-instance 'x :url url) stream)))))))
+     
+
+
+#||
+
 Nitter
 
 ||#
 
-(defclass nitter (x)
-  ())
+(defclass nitter (alternative-x)
+  ((%regex
+    :initform "\\.net/(.+)")))
 
 (map-domain-to-og-getter 'nitter
                          "nitter.net")
 
 
-(defmethod fetch-opengraph-info ((o nitter) stream)
-  (with-accessors ((url url))       
-      o
-    (multiple-value-bind (match groups)
-        (cl-ppcre:scan-to-strings "\\.net/(.+)" url)
-      (unless (zerop (length match))
-        (let ((path (aref groups 0)))
-          (let ((url (format nil "https://x.com/~A" path)))
-            (fetch-opengraph-info (make-instance 'x :url url) stream)))))))
+#||
+
+fixupx
+
+||#
                        
-(defparameter *message* nil)
+(defclass fixup (alternative-x)
+  ((%regex
+    :initform "https?://[^/]+/(.+)")))
+
+(map-domain-to-og-getter 'fixup
+                         "fixupx.com")
+
+
 
 (defun reply-to-someone-p (message)
   (handler-case 

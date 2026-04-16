@@ -5,11 +5,16 @@
 (defun moonmat (control-string &rest args)
   (format nil "[<font color='#cc8aca'>Luna</font>] ~A" (apply #'format nil control-string args)))
 
-(defun %format-strings (strings)
-  (format nil "~{[<font color='#cc8aca'>Luna</font>] ~A<br>~}" strings))
+(defun %format-strings (strings &key (coloured-prefix "Luna"))
+  (format nil "~{[<font color='#cc8aca'>~A</font>] ~A<br>~}"
+          (mapcan (lambda (s)
+                    (list coloured-prefix s))
+                  strings)))
 ;;(format nil "~{[Luna] ~A~%~}" strings)
 
-(defmacro with-formatted-output-to-room ((community room &key reply-event-id) &body body)
+(defmacro with-formatted-output-to-room ((community room
+                                          &key reply-event-id (author "Luna"))
+                                         &body body)
   (alexandria:with-gensyms (res string formatted-string)    
     `(let* ((,res nil)
             (,string
@@ -18,7 +23,7 @@
        (when (string/= ,string "")
          (let ((,formatted-string (str:split #\Newline ,string :omit-nulls t)))
            (luna-message ,community ,room
-                         (%format-strings ,formatted-string)
+                         (%format-strings ,formatted-string :coloured-prefix ,author)
                          :reply-event-id ,reply-event-id)))
        ,res)))
 
