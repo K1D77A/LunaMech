@@ -96,12 +96,6 @@ X
   ((%oembed-url
     :initform "https://publish.twitter.com/oembed?url=~A")))
 
-(defclass alternative-x (x)
-  ((%regex
-    :accessor regex
-    :initarg :regex
-    :allocation :class)))
-
 
 (map-domain-to-og-getter 'x 
                          "x.com"
@@ -178,9 +172,15 @@ Youtube
 
 #||
 
-X alteratives
+X alternatives
 
 ||#
+
+(defclass alternative-x (x)
+  ((%regex
+    :accessor regex
+    :initarg :regex
+    :allocation :class)))
 
 (defmethod fetch-opengraph-info ((o alternative-x) stream)
   (with-accessors ((url url)
@@ -189,9 +189,9 @@ X alteratives
     (multiple-value-bind (match groups)
         (cl-ppcre:scan-to-strings regex url)
       (unless (zerop (length match))
-        (let ((path (aref groups 0)))
-          (let ((url (format nil "https://x.com/~A" path)))
-            (fetch-opengraph-info (make-instance 'x :url url) stream)))))))
+        (let* ((path (aref groups 0))
+               (url (format nil "https://x.com/~A" path)))
+          (fetch-opengraph-info (make-instance 'x :url url) stream))))))
      
 
 
@@ -203,7 +203,7 @@ Nitter
 
 (defclass nitter (alternative-x)
   ((%regex
-    :initform (cl-ppcre:parse-string "\\.net/(.+)"))))
+    :initform "\\.net/(.+)")))
 
 (map-domain-to-og-getter 'nitter
                          "nitter.net")
@@ -217,7 +217,7 @@ fixupx
                        
 (defclass fixup (alternative-x)
   ((%regex
-    :initform (cl-ppcre:parse-string "https?://[^/]+/(.+)"))))
+    :initform "https?://[^/]+/(.+)")))
 
 (map-domain-to-og-getter 'fixup
                          "fixupx.com")
