@@ -99,7 +99,8 @@ X
 (defclass alternative-x (x)
   ((%regex
     :accessor regex
-    :initarg :regex)))
+    :initarg :regex
+    :allocation :class)))
 
 
 (map-domain-to-og-getter 'x 
@@ -133,7 +134,7 @@ X
                               (t nil))))
                      (otherwise nil)))                                      
              children)        
-        (format stream " -- ~A" author)
+       ; (format stream " -- ~A" author)
         author))))
 
 
@@ -171,7 +172,8 @@ Youtube
   (let ((title (gethash "title" parsed))
         (author (gethash "author_name" parsed)))
     (when (and title author)
-      (format stream "~A -- ~A" title author))))
+      (format stream "~A" title)
+      author)))
 
 
 #||
@@ -201,7 +203,7 @@ Nitter
 
 (defclass nitter (alternative-x)
   ((%regex
-    :initform "\\.net/(.+)")))
+    :initform (cl-ppcre:parse-string "\\.net/(.+)"))))
 
 (map-domain-to-og-getter 'nitter
                          "nitter.net")
@@ -215,7 +217,7 @@ fixupx
                        
 (defclass fixup (alternative-x)
   ((%regex
-    :initform "https?://[^/]+/(.+)")))
+    :initform (cl-ppcre:parse-string "https?://[^/]+/(.+)"))))
 
 (map-domain-to-og-getter 'fixup
                          "fixupx.com")
@@ -243,9 +245,13 @@ fixupx
               (log:info "Domain: ~S" domain?)
               (let ((og-getter (get-opengraph-getter domain? url))
                     (event-id (gethash "event_id" message)))
-                (if (and starts-with-http-p
-                         (not (find #\Space text :test #'char=)))
-                    (with-formatted-output-to-room (community room :reply-event-id event-id)
-                      (fetch-opengraph-info og-getter *standard-output*))
-                    (with-formatted-output-to-room (community room)
-                      (fetch-opengraph-info og-getter *standard-output*)))))))))))
+                (let* ((stream (make-string-output-stream))
+                       (author (fetch-opengraph-info og-getter stream)))
+                  (if (and starts-with-http-p
+                           (not (find #\Space text :test #'char=)))                    
+                      (with-formatted-output-to-room (community room
+                                                                :reply-event-id event-id
+                                                                :author author)
+                        (format *standard-output* "~A" (get-output-stream-string stream)))
+                      (with-formatted-output-to-room (community room :author author)
+                        (format *standard-output* "~A" (get-output-stream-string stream)))))))))))))
