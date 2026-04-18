@@ -74,15 +74,16 @@
   (moon-map #'mapcar community room function list))
 
 (defun report-condition-to-matrix (condition message)
-  (mapc-uber-rooms
-   (lambda (connection uber)
-     (module-moonmat-message connection uber "~A ~A" message 
-                             (%emergency-format condition)))))
+  (mapc (lambda (uber)
+          (module-moonmat-message (conn *luna*) uber "~A ~A" message 
+                                  (%emergency-format condition)))
+        (uber-rooms *luna*)))
 
 (defun report-to-matrix (message)
-  (mapc-uber-rooms
-   (lambda (connection uber)
-     (module-moonmat-message connection uber "~A" message))))
+  (mapc (lambda (uber)
+          (module-moonmat-message (conn *luna*) uber "~A" message))
+        (uber-rooms *luna*))
+  nil)
 
 (defgeneric %emergency-format (condition))
 
@@ -160,22 +161,6 @@
        (when room?
          (return-from find-room-in-communities 
            (values room? community)))))))
-
-(defgeneric find-connection (for id)
-  (:method ((for (eql :room-id)) room-id)
-     "Attempts to find the connection associated with ROOM-ID.
-  First we attempt to find it via the server <id>:<server name>
-  if that fails we will try to find it via a room in the communities.
-  Then we will just return the first connection."
-    (or (connection-for-room-id room-id)
-        (connection (find-room-in-communities room-id))
-        (conn *luna*)))
-  (:method ((for (eql :user-id)) user-id)
-    "Attempts to find the associated connection for a user.
-     First via the user-id <id>:<server name> in connections.
-     If that fails then defaults to the first connection."
-    (or (connection-for-user-id user-id)
-        (conn *luna*))))
   
 
 (defun find-room (community id-or-name)

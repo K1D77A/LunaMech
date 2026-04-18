@@ -279,8 +279,8 @@ a subspace within this community."
     (mapc (lambda (room)
             (multiple-value-bind (event type)
                   (object%event/m-room-power_levels
-                   :users (lmav2:%quick-hash `((,user-id . ,(parse-integer powerlevel)))))
-              (lmav2:send-event-to-room (find-connection :room-id room) room type event)))
+                   :users (lmav2:%quick-hash `((,user-id . ,(parse-integer powerlevel))))))
+            (lmav2:send-event-to-room (conn luna) room type event))
           rooms)))
 
 

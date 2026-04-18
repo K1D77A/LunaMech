@@ -50,9 +50,7 @@
            #:start-moonbot
            #:stop-moonbot
            #:mapc-uber-rooms
-           #:connection-for-room-id
-           #:find-connection
-           #:connection-for-user-id
+           #:connection-for-uber-room
            #:room->id-and-server
            #:add-room
            #:%emergency-format

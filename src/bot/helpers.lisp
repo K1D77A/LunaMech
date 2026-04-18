@@ -54,24 +54,20 @@
    id is the first, and the server is second"
   (str:split #\: room-id :omit-nulls t :limit 2))
 
-(defun connection-for-room-id (room-id)
-  "Attempt to find the connection in LUNA associated with ROOM-ID."
+(defun connection-for-uber-room (uber-room)
   (destructuring-bind (id server)
-      (room->id-and-server room-id)
+      (room->id-and-server uber-room)
     (declare (ignore id))
     (find-if (lambda (ele)
                (str:ends-with-p server ele))
              (connections *luna*)
              :key #'url)))
-
-(defun connection-for-user-id (user-id)
-  (connection-for-room-id user-id))
                                          
 (defun mapc-uber-rooms (function)
   "Mapc calling FUNCTION on (uber-rooms *luna*). FUNCTION must accept 2 args,
    the first is the connection associated with that room, the 2nd is the room-id."
   (mapc (lambda (uber-room)
-          (let ((connection (connection-for-room-id uber-room)))
+          (let ((connection (connection-for-uber-room uber-room)))
             (funcall function connection uber-room)))
         (uber-rooms *luna*)))
 

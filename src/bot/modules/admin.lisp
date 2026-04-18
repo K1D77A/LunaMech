@@ -128,7 +128,7 @@
                                          :name (intern
                                                 (string-upcase community-name)
                                                 :keyword)
-                                         :connection (conn *luna*)
+                                         :connection (connection (first communities))
                                          :username (username (first communities))
                                          :rooms nil)))
       (pushnew new-community communities :key #'name)
@@ -178,7 +178,7 @@
   (format t "Attempting to Shadowban ~A" user-id)
   (lmav2:call-api (make-instance 'lmav2:admin%shadowban-user
                                  :user-id user-id
-                                 :connection (find-connection :user-id user-id)))
+                                 :connection (connection community)))
   (format t "Success."))
 
 (new-admin-command deactivate-account ((user-id))
@@ -186,7 +186,7 @@
   (format t "Attempting to deactivate ~A's account~%" user-id)
   (lmav2:call-api (make-instance 'lmav2:admin%deactivate-account
                                  :user-id user-id
-                                 :connection (find-connection :user-id user-id)))
+                                 :connection (connection community)))
   (format t "Success."))
 
 (new-admin-command add-alias ((community-name :valid-community)
@@ -219,7 +219,7 @@
                                                      (:minlen 1)))
     "Uses the Admin API to make USER-ID an admin in ROOM-ID."
   (lmav2:call-api (make-instance 'lmav2:admin%make-user-admin-in-room
-                                 :connection (find-connection :room-id room-id)
+                                 :connection (conn *luna*)
                                  :room-id-or-alias (if (string-equal room-id "here")
                                                        room
                                                        room-id)
@@ -231,7 +231,7 @@
     "Uses the Admin API to make sender an admin in ROOM-ID."
   (log:info room)
   (lmav2:call-api (make-instance 'lmav2:admin%make-user-admin-in-room
-                                 :connection (find-connection :room-id room-id)
+                                 :connection (conn *luna*)
                                  :room-id-or-alias (if (string-equal room-id "here")
                                                        room
                                                        room-id)
@@ -245,7 +245,7 @@
                                         (:minlen 1)))
     "Forces USER-ID into ROOM-ID. Luna must have invite perms in that room."
   (lmav2:call-api (make-instance 'lmav2:admin%edit-users-room-membership
-                                 :connection (find-connection :room-id room-id)
+                                 :connection (conn *luna*)
                                  :room-id-or-alias room-id 
                                  :user-id user-id))
   (format t "Success."))
@@ -256,10 +256,10 @@
     "Forces the members within COMMUNITY-NAME into ROOM-ID. Removes all users who do not
 have the same homeserver as Luna and all of those who are already in the room."
   (let* ((community (find-community community-name *luna*))
-         (members-in-room (members-in-room-ids (connection community) room-id))
+         (members-in-room (members-in-room-ids (conn *luna*) room-id))
          (remainder (set-difference (members community) members-in-room :test #'string=))
          (only-same-home (remove-if-not (lambda (username)
-                                          (same-homeserver-p (connection community) username))
+                                          (same-homeserver-p (conn *luna*) username))
                                         remainder)))
     (moonmat-message community room "forcing ~r member~:p into ~A"
                      (length only-same-home) room-id)
@@ -267,7 +267,7 @@ have the same homeserver as Luna and all of those who are already in the room."
                (lambda (member)
                  (catch-potential-conditions 
                    (lmav2:call-api (make-instance 'lmav2:admin%edit-users-room-membership
-                                                  :connection (connection community)
+                                                  :connection (conn *luna*)
                                                   :room-id-or-alias room-id
                                                   :user-id member))
                    (format t "Forced ~A successfully~%" member)))
@@ -287,11 +287,10 @@ have the same homeserver as Luna and all of those who are already in the room."
     "Invites every unique nonbot user into ROOM-ID."
   (with-accessors ((communities communities))
       moonbot
-    (let* ((conn (find-connection :room-id room-id))
-           (room-id-members
+    (let* ((room-id-members
              (remove-if #'bot-member-id-p
                          (alexandria:hash-table-keys
-                          (pkv (members-in-room-ids conn room-id) :|joined|))))
+                          (pkv (members-in-room-ids (conn *luna*) room-id) :|joined|))))
            (members (mapcar #'members communities))
            (unique (remove-duplicates (apply #'append members) :test #'string=))
            (not-in (set-difference unique room-id-members :test #'string=)))
@@ -303,7 +302,7 @@ have the same homeserver as Luna and all of those who are already in the room."
          (handler-case
              (bt:with-timeout (5)
                (catch-potential-conditions
-                 (invite-member-to-room conn user-id room-id)))
+                 (invite-member-to-room (conn *luna*) user-id room-id)))
            (bt:timeout ()
              (log:error "Timeout when inviting ~A to ~A" user-id room-id))
            (serious-condition (c)

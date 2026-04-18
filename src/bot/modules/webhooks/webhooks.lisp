@@ -99,10 +99,7 @@
       (let ((len (length otp)))
         (<= 1 len 4)))
     :fn (lambda (username otp)
-          (let ((conn (find-connection :user-id username)))
-            (when connection 
-              (string (mm-module.direct-message:start-dm
-                       :otp username conn otp)))))
+          (string (mm-module.direct-message:start-dm :otp username (conn *luna*) otp)))
     :expected-args (username otp)))
   (:private-key
    (lambda ()
