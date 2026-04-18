@@ -33,16 +33,22 @@
   (moon-message community room message :reply-event-id reply-event-id))
 
 
+(defun module-moonmat-message (connection room control-string &rest args)
+  (let ((formatted (apply #'moonmat control-string args)))
+    (catch-potential-conditions
+      (send-message-event-to-room connection room
+                                  (object%event/m-room-message/m-text formatted formatted)))))
+
+
 (defun moon-message (community room message &key reply-event-id)
+  (declare (ignore community))
   (let ((event (if reply-event-id
                    (object%event/m-room-message/m-text%reply message message reply-event-id)
                    (object%event/m-room-message/m-text message message))))
     (catch-potential-conditions
-      (send-message-event-to-room (connection community) room event))))
+      (send-message-event-to-room (connection *luna*) room event))))
 
-(defun module-moonmat-message (connection room control-string &rest args)
-  (catch-potential-conditions
-    (send-message-to-room connection room (apply #'moonmat control-string args))))
+
 
 (defun lunamat-message (community room control-string &rest args)
   (moonmat-message community room control-string args))
@@ -216,7 +222,7 @@
                                            :test #'string=)
     (let ((room-name
             (catch-potential-conditions
-              (get-room-events (connection community)
+              (get-room-events (connection *luna*) 
                                new-val "m.room.name"))))
       (push (list :id new-val :name (second room-name)) (rooms community)))))
 

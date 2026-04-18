@@ -13,6 +13,7 @@
            #:*url*
            #:*luna*
            #:lunamech
+           #:luna
            #:ark
            #:setup-and-go
            #:moonmat-message

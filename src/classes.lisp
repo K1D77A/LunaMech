@@ -131,7 +131,7 @@ for that module.")
     :documentation "The locks for certain other slots."
     :initform (flet ((nl (&rest names)
                        (loop :for name :in names
-                             :appending (list name (bt:make-lock (format nil "~A" name))))))
+                             :appending (list name (bt2:make-lock :name (format nil "~A" name))))))
                 (nl :found-modules :cycle-history :thread :permissions))))
   (:documentation "Luna (Luna here) is the primary class that is used to store all 
 information related to the operation and interaction with the Matrix api. It is an 
@@ -248,7 +248,7 @@ implementation of a new module."))
   ((thread
     :accessor thread
     :initarg :thread
-    :type bt:thread
+    :type bt2:thread
     :documentation "The currently running thread."))
   (:documentation "A normal module except these ones have certain methods executed 
 in a completely separate thread. Currently only on-sync is processed this way.
@@ -447,7 +447,7 @@ the community. This is normally acquired through the populate-community command.
     :initform
     (flet ((nl (&rest names)
              (loop :for name :in names
-                   :appending (list name (bt:make-lock (format nil "~A" name))))))
+                   :appending (list name (bt2:make-lock :name (format nil "~A" name))))))
       (nl :members :rooms :admins :aliases)))))
 
 (defmethod members :around ((community community))

@@ -134,12 +134,13 @@ the prefix, the command and the community it was sent in."))
                        (name command) (name community) room (user-id priv) rest)
              (safe-execution command community room message rest))))
 
-(defun safe-execution (command community room message args &optional (luna nil))
+(defun safe-execution (command community room message args &optional luna)
   "Execute the given COMMAND and catch and format any errors."
-  (check-type luna (or null luna))
+  (check-type luna (or null lunamech))
   (catch-potential-conditions
     (handler-case
-        (let ((connection (connection community))
+        (let ((connection (conn *luna*))
+              (luna luna)
               (community community))
           (declare (special connection community luna))
           (execute command community room message args luna)) 

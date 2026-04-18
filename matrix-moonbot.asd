@@ -53,12 +53,12 @@
                                 :serial t
                                 :components ((:file "classes")))
                                ;;(:file "encryption")))
-                               (:file "configparse")
                                (:file "helpers")                               
                                (:file "system-protocol")
                                (:file "modules-protocol")
                                (:file "ark")
                                (:file "communities")
+                               (:file "connections")
                                (:file "luna")
                                (:file "permissions")
                                ;;(:file "filters")
@@ -67,6 +67,7 @@
                                (:file "validator")
                                (:file "command-helpers")
                                (:file "command-system")
+                               (:file "marshaller")
                                (:module "modules"
                                 :components
                                         ((:file "keys")

@@ -47,7 +47,7 @@
     "Join a room in the community"
   (format t "Joining room ~A." room-id)
   (let ((room (getf (find-room community room-id) :id)))
-    (join-room (connection community) room)))
+    (join-room (conn *luna*) room)))
 
 (new-admin-community-command add-rooms ((rooms (:maxlen 1000)
                                                (:minlen 20)))
@@ -60,7 +60,7 @@
 
 (new-admin-community-command displayname ((user-id :valid-user (:minlen 1)))
     "displays a users displayname"  
-  (let ((name (user-display-name (connection community) user-id)))
+  (let ((name (user-display-name (conn *luna*) user-id)))
     (format t  "Display name: ~A" (get-key name :|displayname|))))
 
 (new-admin-community-command kick ((user-id :valid-user)
@@ -70,7 +70,7 @@
   (moon-mapc-rooms community room
                    (lambda (room-name room-id)
                      (format t  "Kicking ~A from ~A~%" user-id room-name)
-                     (kick-user-from-room (connection community)
+                     (kick-user-from-room (conn *luna*)
                                           room-id user-id reason)))
   (setf (members community) (remove user-id (members community) :test #'string=)))
 
@@ -81,7 +81,7 @@
   (moon-mapc-rooms community room
                    (lambda (room-name room-id)                     
                      (format t "Banning ~A from ~A~%" user-id room-name)
-                     (ban-user-from-room (connection community)
+                     (ban-user-from-room (conn *luna*)
                                          room-id user-id reason)))
   (setf (members community) (remove user-id (members community) :test #'string=)))
 
@@ -92,7 +92,7 @@
                    (lambda (room-name room-id)
                      (declare (ignore room-name))
                      (format t "unbanning ~A from ~A~%" user-id room-id)
-                     (unban-user-from-room (connection community)
+                     (unban-user-from-room (conn *luna*)
                                            room-id user-id))))
 
 (new-admin-community-command invite ((user-id :valid-user))
@@ -105,7 +105,7 @@
     (let ((fun (lambda (room-name room-id)
                  (format t "Inviting ~A to ~A~%" user-id room-name)
                  (sleep 0.25)
-                 (invite-member-to-room (connection community) user-id room-id))))
+                 (invite-member-to-room (conn *luna*) user-id room-id))))
       (moon-mapc-rooms community room fun)
       (setf (members community) (append (members community) (list user-id))))))
 
@@ -152,7 +152,7 @@
 
 (new-admin-community-command populate-community ((room-id :valid-room))
     "Populates the community from the member list in a single room"
-  (let ((members (get-key (members-in-room-ids (connection community)
+  (let ((members (get-key (members-in-room-ids (conn *luna*)
                                                (getf (find-room community room-id) :id))
                           :|joined|)))
     (when members
@@ -177,10 +177,10 @@
   (unless (or (eql private :error)
               (eql invite-community :error))
     (let ((id (get-key
-               (create-room (connection community) room-name room-alias
+               (create-room (conn *luna*) room-name room-alias
                             "Im a topic" :private private
                             :invite (when invite-community
-                                      (remove (user-id (connection community))
+                                      (remove (user-id (conn *luna*))
                                               (members community)
                                               :test #'string=)))
                :|room_id|)))
@@ -263,7 +263,7 @@ a subspace within this community."
                        (rooms community))))
     (moonmat-message community room "Joining ~r room~:p" (length rooms))
     (mapc (lambda (room)
-            (join-room (connection community) room))
+            (join-room (conn *luna*) room))
           rooms)))
     
 (new-admin-community-command set-powerlevel ((user-id :valid-user)
@@ -279,8 +279,8 @@ a subspace within this community."
     (mapc (lambda (room)
             (multiple-value-bind (event type)
                   (object%event/m-room-power_levels
-                   :users (lmav2:%quick-hash `((,user-id . ,(parse-integer powerlevel))))))
-            (lmav2:send-event-to-room (conn luna) room type event))
+                   :users (lmav2:%quick-hash `((,user-id . ,(parse-integer powerlevel)))))
+              (lmav2:send-event-to-room (conn *luna*) room type event)))
           rooms)))
 
 

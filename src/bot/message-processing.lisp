@@ -118,7 +118,7 @@ implemented yet."
   (declare (ignorable luna community room message))
   nil)
 
-(defmethod process-messages ((luna luna) (community community) room messages)
+(defmethod process-messages ((luna lunamech) (community community) room messages)
   "Given a list of messages in MESSAGES, and its associated ROOM id, attempts to determine
 the type of message that has been sent, either m.room.message or m.room.encrypted and 
 then calls either process-message or process-encrypted with that message. In the case 
@@ -146,7 +146,7 @@ that the message type is unknown then signals the condition 'unknown-message-typ
     the messages from the rooms that luna is listening in for that community and then 
     passes them to process-messages"))
 
-(defmethod grab-messages-and-process ((luna luna) (community community) sync)
+(defmethod grab-messages-and-process ((luna lunamech) (community community) sync)
   (with-accessors ((connection connect))
       community
     (let ((messages (extract-all-relevant-messages luna community sync)))
@@ -155,7 +155,7 @@ that the message type is unknown then signals the condition 'unknown-message-typ
           (when messages
             (process-messages luna community room messages)))))))
 
-(defmethod listen-and-process ((luna luna))
+(defmethod listen-and-process ((luna lunamech))
   "This is the primary loop used to run Luna. 
    It executes in the following order. 
    First it checks if Lunas (stopp ) accessor is non nil, in the case it is it stops.

@@ -1,5 +1,6 @@
 (in-package #:matrix-moonbot)
 
+(defparameter *luna* "Thread local instance of lunamech :)")
 
 (defmethod login ((lunamech lunamech) &optional (relog nil))
   "Attempts to log Lunamech's connections into all their appropriate servers. In the event that
@@ -66,7 +67,7 @@ Lunamech will not evaluate any initiating functions and will login using the sam
 
 (defgeneric handle-conditions (lunamech c)
   (:method :around (lunamech c)
-    (log:error c)
+    (ignore-errors (log:error c))
     (call-next-method)))
 
 (defmethod handle-conditions (lunamech (c api-timeout))
@@ -167,40 +168,41 @@ Lunamech is already logged in, if so then it resets the cycle-history and then s
 primary listening thread and executes 'on-restart' on each found module. 
 If Lunamech is not logged in then evaluates (login <lunamech>), executes 'on-login' for each 
 found-module and then recalls start."
-  (unless (found-modules lunamech)
-    (find-modules lunamech)
-    (mapc-found-modules lunamech #'on-load-up))
-  (if (logged-in-p lunamech)
-      (progn
-        (mapc-found-modules lunamech #'on-restart)
-        (log:info "Setting stopp to nil")
-        (setf (stopp lunamech) nil)
-        (log:info "Resetting cycle-history")
-        (setf (cycle-history lunamech) nil)
-        (log:info "Starting primary thread")
-        (setf 
-         (thread lunamech)                    
-         (bt2:make-thread
-          (lambda ()
-            (thread-maintainer lunamech))
-          :name (format nil "~A-lunamech-main" (name lunamech))
-          :initial-bindings `((*package* . ,*package*)
-                              (*error-output* . ,*error-output*)
-                              (*standard-output* . ,*standard-output*)
-                              (dex:*connection-pool* . ,dex:*connection-pool*)
-                              (*lunamech* . ,lunamech)
-                              ,@bt2:*default-special-bindings*)))
-        (log:info "Done.")
-        (mapc (lambda (room-id)
-                (module-moonmat-message (conn lunamech) room-id "I have started."))
-              (uber-rooms lunamech))
-        (log:info "Startup complete.")
-        lunamech)
-      (progn (login lunamech)
-             (log:info "Starting lparallel kernel now with ~r workers." 2)
-             (mapc-found-modules lunamech #'on-login)
-             (initiate-communities lunamech)
-             (start lunamech))))
+  (let ((*luna* lunamech))
+    (unless (found-modules lunamech)
+      (find-modules lunamech)
+      (mapc-found-modules lunamech #'on-load-up))
+    (if (logged-in-p lunamech)
+        (progn
+          (mapc-found-modules lunamech #'on-restart)
+          (log:info "Setting stopp to nil")
+          (setf (stopp lunamech) nil)
+          (log:info "Resetting cycle-history")
+          (setf (cycle-history lunamech) nil)
+          (log:info "Starting primary thread")
+          (setf 
+           (thread lunamech)                    
+           (bt2:make-thread
+            (lambda ()
+              (thread-maintainer lunamech))
+            :name (format nil "~A-lunamech-main" (name lunamech))
+            :initial-bindings `((*package* . ,*package*)
+                                (*error-output* . ,*error-output*)
+                                (*standard-output* . ,*standard-output*)
+                                (dex:*connection-pool* . ,dex:*connection-pool*)
+                                (*luna* . ,lunamech)
+                                ,@bt2:*default-special-bindings*)))
+          (log:info "Done.")
+          (mapc (lambda (room-id)
+                  (module-moonmat-message (conn lunamech) room-id "I have started."))
+                (uber-rooms lunamech))
+          (log:info "Startup complete.")
+          lunamech)
+        (progn (login lunamech)
+               (log:info "Starting lparallel kernel now with ~r workers." 2)
+               (mapc-found-modules lunamech #'on-login)
+               (initiate-communities lunamech)
+               (start lunamech)))))
 
 (defmethod stop ((lunamech lunamech))
   (setf (stopp lunamech) t)
@@ -333,7 +335,7 @@ found but already loaded then 'module-already-loaded is signalled."
 (defmethod sym->module-name ((lunamech lunamech) sym)
   (cdr (assoc sym (modules lunamech) :test #'string=)))
 
-(defmethod unload-module :around (lunamech sym)
+(defmethod unload-module :around ((lunamech lunamech) sym)
   (log:info "Attempting to unload module denoted by ~A from Lunamech" sym)
   (report-to-matrix (format nil "Attempting to unload module denoted by ~A from Lunamech" sym))
   (call-next-method)
