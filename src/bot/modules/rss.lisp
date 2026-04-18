@@ -69,6 +69,7 @@
           (title (gethash :title ,rss))
           (sub (gethash :subtitle ,rss))
           (link (gethash :link ,rss)))
+     (declare (ignorable entries title sub link))
      (locally ,@body)))
 
 (defmacro destructure-entry ((entry) &body body)
@@ -81,6 +82,8 @@
           (summary (gethash :summary ,entry))
           (summary-detail (gethash :summary-detail ,entry))
           (title (gethash :title ,entry)))
+     (declare (ignorable author author-detail id link published
+                         published-parsed summary summary-detail title))
      (locally ,@body)))
 
 (defun new-rss (name feed room last-entry)
@@ -120,7 +123,7 @@
         (setf last-entry (latest-published-date entries))
         (dolist (entry (reverse entries))
           (destructure-entry (entry)
-            (module-moonmat-message (conn *luna*) room
+            (module-moonmat-message (find-connection :room-id room) room
                                     "~A"
                                     (format-rss-entry entry)))))
       (new-rss name feed room last-entry))))
@@ -156,9 +159,10 @@
            (let ((latest (latest-published-date newer)))
              (setf (last-entry name) latest)
              (dolist (entry (reverse newer))
-               (module-moonmat-message (conn *luna*) (rss-room name)
+               (let ((rss-room (rss-room name)))
+                 (module-moonmat-message (find-connection :room-id rss-room) rss-room
                                        "~A"
-                                       (format-rss-entry entry))))))))))
+                                       (format-rss-entry entry)))))))))))
 
 (defmethod on-sync (luna (module rss-module) sync)
   (declare (ignore sync))
@@ -213,7 +217,8 @@
     (unless (str:starts-with-p "http" feed)
       (error "Not a URL"))
     (if (rss-feed name)
-        (module-moonmat-message (conn *luna*) room "Already subscribed.")
+        (module-moonmat-message (find-connection :room-id room)
+                                room "Already subscribed.")
         (subscribe-to-rss name feed (if (string-equal room-id "here")
                                         room
                                         room-id)))))
@@ -223,7 +228,7 @@
     "Unsubscribes from the RSS feed. This will remove its reference from Luna."
   (let ((name (intern (string-upcase name) :keyword)))
     (remf (rooms->feeds *module*) name))
-  (module-moonmat-message (conn *luna*) room "Success."))
+  (module-moonmat-message (find-connection :room-id room) room "Success."))
 
 (new-admin-rss-command update-rss-room ((name (:minlen 1)
                                               (:maxlen 50))
@@ -233,8 +238,8 @@
   (let ((feed (rss-entry (intern (string-upcase name) :keyword))))
     (if feed
         (progn (setf (rss-room name) new-room)
-               (module-moonmat-message (conn *luna*) room "Success."))
-        (module-moonmat-message (conn *luna*) room
+               (module-moonmat-message (find-connection :room-id room) room "Success."))
+        (module-moonmat-message (find-connection :room-id room) room
                                 "Could not find entry by name: ~A" name))))
 
 (new-admin-rss-command all-feeds ()
