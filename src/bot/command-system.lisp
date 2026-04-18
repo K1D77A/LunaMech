@@ -126,7 +126,7 @@ the prefix, the command and the community it was sent in."))
   (format t "Community admin, that community command is missing, ~
              try .<community> help"))
 
-(defmethod execute-command ((luna luna) priv command community
+(defmethod execute-command ((luna lunamech) priv command community
                             room message rest)
   (if (string-equal (first rest) "help")
       (print-command-information command community room)

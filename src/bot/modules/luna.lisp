@@ -17,8 +17,8 @@
       ;;luna commands created for communities that are for normies
       (error 'missing-command)))
 
-(command-defining-macro-no-moonbot new-normie-luna-command
-                                   'luna-command)
+(command-defining-macro-no-luna new-normie-luna-command
+                                'luna-command)
 
 (new-normie-luna-command help ()
     "attempts an explanation of how commands work"

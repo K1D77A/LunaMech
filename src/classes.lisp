@@ -39,7 +39,7 @@
     :type list
     :documentation "list global modules that can only be run per single process.")))
    
-(defclass luna ()
+(defclass lunamech ()
   ((name
     :accessor name
     :initarg :name
@@ -138,64 +138,66 @@ information related to the operation and interaction with the Matrix api. It is 
 instance of Luna (Luna here) that is created from the communities.lisp config file
 and it is that same instance that is backed up to the same file."))
 
+(c2mop:ensure-finalized (find-class 'lunamech))
+
 (defmacro quicklock ((object lock-key) &body body)
   (alexandria:with-gensyms (lock)
     `(with-slots (%locks)
          ,object
        (let ((,lock (getf %locks ,lock-key)))
-         (bt:with-lock-held (,lock)
+         (bt2:with-lock-held (,lock)
            (locally ,@body))))))
       
 
-(defmethod print-object ((luna luna) stream)
-  (print-unreadable-object (luna stream :type t :identity nil)
+(defmethod print-object ((lunamech lunamech) stream)
+  (print-unreadable-object (lunamech stream :type t :identity nil)
     (format stream "~%Community Names: ~{~A ~}~%Modules: ~{~A ~}~%Ubermensch: ~{~A ~}~%~
                    Command count: ~r~%"
-            (mapcar #'name (communities luna))
-            (mapcar #'prefix (found-modules luna))
-            (all-ubermensch luna)
+            (mapcar #'name (communities lunamech))
+            (mapcar #'prefix (found-modules lunamech))
+            (all-ubermensch lunamech)
             (length *commands*))))
 
-(defmethod find-community ((community-name symbol) (luna luna))
-  (find community-name (communities luna) :key #'name))
+(defmethod find-community ((community-name symbol) (lunamech lunamech))
+  (find community-name (communities lunamech) :key #'name))
 
-(defmethod find-community ((community-name string) (luna luna))
-  (find (intern (string-upcase community-name) :keyword) (communities luna) :key #'name))
+(defmethod find-community ((community-name string) (lunamech lunamech))
+  (find (intern (string-upcase community-name) :keyword) (communities lunamech) :key #'name))
 
-(defmethod (setf modules) :after (new-val (luna luna))
+(defmethod (setf modules) :after (new-val (lunamech lunamech))
   "Remove duplicate modules after changing its value."
   (with-slots (modules)
-      luna
+      lunamech
     (setf modules
           (remove-duplicates modules :test (lambda (ele1 ele2)
                                              (string-equal (car ele1) (car ele2)))
                                      :from-end t))))
 
-(defmethod found-modules :around ((luna luna))
-  (quicklock (luna :found-modules)
+(defmethod found-modules :around ((lunamech lunamech))
+  (quicklock (lunamech :found-modules)
     (call-next-method)))
 
-(defmethod permissions :around ((luna luna))
-  (quicklock (luna :permissions)
+(defmethod permissions :around ((lunamech lunamech))
+  (quicklock (lunamech :permissions)
     (call-next-method)))
 
-(defmethod thread :around ((luna luna))
-  (quicklock (luna :thread)
+(defmethod thread :around ((lunamech lunamech))
+  (quicklock (lunamech :thread)
     (call-next-method)))
 
-(defmethod (setf found-modules) :after (new-val (luna luna))
+(defmethod (setf found-modules) :after (new-val (lunamech lunamech))
   "Remove duplicate found-modules after adding/removing one."
   (with-slots (found-modules)
-      luna
+      lunamech
     (with-slots (modules)
         (make-instance 'module)
       (let ((no-dupes (remove-duplicates found-modules :test #'eq)))
         (setf found-modules no-dupes
               modules no-dupes)))))
 
-(defmethod (setf permissions) :after (new-val (luna luna))
-  (setf (slot-value luna 'permissions)
-        (clean-permissions-tree luna)))
+(defmethod (setf permissions) :after (new-val (lunamech lunamech))
+  (setf (slot-value lunamech 'permissions)
+        (clean-permissions-tree lunamech)))
 
 (defclass module ()
   ((command-type
@@ -215,8 +217,8 @@ commands")
     :initarg :prefix
     :type symbol
     :documentation "The symbol used to execute commands registered by this module.
-For example if the prefix was 'luna then the commands would be executed with
- .luna <command>")
+For example if the prefix was 'lunamech then the commands would be executed with
+ .lunamech <command>")
    (modules
     :reader modules;this should not be modifiable by the modules themselves.
     :initarg :modules
@@ -234,11 +236,11 @@ For example if the prefix was 'luna then the commands would be executed with
     :initarg :store
     :type list
     :initform nil))
-  (:documentation "Modules are used to implement modular behaviour within Luna. The ideal 
+  (:documentation "Modules are used to implement modular behaviour within Lunamech. The ideal 
 for modules is that they will at some point be .fasl files that can be loaded into a 
-running instance of Luna, currently they can only be loaded/unloaded while the bot is 
+running instance of Lunamech, currently they can only be loaded/unloaded while the bot is 
 running but they have to have been compiled into the lisp image.
-The basic skeleton required to implement modules within Luna. 
+The basic skeleton required to implement modules within Lunamech. 
 The three slots 'command-type' 'privilege-required' and 'prefix' are required for the 
 implementation of a new module."))
 
@@ -251,11 +253,11 @@ implementation of a new module."))
   (:documentation "A normal module except these ones have certain methods executed 
 in a completely separate thread. Currently only on-sync is processed this way.
 This can work when modules are completely self contained making no modifications to 
-Luna. An example is the RSS or Jitsi module."))
+Lunamech. An example is the RSS or Jitsi module."))
 
-(defclass global-module (module)
+(defclass ark-module (module)
   ()
-  (:documentation "A module that is run per process rather than per luna."))
+  (:documentation "A module that is run per process rather than per lunamech."))
 
 (defclass command ()
   ((name
@@ -263,7 +265,7 @@ Luna. An example is the RSS or Jitsi module."))
     :initarg :name
     :type symbol
     :documentation "This is the name of the command, this is how it is invoked. For example
-if the symbol was 'HELP then the command could be something like .luna help and this 
+if the symbol was 'HELP then the command could be something like .lunamech help and this 
 command would be executed")
    (fun
     :accessor fun
@@ -341,7 +343,7 @@ it is found the instance of privileged is changed into one of 'ubermensch-privil
 (defclass ubermensch-privilege (admin-privilege normie-privilege)
   ()
   (:documentation "The privilege created when the user who sent the command is found 
-within (ubermensch luna). This allows the user to invoke any command."))
+within (ubermensch lunamech). This allows the user to invoke any command."))
 
 (defun ubermensch-privilege-p (obj)
   (typep obj 'ubermensch-privilege))
@@ -472,18 +474,18 @@ the community. This is normally acquired through the populate-community command.
             (getf room :name))
           (slot-value community 'rooms)))
 
-(defmethod find-room-by-id ((luna luna) id)
-  "Searches all of the communities within LUNA for a room that matches ID, then returns
+(defmethod find-room-by-id ((lunamech lunamech) id)
+  "Searches all of the communities within LUNAMECH for a room that matches ID, then returns
 it. If none are found then returns nil"
-  (loop :for community :in (communities luna)
+  (loop :for community :in (communities lunamech)
           :thereis (loop :for room-plist :in (rooms community)
                          :if (string= id (getf room-plist :id))
                            :return room-plist)))
 
-(defmethod find-room-by-name ((luna luna) name)
-  "Searches all of the communities within LUNA for a room that matches NAME, then returns
+(defmethod find-room-by-name ((lunamech lunamech) name)
+  "Searches all of the communities within LUNAMECH for a room that matches NAME, then returns
 it. If none are found then returns nil"
-  (loop :for community :in (communities luna)
+  (loop :for community :in (communities lunamech)
           :thereis (loop :for room-plist :in (rooms community)
                          :if (string= name (getf room-plist :name))
                            :return room-plist)))
@@ -500,9 +502,9 @@ it. If none are found then returns nil"
     (condition ()
       nil)))
 
-(defmethod add-new-alias (alias (luna luna) (community community))
+(defmethod add-new-alias (alias (lunamech lunamech) (community community))
   (check-type alias keyword)
-  (unless (loop :for community :in (communities luna)
+  (unless (loop :for community :in (communities lunamech)
                   :thereis (find alias (aliases community)))
     (push alias (aliases community))))
 

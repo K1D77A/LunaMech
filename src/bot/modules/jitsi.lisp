@@ -19,7 +19,7 @@
              :accessor previous-counts
              :initform (make-hash-table :test #'equal))))
 
-(define-condition jitsi-condition (moonbot-condition)
+(define-condition jitsi-condition (lunamech-condition)
   ((jitsi-condition-prefix
     :accessor jitsi-condition-prefix
     :initarg :jitsi-condition-prefix)
@@ -50,17 +50,17 @@
       (warn "config/jitsi-rooms.lisp does not exist.")
       nil)))
 
-(defmethod on-load-up (moonbot (module jitsi-module))
+(defmethod on-load-up (luna (module jitsi-module))
   (setf (timers module) (make-timers '(:check)))
   (log:info "Loading Jitsi rooms from jitsi-rooms.lisp")
   (results-from-file))
 
-(defmethod on-save (moonbot (module jitsi-module))
+(defmethod on-save (luna (module jitsi-module))
   (log:info "Saving Jitsi rooms to jitsi-rooms.lisp")
   (save-results)
   t)
 
-(defmethod on-module-unload (moonbot (module jitsi-module))
+(defmethod on-module-unload (luna (module jitsi-module))
   nil)
 
 ;;;main functionality that works on an on-sync
@@ -188,19 +188,19 @@ change will happen if the room is not registered within a community in Luna."
   "When prefix is jitsi with no privilege just signal 'missing-command"
   (error 'missing-command))
 
-(defmethod execute-command ((moonbot moonbot) (priv ubermensch-privilege)
+(defmethod execute-command ((luna lunamech) (priv ubermensch-privilege)
                             (command jitsi-command)
                             community room message rest)
   (if (string-equal (first rest) "help")
       (print-command-information command community room)
-      (safe-execution command community room message rest moonbot)))
+      (safe-execution command community room message rest luna)))
 
 (defmethod inform-command-is-missing
     ((priv admin-privilege) (module jitsi-module) community room)
   "ADMIN & JITSI command."
   nil)
 
-(command-defining-macro-moonbot new-jitsi-command 'jitsi-command)
+(command-defining-macro-luna new-jitsi-command 'jitsi-command)
 
 ;;;a few helpers
 (defun fixurl (urls &key (https nil))
@@ -291,7 +291,7 @@ check and change the name of this room depending on the number of people within 
                     :collect
                     (format nil "~A~%  Jitsi ID: ~A~%  Room ID: ~A."
                             (getf 
-                             (find-room-by-id moonbot 
+                             (find-room-by-id luna 
                                               (getf room-list :id))
                              :name)
                             (getf room-list :jitsi-id)

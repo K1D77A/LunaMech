@@ -89,10 +89,10 @@
                                           :serial t
                                           :description #.(format nil
                                                                  "Module that ~
-                                                                 implements the ~
-                                                                construction and execution ~
-                                                                 of direct ~
-                                                         messages with individual users.")
+                                                                  implements the ~
+                                                                  construction and execution ~
+                                                                  of direct ~
+                                                                  messages with individual users.")
                                                   :components
                                                   ((:file "package")
                                                    (:file "direct-message")

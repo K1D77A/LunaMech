@@ -1,7 +1,7 @@
 (in-package #:mm-module.webhook)
 
 
-(define-condition webhook-condition (moonbot-condition)
+(define-condition webhook-condition (lunamech-condition)
   ()
   (:documentation "The toplevel webhook condition."))
 

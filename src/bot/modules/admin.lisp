@@ -21,7 +21,7 @@
   "When prefix is admin with no privilege just signal 'missing-command"
   (error 'missing-command))
 
-(defmethod execute-command ((luna luna) (priv ubermensch-privilege)
+(defmethod execute-command ((luna lunamech) (priv ubermensch-privilege)
                             (command admin-command)
                             community room message rest)
   (if (string-equal (first rest) "help")

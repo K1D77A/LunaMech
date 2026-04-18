@@ -29,11 +29,11 @@
     (jojo:write-key-value "message" (slot-value obj 'message))))
    ;; (jojo:write-key-value "pfp" (slot-value obj 'pfp))))
 
-(defmethod on-load-up (moonbot (module huginn-module))
+(defmethod on-load-up (luna (module huginn-module))
   (log:info "Loading compass results from huginn-privilege.lisp")
   (results-from-file))
 
-(defmethod on-save (moonbot (module huginn-module))
+(defmethod on-save (luna (module huginn-module))
   (log:info "Saving privileged Huginn users to huginn-privilege.lisp")
   (save-results)
   t)
@@ -79,7 +79,7 @@ then signal 'missing-command"
                 (moonmat 
                  "Admin, that huginn command is missing, try #.huginn help")))
 
-(defmethod execute-command ((moonbot moonbot) (priv ubermensch-privilege)
+(defmethod execute-command ((luna lunamech) (priv ubermensch-privilege)
                             (command huginn-command)
                             community room message rest)
   (if (string-equal (first rest) "help")
@@ -99,7 +99,7 @@ then signal 'missing-command"
   "ADMIN & ADMIN command."
   nil)
 
-(command-defining-macro-no-moonbot new-huginn-command
+(command-defining-macro-no-luna new-huginn-command
                                    'huginn-command)
 
 (new-huginn-command help ()

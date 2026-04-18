@@ -72,7 +72,7 @@ responses the bot expects from the user.")
     :initform (make-string-output-stream)
     :documentation "All messages to send to the room are put in here.")))
 
-(define-condition direct-message-condition (moonbot-condition)
+(define-condition direct-message-condition (lunamech-condition)
   ())
 
 (define-condition context-incomplete (direct-message-condition)
@@ -312,12 +312,12 @@ from the appropriate private-room. After cleans any empty private-rooms"
                  :key #'name :test #'string-equal)
       (error 'missing-command)))
 
-(defmethod execute-command ((moonbot moonbot) (priv ubermensch-privilege)
+(defmethod execute-command ((luna lunamech) (priv ubermensch-privilege)
                             (command direct-message-command)
                             community room message rest)
   (if (string-equal (first rest) "help")
       (print-command-information command community room)
-      (safe-execution command community room message rest moonbot)))
+      (safe-execution command community room message rest luna)))
 
 (defmethod inform-command-is-missing
     (priv (module direct-message-module) community room)
@@ -329,7 +329,7 @@ from the appropriate private-room. After cleans any empty private-rooms"
   "ADMIN & ADMIN command."
   nil)
 
-(command-defining-macro-moonbot new-direct-message-command 'direct-message-command)
+(command-defining-macro-luna new-direct-message-command 'direct-message-command)
 
 (new-direct-message-command help ()
     "attempts an explanation of how commands work"
@@ -360,7 +360,7 @@ function (gen-context ..). Returns t when successful, nil when not."
         (let* ((room (create-private-room connection (list user-id)))
                (room-id (pkv room :|room_id|)))
           (add-dm-room user-id room-id cont)
-          (moonmat-message (first (communities matrix-moonbot::*luna*))
+          (moonmat-message (first (communities *luna*))
                            room-id "~A" (initial-message cont))
           t)
         nil)))

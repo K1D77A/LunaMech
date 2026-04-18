@@ -46,10 +46,10 @@
     (serious-condition (c)
       (log:error "Error shutting down wehbook-module. ~A" c))))
 
-(defmethod on-save (moonbot (module webhook-module))
+(defmethod on-save (luna (module webhook-module))
   t)
 
-(defmethod on-module-unload (moonbot (module webhook-module))
+(defmethod on-module-unload (luna (module webhook-module))
   (log:info "Stopping Luna's webhook listener.")
   (handler-case 
       (tbnl:stop (webhook-server *module*))
@@ -69,14 +69,14 @@
   "When prefix is webhook with no privilege just signal 'missing-command"
   (error 'missing-command))
 
-(defmethod execute-command ((moonbot moonbot) (priv ubermensch-privilege)
+(defmethod execute-command ((luna lunamech) (priv ubermensch-privilege)
                             (command webhook-command)
                             community room message rest)
   (if (string-equal (first rest) "help")
       (print-command-information command community room)
-      (safe-execution command community room message rest moonbot)))
+      (safe-execution command community room message rest luna)))
 
-(command-defining-macro-moonbot new-webhook-command 'webhook-command)
+(command-defining-macro-luna new-webhook-command 'webhook-command)
 
 (new-webhook-command help ()
     "attempts an explanation of how commands work"

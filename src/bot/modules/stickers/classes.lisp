@@ -29,7 +29,7 @@
              :initform (make-hash-table :test #'equal)
              :type hash-table)))
 
-(define-condition sticker-condition (moonbot-condition)
+(define-condition sticker-condition (lunamech-condition)
   ((message
     :accessor message
     :initarg :message

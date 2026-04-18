@@ -14,7 +14,7 @@
       ;;site commands created for communities that are for normies
       (error 'missing-command)))
 
-(command-defining-macro-no-moonbot new-normie-site-command
+(command-defining-macro-no-luna new-normie-site-command
                                    'site-command)
 
 

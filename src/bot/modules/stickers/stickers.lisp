@@ -34,18 +34,18 @@ that file must be of type sticker-api-list otherwise will signal a type conditio
       (warn "config/sticker-config.lisp does not exist.")
       nil)))
 
-(defmethod on-load-up (moonbot (module sticker-module))
+(defmethod on-load-up (luna (module sticker-module))
   (log:info "Loading Sticker config from sticker-config.lisp")
   (results-from-file)
   (log:info "Getting information for each server from lunamech.com/stickerpicker")
   (grab-stickerpicker-information))
 
-(defmethod on-module-hotload (moonbot (module sticker-module))
+(defmethod on-module-hotload (luna (module sticker-module))
   (log:info "Getting information for each server from lunamech.com/stickerpicker")
   (results-from-file)
   (grab-stickerpicker-information))
 
-(defmethod on-save (moonbot (module sticker-module))
+(defmethod on-save (luna (module sticker-module))
   (log:info "Saving Sticker config to sticker-config.lisp")
   (save-results)
   t)
@@ -73,21 +73,21 @@ that file must be of type sticker-api-list otherwise will signal a type conditio
   "When prefix is sticker with no privilege just signal 'missing-command"
   (error 'missing-command))
 
-(defmethod execute-command ((moonbot moonbot) (priv ubermensch-privilege)
+(defmethod execute-command ((luna luna) (priv ubermensch-privilege)
                             (command sticker-command)
                             community room message rest)
   (if (string-equal (first rest) "help")
       (print-command-information command community room)
-      (safe-execution command community room message rest moonbot)))
+      (safe-execution command community room message rest luna)))
 
-(defmethod execute-command ((moonbot moonbot) (priv normie-privilege)
+(defmethod execute-command ((luna luna) (priv normie-privilege)
                             (command sticker-command)
                             community room message rest)
   (if (string-equal (first rest) "help")
       (print-command-information command community room)
-      (safe-execution command community room message rest moonbot)))
+      (safe-execution command community room message rest luna)))
 
-;;all commands have moonbot as an argument so need to be careful as they can all be invoked
+;;all commands have luna as an argument so need to be careful as they can all be invoked
 ;;by plebs
 
 (defmethod inform-command-is-missing
@@ -233,7 +233,7 @@ within the media object so that the correct sticker-api object can be found."
               :content content 
               :use-connection-pool nil)))
 
-(command-defining-macro-moonbot new-sticker-command 'sticker-command)
+(command-defining-macro-luna new-sticker-command 'sticker-command)
 
 (new-sticker-command help ()
     "attempts an explanation of how commands work"
@@ -326,7 +326,7 @@ This has wrapped the funcall with 3 restarts, unload-module, do-nothing and resi
       ;;if we fail to grab information on one part of the server we will fail on it all.
       :report "Failed to grab the information required for uploading, unload?"
       (log:error "Failed to grab the information required to upload so unloading.")
-      (matrix-moonbot:unload-module matrix-moonbot::*luna* 'sticker))
+      (unload-module *luna* 'sticker))
     (do-nothing ()
       :report "do nothing?"
       nil)

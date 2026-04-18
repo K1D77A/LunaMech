@@ -79,13 +79,13 @@ that can be used to grab the backup config."
                                                                        (second community))))
                                  communities))
             (connection (config->connection login directory)))
-        (make-instance 'luna :communities communities
-                             :config-path directory
-                             :name (first (last (pathname-directory directory)))
-                             :connection connection
-                             :permissions permissions 
-                             :modules modules 
-                             :uber-rooms uber-rooms)))))
+        (make-instance 'lunamech :communities communities
+                                 :config-path directory
+                                 :name (first (last (pathname-directory directory)))
+                                 :connection connection
+                                 :permissions permissions 
+                                 :modules modules 
+                                 :uber-rooms uber-rooms)))))
 
 (defun luna->config%new (luna)
   "use cl-binary-store to store luna to disk."

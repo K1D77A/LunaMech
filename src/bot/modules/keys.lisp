@@ -1,5 +1,6 @@
 (defpackage #:mm-module.private-keys
-  (:use #:cl #:matrix-moonbot))
+  (:use #:cl #:matrix-moonbot)
+  (:export #:new-key #:get-key))
 
 (in-package #:mm-module.private-keys)
 
@@ -11,7 +12,7 @@
              :initform ()
              :documentation "Private keys")))
 
-(export '(new-key get-key))
+
 (defun new-key (keyword pkey)
   (setf (getf (private-keys *module*) keyword) pkey))
 

@@ -3,11 +3,11 @@
 
 ;;;;conditions
 
-(define-condition moonbot-condition (error)
+(define-condition lunamech-condition (error)
   ()
-  (:documentation "Top level class for all Moonbot defined conditions"))
+  (:documentation "Top level class for all Lunamech defined conditions"))
 
-(define-condition cannot-perform-action (moonbot-condition)
+(define-condition cannot-perform-action (lunamech-condition)
   ((cannot-perform-action-action
     :accessor cannot-perform-action-action
     :initarg :cannot-perform-action-action)
@@ -24,7 +24,7 @@ do like removing the last ubermensch, or the last listen-in room")
 
 ;;;validator errors
 
-(define-condition validator-condition (moonbot-condition)
+(define-condition validator-condition (lunamech-condition)
   ())
 
 (define-condition missing-key (validator-condition)
@@ -81,7 +81,7 @@ excluded")
 
 ;;;sync errors
 
-(define-condition missing-filter-for-key (moonbot-condition)
+(define-condition missing-filter-for-key (lunamech-condition)
   ((missing-filter-for-key-key
     :initarg :missing-filter-for-key-key
     :accessor missing-filter-for-key-key)
@@ -100,7 +100,7 @@ excluded")
              (missing-filter-for-key-message obj)))))
 
 ;;;config errors
-(define-condition config-condition (moonbot-condition)
+(define-condition config-condition (lunamech-condition)
   ())
 
 (define-condition expected-key-missing-from-config (warning config-condition)
@@ -130,7 +130,7 @@ excluded")
 
 ;;;module errors
 
-(define-condition module-error (moonbot-condition)
+(define-condition module-error (lunamech-condition)
   ((module-error-message
     :initarg :module-error-message
     :accessor module-error-message)
@@ -154,15 +154,15 @@ excluded")
   (:documentation "Signalled when an attempt is made to find the module, the package is 
 found but the symbol *module* is unbound."))
 
-(define-condition moonbot-still-running (moonbot-condition)
-  ((moonbot-still-running-message
-    :accessor moonbot-still-running-message
-    :initarg :moonbot-still-running-message
+(define-condition luna-still-running (lunamech-condition)
+  ((luna-still-running-message
+    :accessor luna-still-running-message
+    :initarg :luna-still-running-message
     :initform nil)))
 
 ;;;message parsing erros
 
-(define-condition message-process-failure (moonbot-condition)
+(define-condition message-process-failure (lunamech-condition)
   ((message-process-failure-message
     :accessor message-process-failure-message
     :initform nil
@@ -207,7 +207,7 @@ type"))
     :accessor total-failure-caught-condition
     :initarg :total-failure-caught-condition)))
 
-(define-condition invalid-command (moonbot-condition)
+(define-condition invalid-command (lunamech-condition)
   ((invalid-command-message
     :accessor invalid-command-message
     :initarg :invalid-command-message

@@ -50,7 +50,7 @@
        (string= (get-key (get-key list :|content|) :|membership|) "invite")
        t))
 
-(defmethod process-invites ((luna luna) (connection connection) sync)
+(defmethod process-invites ((luna lunamech) (connection connection) sync)
   "Takes in a SYNC event and looks for the appropriate events associated with receiving 
 an invite. If the invite is valid and from an ubermensch user then joins the room."
   (flet ((valid-senders (events)

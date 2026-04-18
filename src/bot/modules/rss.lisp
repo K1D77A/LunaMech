@@ -24,7 +24,7 @@
                  :key #'name :test #'string-equal)
       (error 'missing-command)))
 
-(defmethod execute-command ((luna luna) (priv ubermensch-privilege)
+(defmethod execute-command ((luna lunamech) (priv ubermensch-privilege)
                             (command rss-command)
                             community room message rest)
   (if (string-equal (first rest) "help")

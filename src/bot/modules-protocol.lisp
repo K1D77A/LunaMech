@@ -38,7 +38,6 @@ I guess we can just store mappings between modules and
 
 ||#
 
-
 (defgeneric find-module (o sym &optional silent))
 
 (defgeneric find-modules (o))
@@ -61,7 +60,7 @@ methods that would normally be called during the use of Luna will no longer be c
 PACKAGE is a symbol denoting the package that the symbols for that module exist. An example
 (register-module 'rss 'mm-module.rss). Doing this saves having to keep a 
 manual list."
-  (pushnew (cons name package) (modules (make-instance 'moonbot))
+  (pushnew (cons name package) (modules (c2mop:class-prototype (find-class 'lunamech)))
            :test #'string-equal
            :key #'car))
 
@@ -133,7 +132,7 @@ and the name of its module subclass.")
                  :key #'name :test #'string-equal)
       (error 'missing-command)))
 
-(defmethod execute-command ((luna luna) (priv ubermensch-privilege)
+(defmethod execute-command ((luna lunamech) (priv ubermensch-privilege)
                             (command command)
                             community room message rest)
   (if (string-equal (first rest) "help")

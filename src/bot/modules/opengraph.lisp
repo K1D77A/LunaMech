@@ -17,7 +17,7 @@
       ;;luna commands created for communities that are for normies
       (error 'missing-command)))
 
-(command-defining-macro-moonbot new-admin-command 'og-command)
+(command-defining-macro-luna new-admin-command 'og-command)
 
 
 

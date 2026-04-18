@@ -94,11 +94,11 @@ that file must be of type twitter-api-list otherwise will signal a type conditio
       (warn "config/twitter-config.lisp does not exist.")
       nil)))
 
-(defmethod on-load-up (moonbot (module twitter-module))
+(defmethod on-load-up (luna (module twitter-module))
   (log:info "Loading Twitter config from twitter-config.lisp")
   (results-from-file))
 
-(defmethod on-save (moonbot (module twitter-module))
+(defmethod on-save (luna (module twitter-module))
   (log:info "Saving Twitter config to twitter-config.lisp")
   (save-results)
   t)
@@ -114,12 +114,12 @@ that file must be of type twitter-api-list otherwise will signal a type conditio
   "When prefix is twitter with no privilege just signal 'missing-command"
   (error 'missing-command))
 
-(defmethod execute-command ((moonbot moonbot) (priv ubermensch-privilege)
+(defmethod execute-command ((luna lunamech) (priv ubermensch-privilege)
                             (command twitter-command)
                             community room message rest)
   (if (string-equal (first rest) "help")
       (print-command-information command community room)
-      (safe-execution command community room message rest moonbot)))
+      (safe-execution command community room message rest luna)))
 
 (defmethod inform-command-is-missing
   ((priv admin-privilege) (module twitter-module) community room)
@@ -163,7 +163,7 @@ to chirp."
                      :api-secret api-secret
                      :api-key api-key))))
 
-(command-defining-macro-moonbot new-twitter-command 'twitter-command)
+(command-defining-macro-luna new-twitter-command 'twitter-command)
 
 (new-twitter-command help ()
     "attempts an explanation of how commands work"

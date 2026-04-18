@@ -1,8 +1,10 @@
 ;;;; package.lisp
+(in-package #:cl-user)
+
 (defpackage #:matrix-moonbot
   (:use #:cl
         #:lmav2)
-  (:nicknames #:moonbot #:lunamech)
+  (:nicknames #:lunamech #:luna)
   (:export #:*commands*
            #:*api*
            #:module-moonmat-message
@@ -10,6 +12,8 @@
            #:request-open-id-token
            #:*url*
            #:*luna*
+           #:lunamech
+           #:ark
            #:setup-and-go
            #:moonmat-message
            #:with-formatted-output-to-room
@@ -47,8 +51,6 @@
            #:add-command
            #:add-correct-con-to-community
            #:add-listen-in
-           #:start-moonbot
-           #:stop-moonbot
            #:add-room
            #:%emergency-format
            #:report-condition-to-matrix
@@ -117,7 +119,7 @@
            #:community-prefix-p
            #:condition-sym
            #:config
-           #:config->moonbot
+           #:config->luna
            #:config-missing
            #:config-missing-message
            #:connection
@@ -249,10 +251,9 @@
            #:modules
            #:moon-mapc
            #:moon-message
-           #:moonbot
-           #:moonbot->config
-           #:moonbot-still-running
-           #:moonbot-still-running-message
+           #:luna->config
+           #:luna-still-running
+           #:luna-still-running-message
            #:moonmat
            #:msgtype
            #:msoc
@@ -348,7 +349,7 @@
            #:on-message
            #:on-save
            #:on-cycle
-           #:moonbot-condition
+           #:lunamech-condition
            #:m-file
            #:file-info
            #:on-load-up
@@ -400,8 +401,8 @@
            #:key
            #:id
            #:last-sync-string
-           #:command-defining-macro-no-moonbot
-           #:command-defining-macro-moonbot
+           #:command-defining-macro-no-luna
+           #:command-defining-macro-luna
            #:rooms-id
            #:rooms-name
            #:report-to-matrix))
