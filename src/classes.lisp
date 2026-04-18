@@ -8,11 +8,49 @@
                         :origin-server-ts origin-server-ts :room-id room-id
                         :unsigned unsigned :sender sender))
 
-(defclass luna ()
-  ())
 
-(defclass moonbot (luna)
-  ((communities
+(defclass lunas-ark ()
+  ((%lunas
+    :accessor lunas
+    :initarg :lunas
+    :initform ()
+    :type list
+    :documentation "List of luna instances.")
+   (%thread
+    :accessor thread
+    :initarg :thread    
+    :initform nil
+    :type (or null bt2:thread)
+    :documentation "Background thread to do assorted thinks.")
+   (%timestamp
+    :accessor timestamp
+    :initarg :timestamp
+    :initform (local-time:now)
+    :type local-time:timestamp)
+   (%state
+    :accessor state
+    :initarg :state
+    :initform :idle
+    :type (member :starting :started :stopping :stopped :idle :paused))
+   (%global-modules
+    :accessor global-modules
+    :initarg :global-modules
+    :initform ()
+    :type list
+    :documentation "list global modules that can only be run per single process.")))
+   
+(defclass luna ()
+  ((name
+    :accessor name
+    :initarg :name
+    :type string
+    :documentation "The name for this instance of Luna")
+   (config-path
+    :accessor config-path
+    :initarg :config-path
+    :type pathname
+    :documentation "The pathname of the config.")
+   (communities
     :accessor communities
     :initarg :communities
     :type list
@@ -23,15 +61,12 @@
     :initform nil
     :type list
     :documentation "A list structure mapping usernames to their various permissions.")
-   (connections
-    :accessor connections
-    :initarg :connections
-    :type list
-    :documentation "A list of connections that have been used to login to the Matrix api.
-Its important to note that all testing has only ever been done with a single connection, 
-so although most functionality will work with multiple connections as communities are 
-associated with a connection, there are a few places where (first (connections <luna>)) 
-is used to send data to the server. So best not rely on this functionality.")
+   (connection
+    :accessor connection
+    :reader conn
+    :initarg :connection
+    :type lunamech-matrix-api/v2:connection 
+    :documentation "A single connection for this instance of moonbot")
    (filters
     :accessor filters
     :initarg :filters
@@ -79,10 +114,6 @@ complete listening cycle. This can be used to implement timers.")
     :accessor parallel-p
     :initform nil
     :documentation "Set to t and actions will be performed concurrently using lparallel.")
-   (controller-thread
-    :accessor cotroller-thread
-    :documentation "This is a thread that is used to control Luna from matrix, ie to start
-stop etc")
    (timers
     :accessor timers
     :initarg :timers
@@ -116,7 +147,7 @@ and it is that same instance that is backed up to the same file."))
            (locally ,@body))))))
       
 
-(defmethod print-object ((luna moonbot) stream)
+(defmethod print-object ((luna luna) stream)
   (print-unreadable-object (luna stream :type t :identity nil)
     (format stream "~%Community Names: ~{~A ~}~%Modules: ~{~A ~}~%Ubermensch: ~{~A ~}~%~
                    Command count: ~r~%"
@@ -124,9 +155,6 @@ and it is that same instance that is backed up to the same file."))
             (mapcar #'prefix (found-modules luna))
             (all-ubermensch luna)
             (length *commands*))))
-
-(defmethod conn ((luna luna))
-  (first (connections luna)))
 
 (defmethod find-community ((community-name symbol) (luna luna))
   (find community-name (communities luna) :key #'name))
@@ -224,6 +252,10 @@ implementation of a new module."))
 in a completely separate thread. Currently only on-sync is processed this way.
 This can work when modules are completely self contained making no modifications to 
 Luna. An example is the RSS or Jitsi module."))
+
+(defclass global-module (module)
+  ()
+  (:documentation "A module that is run per process rather than per luna."))
 
 (defclass command ()
   ((name
@@ -335,20 +367,7 @@ ubermensch of admin. They can only execute normie commands."))
   (:documentation "Its me! I have no permissions to perform any commands!"))
 
 (defclass community ()
-  ((username
-    :accessor username
-    :initarg :username
-    :initform nil
-    :type (or null string)
-    :documentation "This is the username that this community used to login")
-   (connection
-    :accessor connection
-    :initform nil
-    :initarg :connection
-    :type (or null connection)
-    :documentation "An instance of CONNECTION that is used to login to the server where
-this community is located. This should be eq to a connection within (connections LUNA)")
-   (top-level-space
+  ((top-level-space
     :accessor top-level-space
     :initform ""
     :initarg :top-level-space
@@ -386,21 +405,7 @@ commands related to this community would go something like .my-community <comman
     :initarg :aliases
     :initform nil
     :type (or null list)
-    :documentation "A list of aliases that can be used to invoke commands in that community")
-   (url
-    :accessor url
-    :initarg :url
-    :initform nil
-    :type (or null string)
-    :documentation "The url of the matrix server. This should be something like 
-'matrix.<my-domain>.com'")
-   (api
-    :accessor api
-    :initarg :api
-    :initform nil
-    :type (or null string)
-    :documentation "The current API version for the community to use, this will 
-normally be '/_matrix/client/r0/'")
+    :documentation "A list of aliases that can be used to invoke commands in that community")  
    (admins
     :accessor admins
     :initarg :admins
@@ -495,7 +500,7 @@ it. If none are found then returns nil"
     (condition ()
       nil)))
 
-(defmethod add-new-alias (alias (luna moonbot) (community community))
+(defmethod add-new-alias (alias (luna luna) (community community))
   (check-type alias keyword)
   (unless (loop :for community :in (communities luna)
                   :thereis (find alias (aliases community)))

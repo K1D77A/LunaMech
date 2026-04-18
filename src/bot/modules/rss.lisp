@@ -170,7 +170,7 @@
        (lambda (rss-name)
          (log:info "Checking for RSS updates for ~A" rss-name)
          (handler-case
-             (bt:with-timeout (200)
+             (bt2:with-timeout (200)
                (update-rss rss-name))
            (serious-condition (c)
              (report-condition-to-matrix c (format nil "Trying to update room ~A"

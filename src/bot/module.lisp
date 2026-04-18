@@ -332,10 +332,19 @@ form of usocket condition. Module is not being unloaded. Condition: ~A"
 (defmethod on-sync :around (luna (module background-module) sync)
   "This is the most primitive version I could use. Those modules that subclass from 
 background-module will be executed entirely in their own thread."
-  (let ((thread (bt:make-thread (lambda ()
+  (let ((thread (bt2:make-thread (lambda ()
                                   (ignore-errors
                                    (bt:with-timeout (300);force a timeout after 300 seconds
-                                     (%on-sync-body)))))))
+                                     (%on-sync-body))))
+                                 :name (format nil "~A-on-sync-background" (name luna))
+                                 :initial-bindings `((*package* . ,*package*)
+                                                     (*error-output* . ,*error-output*)
+                                                     (*standard-output* . ,*standard-output*)
+                                                     (dex:*connection-pool* .
+                                                                            ,dex:*connection-pool*)
+                                                     (*luna* . ,luna)
+                                                     ,@bt2:*default-special-bindings*))))
+                                 
     (setf (thread module) thread)))
   ;;(%on-sync-body))
 

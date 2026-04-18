@@ -16,7 +16,7 @@
 (defun format-command (stream command)
   (format stream
           "The command '~A' has the description ~
-            \"~A\" and it requires ~r argument~:p ~A~%"
+            ~S and it requires ~r argument~:p ~A~%"
           (string-capitalize (name command))
           (docs command)
           (arg-count command)                          

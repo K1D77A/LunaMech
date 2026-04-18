@@ -166,7 +166,7 @@ that the message type is unknown then signals the condition 'unknown-message-typ
    Once again within the same map Luna maps over each module in (found-modules ) and calls 
    the on-sync method with the latest sync object. 
    Now that map is complete.
-   Next if 50 loops have been completed then Luna will map over (connections ) and 
+   Next if 50 loops have been completed then Luna 
    check for any invites by syncing using the :invites filter, this sync object is 
    then passed to process-invites.
    Next if 100 loops have been completed then Luna resets the (cycle-history ) variable.
@@ -179,24 +179,23 @@ that the message type is unknown then signals the condition 'unknown-message-typ
                    (found-modules found-modules)
                    (timestamp timestamp)
                    (cycle-history cycle-history)
-                   (connections connections)
+                   (connection connection)
                    (communities communities))
       luna
     (loop :while (not (stopp luna))
-          :do (mapc (lambda (connection)
-                      (let ((sync (sync connection :timeout *sync-timeout*)))
-                        (%grab-and-process-messages luna sync)
-                        (%process-modules luna sync)
-                        (process-invites luna connection sync)))
-                    connections)
-              (execute-stamp-n-after-luna ((find-timer timers :clear-cycle)
-                                           5)
-                (%reset-cycle-history luna))
-              (execute-stamp-n-after-luna ((find-timer timers :backup)
-                                           300)
-                (%backup-luna luna))
-              (%reset-timestamp luna)
-              (sleep 0.25)
+          :do 
+             (let ((sync (sync connection :timeout *sync-timeout*)))
+               (%grab-and-process-messages luna sync)
+               (%process-modules luna sync)
+               (process-invites luna connection sync))               
+             (execute-stamp-n-after-luna ((find-timer timers :clear-cycle)
+                                          5)
+               (%reset-cycle-history luna))
+             (execute-stamp-n-after-luna ((find-timer timers :backup)
+                                          300)
+               (%backup-luna luna))
+             (%reset-timestamp luna)
+             (sleep 0.25)
           :finally (log:info "Luna going down"))))
 
 (defun %grab-and-process-messages (luna sync)
@@ -209,10 +208,10 @@ that the message type is unknown then signals the condition 'unknown-message-typ
   (maybe-pmapc luna 
                (lambda (module) 
                  (handler-case
-                     (bt:with-timeout (60)
+                     (bt2:with-timeout (60)
                        ;;smashout after 60 seconds
                        (on-sync luna module sync))
-                   (bt:timeout ()
+                   (bt2:timeout ()
                      (log:error "An on-sync method timed out.")))
                  (execute-all-communications-between-modules luna module sync))
                (found-modules luna)))

@@ -300,10 +300,10 @@ have the same homeserver as Luna and all of those who are already in the room."
        (lambda (user-id)
          (log:info "Inviting ~A to ~A" user-id room-id)
          (handler-case
-             (bt:with-timeout (5)
+             (bt2:with-timeout (5)
                (catch-potential-conditions
                  (invite-member-to-room (conn *luna*) user-id room-id)))
-           (bt:timeout ()
+           (bt2:timeout ()
              (log:error "Timeout when inviting ~A to ~A" user-id room-id))
            (serious-condition (c)
              (log:error "Serious condition when inviting ~A to ~A" user-id room-id)
