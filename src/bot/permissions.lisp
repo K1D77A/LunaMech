@@ -59,7 +59,7 @@ returns a new instance of 'module-privilege."
 
 (defun determine-privilege (luna community message)
   "Determines the privilege of a message sender by checking the name first against
-(ubermensch moonbot) then by checking if they are in (admins community) and finally
+(ubermensch luna) then by checking if they are in (admins community) and finally
 defaulting to normie. Returns either an ubermensch, admin, or normie privilege 
 object"
   (let ((sender (message-from? message t)))

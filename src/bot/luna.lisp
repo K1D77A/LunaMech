@@ -26,17 +26,17 @@ Luna will not evaluate any initiating functions and will login using the same de
         ;;              (initiate-filters con))))
 
 
-(defmethod logged-in-p ((moonbot moonbot))
-  (logged-in-p (connection moonbot)))
+(defmethod logged-in-p ((luna luna))
+  (logged-in-p (connection luna)))
 
-(defmethod moonbot-restart ((moonbot moonbot))
+(defmethod luna-restart ((luna luna))
   (handler-case 
-      (login moonbot t)
+      (login luna t)
     (condition (c)
       (log:error "Restart error: ~A" c)
       (log:error "Failed to login, retrying in 5 seconds")
       (sleep 5)
-      (moonbot-restart moonbot))))
+      (luna-restart luna))))
 
 (defmethod initiate-spellcheckers ((luna luna))
   (mapc #'initiate-room-spellchecker (communities luna)))
@@ -72,7 +72,7 @@ Luna will not evaluate any initiating functions and will login using the same de
 (defmethod handle-conditions (luna (c api-timeout))
   (log:error "Socket condition: ~A" (api-timeout-condition c))
   (log:error "Attempting a restart of Luna")
-  (moonbot-restart luna)
+  (luna-restart luna)
   (when (find-restart 'try-again)
     (log:error "Successful reconnection")
     (invoke-restart 'try-again)))
@@ -80,7 +80,7 @@ Luna will not evaluate any initiating functions and will login using the same de
 (defmethod handle-conditions (luna (c api-no-connection))
   (log:error "Socket condition: ~A" c)
   (log:error "Waiting and trying to restart.")
-  (moonbot-restart luna)
+  (luna-restart luna)
   (when (find-restart 'try-again)
     (log:error "Successful reconnection")
     (invoke-restart 'try-again)))
@@ -97,7 +97,7 @@ Luna will not evaluate any initiating functions and will login using the same de
 
 (defmethod handle-conditions (luna (c m-unknown))
   (log:error "Unknown error")
-  (moonbot-restart luna)
+  (luna-restart luna)
   (when (find-restart 'try-again)
     (log:error "Successful reconnection")
     (invoke-restart 'try-again)))
@@ -105,7 +105,7 @@ Luna will not evaluate any initiating functions and will login using the same de
 (defmethod handle-conditions (luna c)
   (log:error "Unhandled condition signalled~% ~A~
               Attempting to restart in 5 seconds" c)
-  (moonbot-restart luna)
+  (luna-restart luna)
   (when (find-restart 'listen-and-process)    
     (invoke-restart 'listen-and-process)))
 
@@ -208,7 +208,7 @@ found-module and then recalls start."
    (report-to-matrix "I have been told to shutdown"))
   (log:info "Waiting for Luna to stop on its own")
   (let ((err-count 0))
-    (handler-bind ((moonbot-still-running
+    (handler-bind ((luna-still-running
                      (lambda (c)
                        (declare (ignore c))
                        (incf err-count)
@@ -247,8 +247,8 @@ second 'wait-60' recalls 'wait-for-stop' making it wait another 60 seconds."
                   (incf x 5)
                   (log:info "Luna still running. Waited: ~D seconds" x)
                   (when (= x 10);10 seconds
-                    (error 'moonbot-still-running
-                           :moonbot-still-running-message
+                    (error 'luna-still-running
+                           :luna-still-running-message
                            (format nil "Luna is still running despite ~
                                           waiting 10 seconds"))))
       (force-stop ()
@@ -260,3 +260,101 @@ second 'wait-60' recalls 'wait-for-stop' making it wait another 60 seconds."
         (log:error "Luna is still running, waiting 10 seconds")
         (wait-for-stop luna)))))
 
+#||
+Modules
+||#
+
+
+(defmethod find-module ((luna luna) sym &optional (silent t))
+  "Takes in a symbol SYM and looks within the alist (modules LUNA) for a 
+corresponding package name, then looks for *module* within that package."
+  (restart-case
+      (handler-case
+          (progn (unless silent
+                   (log:info "Searching for module ~A" sym))
+                 (let ((package (cdr (assoc sym (modules luna) :test #'string-equal))))
+                   (unless package
+                     (error 'missing-module
+                            :module-error-module sym
+                            :module-error-message "Cant find module (package missing)"))
+                   (handler-case
+                       (prog1 (symbol-value (find-symbol "*MODULE*" package))
+                         (unless silent
+                           (log:info "Module found for " sym)))
+                     (unbound-variable ()
+                       (error 'malformed-module
+                              :module-error-module package
+                              :module-error-message
+                              "Module doesn't have *module* variable."))))))
+    (ignore ()
+      :report "can't find module, ignore it?"
+      (log:error "Cannot find module associated with sym: ~S. Discarding" sym)
+      nil)))
+
+(defmethod find-modules ((luna luna))
+  "Loops through (modules LUNA) and attempts to resolve all of the *module* variables 
+for each (name . package) pair."
+  (handler-bind ((module-error
+                   (lambda (c)
+                     (declare (ignore c))
+                     (invoke-restart 'ignore))))
+    (setf (found-modules luna)
+          (remove-if #'null
+                     (loop :for (name . package) :in (modules luna)
+                           :collect
+                           (handler-case
+                               (symbol-value (find-symbol "*MODULE*" package))
+                             (unbound-variable ()
+                               nil)))))))
+
+(defmethod module-loaded-p ((luna luna) module)
+  (and (find module (found-modules luna)) t))
+
+(defmethod hotload-module ((luna luna) sym)
+  "Load a module into Luna while Luna is running. SYM should be the prefix
+of the module. If SYM is not a valid module signals 'missing-module. If module is
+found but already loaded then 'module-already-loaded is signalled."
+  (format t "Attempting hotload of module denoted by ~A~%" sym)
+  (log:info "Attempting hotload of module denoted by ~A" sym)
+  (with-accessors ((found-modules found-modules))
+      luna
+    (let ((module (find-module luna sym)))
+      (when (module-loaded-p luna module)
+        (error 'module-already-loaded
+               :module-error-module module
+               :module-error-message "Already found module in Luna"))
+      (push module found-modules) 
+      (on-module-hotload luna module)
+      (format t "Hotload of ~S~%Successful~%" module)
+      (log:info "Hotload of ~A~%Successful" module))))
+
+
+
+(defmethod sym->module-name ((luna luna) sym)
+  (cdr (assoc sym (modules luna) :test #'string=)))
+
+(defmethod unload-module :around (luna sym)
+  (log:info "Attempting to unload module denoted by ~A from Luna" sym)
+  (report-to-matrix (format nil "Attempting to unload module denoted by ~A from Luna" sym))
+  (call-next-method)
+  (report-to-matrix "Module successfully unloaded")
+  (log:info "Module successfully unloaded"))
+
+(defmethod unload-module ((luna luna) sym)
+  "Unload a module denoted by SYM from Luna. If the modules associated with SYM,
+cannot be found then the condition 'missing-module is signalled."
+  (let ((module-package (sym->module-name luna sym)))
+    (with-accessors ((found found-modules)
+                     (modules modules))
+        luna
+      (let ((module (find-module luna sym t)))
+        (progn
+          (on-module-unload luna module)
+          (setf modules (remove module-package modules :key #'car)
+                found (remove module found :test #'eq)))
+        (format t "Module successfully unloaded~%")))))
+
+(defmethod unload-module ((luna luna) (mod module))
+  (on-module-unload luna mod)
+  (setf (found-modules luna)
+        (remove mod (found-modules luna))))

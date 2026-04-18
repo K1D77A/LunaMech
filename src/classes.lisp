@@ -66,7 +66,7 @@
     :reader conn
     :initarg :connection
     :type lunamech-matrix-api/v2:connection 
-    :documentation "A single connection for this instance of moonbot")
+    :documentation "A single connection for this instance of luna")
    (filters
     :accessor filters
     :initarg :filters
@@ -133,9 +133,9 @@ for that module.")
                        (loop :for name :in names
                              :appending (list name (bt:make-lock (format nil "~A" name))))))
                 (nl :found-modules :cycle-history :thread :permissions))))
-  (:documentation "Luna (Moonbot here) is the primary class that is used to store all 
+  (:documentation "Luna (Luna here) is the primary class that is used to store all 
 information related to the operation and interaction with the Matrix api. It is an 
-instance of Luna (Moonbot here) that is created from the communities.lisp config file
+instance of Luna (Luna here) that is created from the communities.lisp config file
 and it is that same instance that is backed up to the same file."))
 
 (defmacro quicklock ((object lock-key) &body body)
@@ -162,10 +162,10 @@ and it is that same instance that is backed up to the same file."))
 (defmethod find-community ((community-name string) (luna luna))
   (find (intern (string-upcase community-name) :keyword) (communities luna) :key #'name))
 
-(defmethod (setf modules) :after (new-val (moonbot moonbot))
+(defmethod (setf modules) :after (new-val (luna luna))
   "Remove duplicate modules after changing its value."
   (with-slots (modules)
-      moonbot
+      luna
     (setf modules
           (remove-duplicates modules :test (lambda (ele1 ele2)
                                              (string-equal (car ele1) (car ele2)))
@@ -183,10 +183,10 @@ and it is that same instance that is backed up to the same file."))
   (quicklock (luna :thread)
     (call-next-method)))
 
-(defmethod (setf found-modules) :after (new-val (moonbot moonbot))
+(defmethod (setf found-modules) :after (new-val (luna luna))
   "Remove duplicate found-modules after adding/removing one."
   (with-slots (found-modules)
-      moonbot
+      luna
     (with-slots (modules)
         (make-instance 'module)
       (let ((no-dupes (remove-duplicates found-modules :test #'eq)))
@@ -472,18 +472,18 @@ the community. This is normally acquired through the populate-community command.
             (getf room :name))
           (slot-value community 'rooms)))
 
-(defmethod find-room-by-id ((moonbot moonbot) id)
-  "Searches all of the communities within MOONBOT for a room that matches ID, then returns
+(defmethod find-room-by-id ((luna luna) id)
+  "Searches all of the communities within LUNA for a room that matches ID, then returns
 it. If none are found then returns nil"
-  (loop :for community :in (communities moonbot)
+  (loop :for community :in (communities luna)
           :thereis (loop :for room-plist :in (rooms community)
                          :if (string= id (getf room-plist :id))
                            :return room-plist)))
 
-(defmethod find-room-by-name ((moonbot moonbot) name)
-  "Searches all of the communities within MOONBOT for a room that matches NAME, then returns
+(defmethod find-room-by-name ((luna luna) name)
+  "Searches all of the communities within LUNA for a room that matches NAME, then returns
 it. If none are found then returns nil"
-  (loop :for community :in (communities moonbot)
+  (loop :for community :in (communities luna)
           :thereis (loop :for room-plist :in (rooms community)
                          :if (string= name (getf room-plist :name))
                            :return room-plist)))

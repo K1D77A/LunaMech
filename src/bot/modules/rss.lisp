@@ -24,7 +24,7 @@
                  :key #'name :test #'string-equal)
       (error 'missing-command)))
 
-(defmethod execute-command ((moonbot moonbot) (priv ubermensch-privilege)
+(defmethod execute-command ((luna luna) (priv ubermensch-privilege)
                             (command rss-command)
                             community room message rest)
   (if (string-equal (first rest) "help")
@@ -47,17 +47,17 @@
       (warn "config/rss-config.lisp does not exist.")
       nil)))
 
-(defmethod on-load-up (moonbot (module rss-module))
+(defmethod on-load-up (luna (module rss-module))
   (setf (timers module) (make-timers '(:check)))
   (log:info "Loading rss rooms from rss-config.lisp")
   (results-from-file))
 
-(defmethod on-save (moonbot (module rss-module))
+(defmethod on-save (luna (module rss-module))
   (log:info "Saving rss rooms to rss-config.lisp")
   (save-results)
   t)
 
-(command-defining-macro-no-moonbot new-admin-rss-command
+(command-defining-macro-no-luna new-admin-rss-command
                                    'rss-command)
 
 (new-admin-rss-command help ()

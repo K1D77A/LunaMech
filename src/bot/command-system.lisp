@@ -140,10 +140,8 @@ the prefix, the command and the community it was sent in."))
   (catch-potential-conditions
     (handler-case
         (let ((connection (connection community))
-              (community community)
-              (moonbot luna)
-              (luna luna))
-          (declare (special connection community moonbot luna))
+              (community community))
+          (declare (special connection community luna))
           (execute command community room message args luna)) 
       (api-timeout (c)
         (error c))
@@ -203,7 +201,7 @@ be in the last position within args."))
           (format t "I don't have the privileges to do that."))))))
 
 #||
-command-defining-macro-no-moonbot and command-defining-macro-moonbot are both functionally
+command-defining-macro-no-luna and command-defining-macro-luna are both functionally
 the same as they both define a macro for defining commands within a module. 
 the first argument NAME is the name of a macro you use to define new commands and 
 COMMAND-TYPE is a class of subclass COMMAND that each command will be, the default
@@ -220,7 +218,7 @@ validators arguments. The last argument BODY is what is executed.
 
 The fun slot of the generated command is an anonymous function
 that takes the arguments:
-moonbot (when not no-moonbot) community room message &optional args .
+luna (when not no-luna) community room message &optional args .
 These are the argument passed when executing a function. 
 The macro generates a list of functions that are executed to validate that the arguments
 provided match their appropriate validators, if they dont then 'validation-failed 
@@ -234,7 +232,7 @@ room. This is useful for responding to the invoker in the room they invoked Luna
 ||#
 
 
-(defmacro command-defining-macro-no-moonbot (name command-type)
+(defmacro command-defining-macro-no-luna (name command-type)
   "See doc block in command-system.lisp"
   `(defmacro ,name (name args doc-string &body body)
      (alexandria:with-gensyms (command fun lambda split)
@@ -266,19 +264,19 @@ room. This is useful for responding to the invoker in the room they invoked Luna
                                        ,doc-string ',args ,fun)))
           (add-command ,command)))))
 
-(command-defining-macro-no-moonbot new-normie-community-command
+(command-defining-macro-no-luna new-normie-community-command
                                    'community-command)
 
-(command-defining-macro-no-moonbot new-admin-community-command
+(command-defining-macro-no-luna new-admin-community-command
                                    'admin-community-command)
 
-(defmacro command-defining-macro-moonbot (name command-type)
+(defmacro command-defining-macro-luna (name command-type)
   "See doc block in command-system.lisp"
   `(defmacro ,name (name args doc-string &body body)
      (alexandria:with-gensyms (command fun lambda split)
        `(let* ((,fun
-                 (lambda (moonbot community room message &optional args)
-                   (declare (ignorable moonbot message args))
+                 (lambda (luna community room message &optional args)
+                   (declare (ignorable luna message args))
                    ,(if args
                         `(let ((,lambda ,(length
                                      (args-from-validation-lists args

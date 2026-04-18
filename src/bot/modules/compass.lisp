@@ -10,11 +10,11 @@
            compass-command ()
            compass-module ())
 
-(defmethod on-load-up (moonbot (module compass-module))
+(defmethod on-load-up (luna (module compass-module))
   (log:info "Loading compass results from compass-results.lisp")
   (compass:results-from-file))
 
-(defmethod on-save (moonbot (module COMPASS-MODULE))
+(defmethod on-save (luna (module COMPASS-MODULE))
   (log:info "Saving compass results to compass-results.lisp")
   (compass:save-results)
   t)
@@ -26,7 +26,7 @@
       ;;compass commands created for communities that are for normies
       (error 'missing-command)))
 
-(command-defining-macro-no-moonbot new-compass-command 'compass-command)
+(command-defining-macro-no-luna new-compass-command 'compass-command)
 
 (new-compass-command help ()
     "attempts an explanation of how commands work"

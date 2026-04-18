@@ -38,12 +38,12 @@
           (string-equal string (format nil ".~A" alias)))
         (aliases community)))
 
-(defun extract-command-and-args (moonbot community string)
-  "Normal - Takes in an instance of moonbot a community and a string and
+(defun extract-command-and-args (luna community string)
+  "Normal - Takes in an instance of luna a community and a string and
    splits it by #\Space and removes nulls, then checks if the
    string is a community-prefix-p, if so returns a list of an interned prefix 
    and the args to the functions. If it not community-prefix-p then checks if the
-   interned prefix can be found within any of the modules associated with MOONBOT.
+   interned prefix can be found within any of the modules associated with LUNA.
    If one is found then returns a list of the module and the remainder of the split.
    Exceptional - If neither community-prefix-p or part of a module then signals
    a 'invalid-prefix' condition."
@@ -55,7 +55,7 @@
           (if (or (community-prefix-p community prefix)
                   (community-alias-p community prefix))
               (cons in (rest split))
-              (let ((mod (check-found-modules moonbot in)))
+              (let ((mod (check-found-modules luna in)))
                 (if mod
                     (progn (unless (rest split)
                              (error 'missing-invoker
@@ -112,13 +112,13 @@
           :report "Resignal the condition?"
           (error c))))))
 
-(defun process-encrypted (moonbot community room message)
+(defun process-encrypted (luna community room message)
   "This function is supposed to process encrypted messages, but this has not been 
 implemented yet."
-  (declare (ignorable moonbot community room message))
+  (declare (ignorable luna community room message))
   nil)
 
-(defmethod process-messages ((moonbot moonbot) (community community) room messages)
+(defmethod process-messages ((luna luna) (community community) room messages)
   "Given a list of messages in MESSAGES, and its associated ROOM id, attempts to determine
 the type of message that has been sent, either m.room.message or m.room.encrypted and 
 then calls either process-message or process-encrypted with that message. In the case 
@@ -130,11 +130,11 @@ that the message type is unknown then signals the condition 'unknown-message-typ
                                (invoke-restart 'return-nil))))
               (with-hash-keys (|type| |event_id|)
                   message
-                (unless (%already-processed-message-p moonbot |event_id|)
+                (unless (%already-processed-message-p luna |event_id|)
                   (cond ((string= |type| "m.room.message")
-                         (process-message moonbot community room message))
+                         (process-message luna community room message))
                         ((string= |type| "m.room.encrypted")
-                         (process-encrypted moonbot community room message))
+                         (process-encrypted luna community room message))
                         (t (error 'unknown-message-type
                                   :message-process-failure-type |type|
                                   :message-process-failure-message
@@ -146,14 +146,14 @@ that the message type is unknown then signals the condition 'unknown-message-typ
     the messages from the rooms that luna is listening in for that community and then 
     passes them to process-messages"))
 
-(defmethod grab-messages-and-process ((moonbot moonbot) (community community) sync)
+(defmethod grab-messages-and-process ((luna luna) (community community) sync)
   (with-accessors ((connection connect))
       community
-    (let ((messages (extract-all-relevant-messages moonbot community sync)))
+    (let ((messages (extract-all-relevant-messages luna community sync)))
       (when messages
         (alexandria:doplist (room messages messages)
           (when messages
-            (process-messages moonbot community room messages)))))))
+            (process-messages luna community room messages)))))))
 
 (defmethod listen-and-process ((luna luna))
   "This is the primary loop used to run Luna. 
@@ -223,7 +223,7 @@ that the message type is unknown then signals the condition 'unknown-message-typ
   (log:info "Backing up Luna to ~A" *config-file*)
   (dolist (mod (found-modules luna))
     (on-save luna mod))
-  (moonbot->config luna)
+  (luna->config luna)
   (log:info "Luna backed up"))
 
 (defun %reset-timestamp (luna)

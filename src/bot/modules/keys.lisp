@@ -33,11 +33,11 @@
       (warn "config/private-keys.lisp does not exist.")
       nil)))
 
-(defmethod on-load-up (moonbot (module private-keys-module))
+(defmethod on-load-up (luna (module private-keys-module))
   (log:info "Loading private-keys rooms from private-keys.lisp")
   (results-from-file))
 
-(defmethod on-save (moonbot (module private-keys-module))
+(defmethod on-save (luna (module private-keys-module))
   (log:info "Saving private keys to private-keys.lisp")
   (save-results)
   t)

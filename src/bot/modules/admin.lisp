@@ -21,12 +21,12 @@
   "When prefix is admin with no privilege just signal 'missing-command"
   (error 'missing-command))
 
-(defmethod execute-command ((moonbot moonbot) (priv ubermensch-privilege)
+(defmethod execute-command ((luna luna) (priv ubermensch-privilege)
                             (command admin-command)
                             community room message rest)
   (if (string-equal (first rest) "help")
       (print-command-information command community room)
-      (safe-execution command community room message rest moonbot)))
+      (safe-execution command community room message rest luna)))
 
 (defmethod inform-command-is-missing
     (priv (module admin-module) community room)
@@ -38,7 +38,7 @@
   "ADMIN & ADMIN command."
   nil)
 
-(command-defining-macro-moonbot new-admin-command 'admin-command)
+(command-defining-macro-luna new-admin-command 'admin-command)
 
 (new-admin-command help ()
     "attempts an explanation of how commands work"  
@@ -46,27 +46,27 @@
 
 (new-admin-command add-ubermensch ((user-id :valid-user))
     "Adds a new ubermensch."
-  (make-ubermensch moonbot user-id)
+  (make-ubermensch luna user-id)
   (format t "Added ~A to list of ubermensch~%" user-id))
 
 (new-admin-command add-module-admin ((user-id :valid-user)
                                      (module (:maxlen 50)
                                              (:minlen 1)))
     "Adds a new module admin."
-  (make-module-admin moonbot user-id module)
+  (make-module-admin luna user-id module)
   (format t "Added ~A to module administrators for ~A~%" user-id module))
 
 (new-admin-command remove-module-admin ((user-id :valid-user)
                                         (module (:maxlen 50)
                                                 (:minlen 1)))
     "Adds a new module admin."
-  (retract-module-admin moonbot user-id module)
+  (retract-module-admin luna user-id module)
   (format t "Removed ~A from module administrators for ~A~%" user-id module))
 
 (new-admin-command remove-ubermensch ((user-id :valid-user))
     "Removes an ubermensch."
-  (if (can-remove-ubermensch-p moonbot)
-      (remove-ubermensch moonbot user-id)
+  (if (can-remove-ubermensch-p luna)
+      (remove-ubermensch luna user-id)
       (error 'cannot-perform-action
              :cannot-perform-action-action "Remove the last ubermensch"
              :cannot-perform-action-message "I cannot remove the last ubermensch."))
@@ -74,24 +74,24 @@
 
 (new-admin-command print-ubermensch ()
     "Prints the ubermensch."
-  (format t "Ubermensch: ~{~A ~}" (mapcar #'clean-user-id (all-ubermensch moonbot))))
+  (format t "Ubermensch: ~{~A ~}" (mapcar #'clean-user-id (all-ubermensch luna))))
 
 (new-admin-command print-permissions ()
     "Prints the permissions tree."
-  (format t "~S" (permissions moonbot)))
+  (format t "~S" (permissions luna)))
 
 (new-admin-command users-permissions ((user-id :valid-user))
     "Prints the permissions tree for USER-ID."
-  (format t "~S" (find-permissions moonbot user-id)))
+  (format t "~S" (find-permissions luna user-id)))
 
 (new-admin-command accept-invites-from ((user-id :valid-user))
     "Luna will accept invites from USER-ID."
-  (accept-invites-from moonbot user-id)
+  (accept-invites-from luna user-id)
   (format t "Luna will now accept invites from ~A" user-id))
 
 (new-admin-command stop-accepting-invites-from ((user-id :valid-user))
     "Luna will no longer accept invites from USER-ID."
-  (stop-accepting-invites-from moonbot user-id)
+  (stop-accepting-invites-from luna user-id)
   (format t "Luna will no longer accept invites from ~A" user-id))
 
 
@@ -100,13 +100,13 @@
 (new-admin-command list-communities ()
     "Prints all the communities."
   (with-accessors ((communities communities))
-      moonbot
+      luna
     (format t "~{~A~%~}" (mapcar #'name communities))))
 
 (new-admin-command copy-admins ((from :valid-community)(to :valid-community))
     "Copies the admins from community name and puts them into the other"
   (with-accessors ((communities communities))
-      moonbot
+      luna
     (let* ((cf (intern (string-upcase from) :keyword))
            (ct (intern (string-upcase to) :keyword))
            (c1 (find cf communities :key #'name))
@@ -118,7 +118,7 @@
                                                            (:minlen 1)))
     "Creates a new community by name. Don't include spaces."
   (with-accessors ((communities communities))
-      moonbot    
+      luna    
     (let* ((sender (pkv message :|sender|))
            (new-community (make-instance 'community
                                          :extra nil :members (list sender)
@@ -137,7 +137,7 @@
 (new-admin-command member-count ()
     "Counts the total number of members in all communities."
   (with-accessors ((communities communities))
-      moonbot
+      luna
     (let* ((members (mapcar #'members communities))
            (count 
              (length 
@@ -147,7 +147,7 @@
 (new-admin-command room-count ()
     "Counts the total number of rooms in all communities."
   (with-accessors ((communities communities))
-      moonbot
+      luna
     (let* ((rooms (mapcar #'rooms-id communities))
            (count 
              (length 
@@ -157,7 +157,7 @@
 (new-admin-command load-module ((module-prefix (:maxlen 50) (:minlen 1)))
     "Loads a new module into Luna. Currently the code has to be loaded."
   (handler-case
-      (hotload-module moonbot (intern (string-upcase module-prefix)))
+      (hotload-module luna (intern (string-upcase module-prefix)))
     (missing-module ()
       (format t "Could not find module associated with ~A" module-prefix))
     (module-already-loaded ()
@@ -169,7 +169,7 @@
       (let ((mod (intern (string-upcase module-prefix))))
         (if (string= mod "ADMIN")
             (format t "You can't unload the admin module.")
-            (unload-module moonbot mod)))
+            (unload-module luna mod)))
     (missing-module ()
       (format t "Could not find module associated with ~A" module-prefix))))
 
@@ -194,22 +194,22 @@
                                      (:maxlen 50)
                                      (:minlen 1)))
     "Adds a new alias to community."
-  (let ((relevant (find-community community-name moonbot)))
-    (add-new-alias (intern (string-upcase alias) :keyword) moonbot relevant)
+  (let ((relevant (find-community community-name luna)))
+    (add-new-alias (intern (string-upcase alias) :keyword) luna relevant)
     (format t "Success.")))
 
 (new-admin-command remove-alias ((community-name :valid-community)
                                  (alias (:maxlen 50)
                                         (:minlen 1)))
     "Adds a new alias to community."
-  (let ((relevant (find-community community-name moonbot)))
+  (let ((relevant (find-community community-name luna)))
     (setf (aliases community)
           (remove (intern (string-upcase community-name) :keyword) (aliases relevant)))
     (format t "Success.")))
 
 (new-admin-command add-room-to-community ((community-name :valid-community))
     "Adds the room that Luna receives this command from into COMMUNITY-NAME."
-  (let ((add-in (find-community community-name moonbot)))
+  (let ((add-in (find-community community-name luna)))
     (add-room add-in room))
   (format t "Success."))
 
@@ -286,7 +286,7 @@ have the same homeserver as Luna and all of those who are already in the room."
                                              (:minlen 5)))
     "Invites every unique nonbot user into ROOM-ID."
   (with-accessors ((communities communities))
-      moonbot
+      luna
     (let* ((room-id-members
              (remove-if #'bot-member-id-p
                          (alexandria:hash-table-keys

@@ -19,28 +19,6 @@ the lunas directory
   (values (uiop:subdirectories luna-dir)
           (uiop:directory-files other-config-dir)))
 
-(defun grab-latest-config (directory)
-  (let ((files (uiop:directory-files directory)))
-    (or (find *config-file* files :key #'file-namestring :test #'equal)
-        (error 'config-missing :config-missing-message
-               (progn
-                 (log:error "The default config file is missing")
-                 (format nil "Tried looking for 'communities.lisp' and ~
-                            and the latest backup in ~A but ~
-                            I could not find it. Either move your config ~
-                            to this directory or make a new one." directory))))))
-
-(defun use-backup-config (dir)
-  (log:error "Attempting to use backup config")
-  (let ((files (uiop:directory-files dir)))
-    (or (find *backup-config-file* files :key #'file-namestring :test #'equal)
-        (error 'config-missing :config-missing-message
-               (progn (log:error
-                       "The default and backup config file is missing")
-                      (format nil "if you are seeing this message then both your ~
-                              communities.lisp and communities.lisp.backup files are
-                              missing. Please recreate either and try again."))))))
-
 (defun grab-config (directory)
   "Loads in the file 'communities.lisp'. Establishes the restart 'use-backup' 
 that can be used to grab the backup config."
@@ -49,15 +27,6 @@ that can be used to grab the backup config."
     (use-backup ()
       :report "Default config missing; try backup?"
       (use-backup-config directory))))
-
-(defun msoc (key list &optional (signal-condition #'warn))
-  (let ((val (second (assoc key list :test #'eql))))
-    (when (and signal-condition (not val))
-      (funcall signal-condition 'expected-key-missing-from-config
-               :missing-key-expected-key key
-               :missing-key-message
-               (format nil "I am missing this key")))
-    val))
 
 (defun list-community->community-object (name args)
   (destructuring-bind (&key aliases top-level-space admins extra)
@@ -79,11 +48,6 @@ that can be used to grab the backup config."
                                :username username
                                :api api
                                :url url)))
-
-(defun add-correct-con-to-community (community connections)
-  (let* ((curl (url community))
-         (con (find curl connections :key #'url :test #'string=)))
-    (setf (connection community) con)))
 
 (defun config->luna (directory)  
   (let* ((restartedp nil)
@@ -123,50 +87,6 @@ that can be used to grab the backup config."
                              :modules modules 
                              :uber-rooms uber-rooms)))))
 
-(defun global-config-to-list (luna)
-  (with-accessors ((permissions permissions)
-                   (modules modules)
-                   (uber-rooms uber-rooms))
-      luna
-    (list :luna-config
-          (list :PERMISSIONS permissions)
-          (list :MODULES modules)
-          (list :UBER-ROOMS uber-rooms))))
-
-(defun object-to-list ((luna luna))
-  (append (list (global-config-to-list luna))
-          (mapcar #'object-to-list (communities luna))))
-
-(defun object-to-list (community)
-  (with-accessors ((username username)
-                   (commands commands)
-                   (from from)
-                   (name name)
-                   (top-level-space top-level-space)
-                   (admins admins)
-                   (aliases aliases)
-                   (extra extra))
-      community
-    `(,name
-      ((:aliases ,aliases)
-       (:top-level-space ,top-level-space)
-       (:admins ,admins)
-       (:extra ,extra)))))
-
-(defun luna->config (moonbot &optional (dir *default-config-location*))
-  "Accepts an instance of MOONBOT as its first argument, backs up the old config 
-by renaming it to *backup-config-file* and then overwrites *config-file* with a
-a list version of moonbot generated with (object-to-list MOONBOT). DIR is the
-default location where *config-file* is located."
-  (let* ((object (object-to-list moonbot))
-         (config (format nil "~A/~A" dir *config-file*)))
-    (unwind-protect 
-         (rename-file config *backup-config-file*)
-      (alexandria:write-string-into-file (format nil "~S" object) config
-                                         :if-exists :overwrite
-                                         :if-does-not-exist :create))))
-
-
 (defun luna->config%new (luna)
   "use cl-binary-store to store luna to disk."
   (let ((path (pathname (format nil "~Aluna.bin" (config-path luna)))))
@@ -200,7 +120,6 @@ default location where *config-file* is located."
     (cleanup-restored-luna luna)
     (log:info "Restored:~%~A" luna)
     luna))
-
 
 (defun ark->config (ark)
   (with-accessors ((global-modules global-modules)
