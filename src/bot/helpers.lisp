@@ -49,3 +49,25 @@
                   (decf ,repeat)
                   (go ,tag)))))))))
 
+(defun room->id-and-server (room-id)
+  "Split a room id like abcd:im-a-server.com by : and return this as a list.
+   id is the first, and the server is second"
+  (str:split #\: room-id :omit-nulls t :limit 2))
+
+(defun connection-for-uber-room (uber-room)
+  (destructuring-bind (id server)
+      (room->id-and-server uber-room)
+    (declare (ignore id))
+    (find-if (lambda (ele)
+               (str:ends-with-p server ele))
+             (connections *luna*)
+             :key #'url)))
+                                         
+(defun mapc-uber-rooms (function)
+  "Mapc calling FUNCTION on (uber-rooms *luna*). FUNCTION must accept 2 args,
+   the first is the connection associated with that room, the 2nd is the room-id."
+  (mapc (lambda (uber-room)
+          (let ((connection (connection-for-uber-room uber-room)))
+            (funcall function connection uber-room)))
+        (uber-rooms *luna*)))
+

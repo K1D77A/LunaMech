@@ -139,6 +139,30 @@
 (defun find-room-either (community id-or-name)
   (find-room community id-or-name))
 
+(defun %moon-map-communities (mapper function)
+  "map over all communities in *luna* calling MAPPER and FUNCTION"
+  (with-accessors ((communities communities))
+      *luna*
+    (funcall mapper function communities)))
+
+(defun moon-mapc-communities (function)
+  (%moon-map-communities #'mapc function))
+
+(defun moon-mapcar-communities (function)
+  (%moon-map-communities #'mapcar function))
+
+(defun moon-some-communities (function)
+  (%moon-map-communities #'some function))
+
+(defun find-room-in-communities (id-or-name)
+  (moon-mapc-communities
+   (lambda (community)
+     (let ((room? (find-room community id-or-name)))
+       (when room?
+         (return-from find-room-in-communities 
+           (values room? community)))))))
+  
+
 (defun find-room (community id-or-name)
   "Given an string in ID-OR-NAME looks in (rooms COMMUNITY) for a room whose :id
   or :name key matches ID-OR-NAME then returns the room list"

@@ -213,13 +213,14 @@ Luna will not evaluate any initiating functions and will login using the same de
 
 (defmethod initiate-rooms ((luna luna) (community community))
   (with-accessors ((top-level-space top-level-space)
-                   (name name))
+                   (name name)
+                   (connection connection))
       community
     (log:info "Collecting rooms for " name)
     (if top-level-space
         (handler-case
             (catch-potential-conditions 
-              (let ((rooms (rooms-in-a-space (conn luna) top-level-space)))
+              (let ((rooms (rooms-in-a-space connection top-level-space)))
                 (log:info "- Found ~D room~:P" (length rooms))
                 (setf (rooms community) rooms)
                 (log:info "- Done")))
@@ -231,7 +232,8 @@ Luna will not evaluate any initiating functions and will login using the same de
 (defmethod initiate-members ((luna luna) (community community))
   (with-accessors ((rooms rooms)
                    (name name)
-                   (members members))
+                   (members members)
+                   (connection connection))
       community
     (log:info "Collecting users for " name)
     (dolist (room rooms)
@@ -240,7 +242,7 @@ Luna will not evaluate any initiating functions and will login using the same de
         (log:info "- Checking for users in ~A" name)
         (handler-case
             (catch-potential-conditions 
-              (let ((member-hash (gethash "joined" (members-in-room-ids (conn luna) id))))
+              (let ((member-hash (gethash "joined" (members-in-room-ids connection id))))
                 (maphash (lambda (member hash)
                            (declare (ignore hash))
                            (pushnew member members :test #'string=))
@@ -279,9 +281,9 @@ found-module and then recalls start."
                               (*standard-output* . ,*standard-output*)
                               (dex:*connection-pool* . ,dex:*connection-pool*))))
         (log:info "Done.")
-        (mapc (lambda (room-id)
-                (module-moonmat-message (conn luna) room-id "I have started."))
-              (uber-rooms luna))
+        (mapc-uber-rooms
+         (lambda (connection room-id)
+           (module-moonmat-message connection room-id "I have started.")))           
         (log:info "Startup complete.")
         luna)
       (progn (login luna)

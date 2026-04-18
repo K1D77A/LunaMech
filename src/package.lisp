@@ -49,6 +49,9 @@
            #:add-listen-in
            #:start-moonbot
            #:stop-moonbot
+           #:mapc-uber-rooms
+           #:connection-for-uber-room
+           #:room->id-and-server
            #:add-room
            #:%emergency-format
            #:report-condition-to-matrix
@@ -248,6 +251,10 @@
            #:module-error-module
            #:modules
            #:moon-mapc
+           #:moon-mapc-communities
+           #:moon-mapcar-communities
+           #:moon-some-communities
+           #:find-room-in-communities
            #:moon-message
            #:moonbot
            #:moonbot->config

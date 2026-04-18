@@ -111,8 +111,11 @@
                  (declare (ignore message room-id))
                  t)
     :fn (lambda (message room-id)
-          (lunamat-message (first (communities *luna*)) room-id "~{~A~}" message)
-          "t")
+          (multiple-value-bind (room community)
+              (find-room-in-communities room-id)
+            (declare (ignore room))
+            (lunamat-message community room-id "~{~A~}" message)
+          "t"))
     :expected-args (message room-id)))
   (:private-key
    (lambda ()
