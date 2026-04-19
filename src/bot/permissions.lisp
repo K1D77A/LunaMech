@@ -19,6 +19,12 @@ This will introduce a new execute-command for modules that want per module perms
 (defmethod find-permissions (luna (user privilege))
   (find-permissions luna (user-id user)))
 
+(defmethod add-permission (luna user-id permission-dotted)
+  (let ((found? (find-permissions luna user-id)))
+    (if found?
+        (push permission-dotted found?)
+        (push (list user-id (list permission-dotted)) (permissions luna)))))
+
 (defun find-permission (luna user permission)
   (let ((permissions (find-permissions luna user)))
     (cdr (assoc permission permissions :test #'string-equal))))
@@ -81,10 +87,14 @@ the body, then restores the user to their previous permission level after execut
        (locally ,else)))
 
 (defun update-permission (luna user-id key new-val)
-  (setf (second (find user-id (permissions luna) :key #'first :test #'string=))
-        (acons key new-val
-               (second (find user-id (permissions luna) :key #'first :test #'string=)))))
-
+  (let ((perms? (find-permissions luna user-id)))
+    (if perms?
+        (let ((exists? (assoc key perms?)))
+          (if exists?
+              (setf (cdr exists?) new-val)
+              (push (cons key new-val) perms?)))
+        (add-permission luna user-id (cons key new-val)))))
+        
 (defun ubermensch-count (luna)
   (length (remove-if-not (lambda (name)
                            (ubermensch-p luna name))
@@ -96,6 +106,7 @@ the body, then restores the user to their previous permission level after execut
 (defun make-ubermensch (luna user-id)
   (unless (ubermensch-p luna user-id)
     (update-permission luna user-id :ubermensch t)))
+        
 
 (defun remove-ubermensch (luna user-id)
   (when (ubermensch-p luna user-id)

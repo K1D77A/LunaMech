@@ -38,11 +38,22 @@ I guess we can just store mappings between modules and
 
 ||#
 
+(defvar *lunamech-modules* ())
+
 (defgeneric find-module (o sym &optional silent))
+
+(defmethod find-module (o sym &optional silent)
+  "By default just find the modules in *modules*"
+  (declare (ignore o silent))
+  (find sym *lunamech-modules* :test #'string-equal :key #'second))
 
 (defgeneric find-modules (o))
 
 (defgeneric module-loaded-p (o module))
+
+(defgeneric modules-slots-to-serialize (module)
+  (:method (module)
+    ()))
 
 (defgeneric hotload-module (o sym)
   (:documentation "Attempts to add a module denoted by SYM into Luna as she is running. 
@@ -50,49 +61,56 @@ This will start all of the method calls and immediately invoke 'on-module-hotloa
 
 (defgeneric sym->module-name (o sym))
 
+(defun module-persistent-path (luna module &optional (name "data") (type "bin"))
+  (make-pathname :directory (append (pathname-directory (config-path luna))
+                                    (list (format nil "~(~A~)" (class-name (class-of module)))))
+                 :name name
+                 :type type))
+
 (defgeneric unload-module (o sym)
   (:documentation "Removes the module denoted by SYM from Luna, meaning all the 
 methods that would normally be called during the use of Luna will no longer be called."))
 
 
-(defun register-module (name package)
+(defun register-module (name &rest module-description)
   "Registers the module within Luna. NAME is a symbol denoting the name of the module, and
 PACKAGE is a symbol denoting the package that the symbols for that module exist. An example
 (register-module 'rss 'mm-module.rss). Doing this saves having to keep a 
 manual list."
-  (pushnew (cons name package) (modules (c2mop:class-prototype (find-class 'lunamech)))
-           :test #'string-equal
-           :key #'car))
-
-(defgeneric module-information (module)
-  (:documentation "Evaluates to a plist of information within a module. The information 
-should at the very least contain the variable *module*, the name of its command subclass
-and the name of its module subclass.")
-  (:method (m)
-    nil))
+  (pushnew (list* :name name module-description) *lunamech-modules*
+           :test #'eq
+           :key #'second))
 
 (defmacro defmodule (name (package prefix privilege-required &rest module-args)
                      command-class command-slots module-class module-slots
                      &key (module-superclass nil))
+  (let ((module-name (intern (string-upcase "*module*") package)))
   `(let ((*package* (find-package ',package)))
      (defclass ,command-class (module-command)
        ,command-slots)
      ,(if module-superclass
           `(defclass ,module-class ,module-superclass
-             ,module-slots)
+             ,module-slots
+             (:default-initargs 
+              :prefix ',prefix 
+              :command-type (make-instance ',command-class)
+              :privilege-required (make-instance ',privilege-required)))
           `(defclass ,module-class (module)
-             ,module-slots))
-     (register-module ',name ',package)
-     (defvar ,(intern (string-upcase "*module*") package)
-       (new-module ',module-class ',prefix
-                   ',command-class ',privilege-required
-                   ,module-args))
-     (export (list ',(intern (string-upcase "*module*") package)
-                   ',command-class ',module-class))
-     (defmethod module-information ((module ,module-class))
-       (list :module ,(intern (string-upcase "*module*") package)
-             :command ',command-class
-             :privilege ',privilege-required))))
+             ,module-slots
+             (:default-initargs 
+              :prefix ',prefix 
+              :command-type (make-instance ',command-class)
+              :privilege-required (make-instance ',privilege-required))))
+     (defmethod cl-binary-store:serializable-object-info ((o (eql ',module-class)))
+       (values (modules-slots-to-serialize (c2mop:class-prototype (find-class ',module-class)))
+               nil))
+     (defvar ,module-name nil)
+     (register-module ',name :package ',package
+                             :module-class ',module-class
+                             :command-class ',command-class
+                             :module-symbol ',module-name)
+     (export (list ',module-name
+                   ',command-class ',module-class)))))
 
 (defun check-found-modules (luna prefix)
   "Loops through (found-modules LUNA) looking for a module whose prefix is PREFIX."
@@ -102,14 +120,10 @@ and the name of its module subclass.")
 (defun new-module (class prefix command-type privilege-required
                    &rest args)
   (apply #'make-instance class
-         (apply #'concatenate 'list 
-                (list 
-                 :prefix prefix 
-                 :command-type (make-instance command-type)
-                 :privilege-required (make-instance privilege-required))
-                args)))
-
-
+         :prefix prefix 
+         :command-type (make-instance command-type)
+         :privilege-required (make-instance privilege-required)
+         args))
 
 (defmethod inform-command-is-missing (privilege (module module) community room)
   nil)
@@ -156,14 +170,20 @@ in a thread safe way for that module. Allows communication between modules."))
 
 (defmacro new-module-hook (name args docstring)
   "Is used to define a new hook that the a module can use. ARGS must contain atleast the 
-elements luna and module as symbols. Docstring is simpley a descriptor. 
+elements luna and module as symbols in the first and second position respectively.
+Docstring is simply a descriptor. 
 Defines a generic by NAME, a default method that evals to nil and an :around method that
  when it catches any subclass of condition unloads the module"
   `(progn (defgeneric ,name ,args (:documentation ,docstring))
           (defmethod ,name ,args nil)
           (defmethod ,name :around ,args
             (handler-case
-                (call-next-method)
+                (let* ((sym (class-name (class-of ,(second args))))
+                       (package (find-package (symbol-package sym)))
+                       (sym (find-symbol "*MODULE*" package)))
+                  (progv (list sym)
+                      (list module)
+                    (call-next-method)))
               ((or usocket:socket-condition
                 usocket:ns-condition
                 usocket:socket-error
@@ -224,7 +244,13 @@ perform operations at save time.")
 (defmethod on-sync (luna module sync) nil)
 
 (defmacro %on-sync-body ()
-  `(handler-case (call-next-method)
+  `(handler-case
+         (let* ((sym (class-name (class-of module)))
+                (package (find-package (symbol-package sym)))
+                (sym (find-symbol "*MODULE*" package)))
+           (progv (list sym)
+               (list module)
+             (call-next-method)))
      ((or usocket:socket-condition usocket:ns-condition
        usocket:socket-error usocket:timeout-error
        usocket:unknown-error usocket:ns-error)

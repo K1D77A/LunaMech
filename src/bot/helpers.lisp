@@ -49,3 +49,23 @@
                   (decf ,repeat)
                   (go ,tag)))))))))
 
+
+(defun valid-room-p (list)
+  "Checks to make sure that the list is a valid room plist"
+  (handler-case 
+      (destructuring-bind (a b c d)
+          list
+        (and (eql a :id)
+             (stringp b)
+             (eql c :name)
+             (stringp d)))
+    (condition ()
+      nil)))
+
+(defmacro quicklock ((object lock-key) &body body)
+  (alexandria:with-gensyms (lock)
+    `(with-slots (%locks)
+         ,object
+       (let ((,lock (getf %locks ,lock-key)))
+         (bt2:with-lock-held (,lock)
+           (locally ,@body))))))

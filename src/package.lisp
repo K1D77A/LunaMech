@@ -28,6 +28,8 @@
            #:module-information
            #:new-module
            #:defmodule
+           #:modules-slots-to-serialize
+           #:module-persistent-path
            #:pass-to-module
            #:find-module
            #:find-timer

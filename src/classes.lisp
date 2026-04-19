@@ -8,7 +8,6 @@
                         :origin-server-ts origin-server-ts :room-id room-id
                         :unsigned unsigned :sender sender))
 
-
 (defclass lunas-ark ()
   ((%lunas
     :accessor lunas
@@ -32,6 +31,11 @@
     :initarg :state
     :initform :idle
     :type (member :starting :started :stopping :stopped :idle :paused))
+   (%wanted-modules
+    :accessor wanted-modules
+    :initarg :wanted-modules
+    :initform ()
+    :type list)    
    (%global-modules
     :accessor global-modules
     :initarg :global-modules
@@ -76,18 +80,16 @@
     :initform nil
     :documentation "This is a list of event-ids that is reset every 100 cycles. This makes 
 sure that no event is handled twice by the command execution system.")
-   (modules
-    :accessor modules
-    :initarg :modules
+   (wanted-modules
+    :accessor wanted-modules
+    :initarg :wanted-modules
     :initform nil
     :type list
-    :allocation :class
-    :documentation "An alist of symbols to their associated packages.")
+    :documentation "List of modules by name (symbol) that denote the modules we want to load.")
    (found-modules
     :accessor found-modules
     :initform nil
-    :type list
-    :allocation :class
+    :type list    
     :documentation "When Luna is started the modules within Luna are searched for within 
 the Lisp image, this is a list of all the modules that were found.")
    (uber-rooms
@@ -140,15 +142,7 @@ and it is that same instance that is backed up to the same file."))
 
 (c2mop:ensure-finalized (find-class 'lunamech))
 
-(defmacro quicklock ((object lock-key) &body body)
-  (alexandria:with-gensyms (lock)
-    `(with-slots (%locks)
-         ,object
-       (let ((,lock (getf %locks ,lock-key)))
-         (bt2:with-lock-held (,lock)
-           (locally ,@body))))))
       
-
 (defmethod print-object ((lunamech lunamech) stream)
   (print-unreadable-object (lunamech stream :type t :identity nil)
     (format stream "~%Community Names: ~{~A ~}~%Modules: ~{~A ~}~%Ubermensch: ~{~A ~}~%~
@@ -158,46 +152,7 @@ and it is that same instance that is backed up to the same file."))
             (all-ubermensch lunamech)
             (length *commands*))))
 
-(defmethod find-community ((community-name symbol) (lunamech lunamech))
-  (find community-name (communities lunamech) :key #'name))
 
-(defmethod find-community ((community-name string) (lunamech lunamech))
-  (find (intern (string-upcase community-name) :keyword) (communities lunamech) :key #'name))
-
-(defmethod (setf modules) :after (new-val (lunamech lunamech))
-  "Remove duplicate modules after changing its value."
-  (with-slots (modules)
-      lunamech
-    (setf modules
-          (remove-duplicates modules :test (lambda (ele1 ele2)
-                                             (string-equal (car ele1) (car ele2)))
-                                     :from-end t))))
-
-(defmethod found-modules :around ((lunamech lunamech))
-  (quicklock (lunamech :found-modules)
-    (call-next-method)))
-
-(defmethod permissions :around ((lunamech lunamech))
-  (quicklock (lunamech :permissions)
-    (call-next-method)))
-
-(defmethod thread :around ((lunamech lunamech))
-  (quicklock (lunamech :thread)
-    (call-next-method)))
-
-(defmethod (setf found-modules) :after (new-val (lunamech lunamech))
-  "Remove duplicate found-modules after adding/removing one."
-  (with-slots (found-modules)
-      lunamech
-    (with-slots (modules)
-        (make-instance 'module)
-      (let ((no-dupes (remove-duplicates found-modules :test #'eq)))
-        (setf found-modules no-dupes
-              modules no-dupes)))))
-
-(defmethod (setf permissions) :after (new-val (lunamech lunamech))
-  (setf (slot-value lunamech 'permissions)
-        (clean-permissions-tree lunamech)))
 
 (defclass module ()
   ((command-type
@@ -219,17 +174,10 @@ commands")
     :documentation "The symbol used to execute commands registered by this module.
 For example if the prefix was 'lunamech then the commands would be executed with
  .lunamech <command>")
-   (modules
-    :reader modules;this should not be modifiable by the modules themselves.
-    :initarg :modules
-    :type list
-    :allocation :class
-    :documentation "All of the other available modules.")
    (channel
     :accessor channel
     :initform (make-hash-table :synchronized t)
     :type hash-table
-    :allocation :class
     :documentation "A means of communicating between modules.")
    (store
     :accessor store
@@ -450,99 +398,6 @@ the community. This is normally acquired through the populate-community command.
                    :appending (list name (bt2:make-lock :name (format nil "~A" name))))))
       (nl :members :rooms :admins :aliases)))))
 
-(defmethod members :around ((community community))
-  (quicklock (community :members)
-    (call-next-method)))
-
-(defmethod rooms :around ((community community))
-  (quicklock (community :rooms)
-    (call-next-method)))
-
-(defmethod admins :around ((community community))
-  (quicklock (community :admins)
-    (call-next-method)))
-
-(defmethod rooms-id ((community community))
-  "Extracts the room id's of all the rooms within COMMUNITY"
-  (mapcar (lambda (room)
-            (getf  room :id))
-          (slot-value community 'rooms)))
-
-(defmethod rooms-name ((community community))
-  "Extracts the room name of all the rooms within COMMUNITY"
-  (mapcar (lambda (room)
-            (getf room :name))
-          (slot-value community 'rooms)))
-
-(defmethod find-room-by-id ((lunamech lunamech) id)
-  "Searches all of the communities within LUNAMECH for a room that matches ID, then returns
-it. If none are found then returns nil"
-  (loop :for community :in (communities lunamech)
-          :thereis (loop :for room-plist :in (rooms community)
-                         :if (string= id (getf room-plist :id))
-                           :return room-plist)))
-
-(defmethod find-room-by-name ((lunamech lunamech) name)
-  "Searches all of the communities within LUNAMECH for a room that matches NAME, then returns
-it. If none are found then returns nil"
-  (loop :for community :in (communities lunamech)
-          :thereis (loop :for room-plist :in (rooms community)
-                         :if (string= name (getf room-plist :name))
-                           :return room-plist)))
-
-(defun valid-room-p (list)
-  "Checks to make sure that the list is a valid room plist"
-  (handler-case 
-      (destructuring-bind (a b c d)
-          list
-        (and (eql a :id)
-             (stringp b)
-             (eql c :name)
-             (stringp d)))
-    (condition ()
-      nil)))
-
-(defmethod add-new-alias (alias (lunamech lunamech) (community community))
-  (check-type alias keyword)
-  (unless (loop :for community :in (communities lunamech)
-                  :thereis (find alias (aliases community)))
-    (push alias (aliases community))))
-
-(defmethod (setf aliases) :after (new-val (community community))
-  (let ((aliases (slot-value community 'aliases)))
-    (setf (slot-value community 'aliases)
-          (remove-duplicates aliases))))
-
-(defmethod (setf rooms) :after (new-val (community community))
-  "When a new room is added from an id get its display name and store that along
-side it"
-  ;;if the server goes down here this will only end up half complete, but next
-  ;;attempt should fix it
-  (let* ((rooms (slot-value community 'rooms)))
-    (setf (slot-value community 'rooms)
-          (remove-duplicates rooms :test #'string= :key (lambda (ele)
-                                                          (getf ele :id))))))
-
-(defmethod (setf members) :after (new-val (community community))
-  "Remove any duplicates from members after a new one is added."
-  (let ((members (slot-value community 'members)))
-    (setf (slot-value community 'members)
-          (remove-duplicates members :test #'string=))))
-
-(defmethod (setf admins) :before (new-val (community community))
-  "Makes sure the user doesn't remove the last administrator from their community. If they 
-  did that they would be unable to invoke any administrator level community commands. If they
-  try then signals the condition 'cannot-perform-action"
-  (unless new-val
-    (error 'cannot-perform-action
-           :cannot-perform-action-action "Remove the last admin"
-           :cannot-perform-action-message "I cannot remove the last admin.")))
-
-(defmethod (setf admins) :after (new-val (community community))
-  "Removes the duplicates from (admins COMMUNITY) after a new one is added."
-  (let ((admins (slot-value community 'admins)))
-    (setf (slot-value community 'admins)
-          (remove-duplicates admins :test #'string=))))
 
 (defmethod print-object ((community community) stream)
   (print-unreadable-object (community stream)

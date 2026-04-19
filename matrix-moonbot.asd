@@ -6,7 +6,7 @@
   :build-operation "program-op"
   :build-pathname "./lunamech"
   :entry-point "matrix-moonbot:setup-and-go"
-  :version "0.0.23"
+  :version "0.0.24"
   :depends-on (#:jonathan
                #:alexandria
                #:str
@@ -86,23 +86,24 @@
                                                   ((:file "classes")
                                                    (:file "process")
                                                    (:file "twitter")))
-                                         (:module "direct-message"
-                                          :serial t
-                                          :description #.(format nil
-                                                                 "Module that ~
-                                                                  implements the ~
-                                                                  construction and execution ~
-                                                                  of direct ~
-                                                                  messages with individual users.")
-                                                  :components
-                                                  ((:file "package")
-                                                   (:file "direct-message")
-                                                   (:file "context-generator")
-                                                   (:file "context-executor")
-                                                   (:file "collect")
-                                                   (:file "room-commands")
-                                                   (:file "to-file")
-                                                   (:file "commands")))
+                                         ;;commented because new modules wont work
+                                         ;; (:module "direct-message"
+                                         ;;  :serial t
+                                         ;;  :description #.(format nil
+                                         ;;                         "Module that ~
+                                         ;;                          implements the ~
+                                         ;;                          construction and execution ~
+                                         ;;                          of direct ~
+                                         ;;                          messages with individual users.")
+                                         ;;          :components
+                                         ;;          ((:file "package")
+                                         ;;           (:file "direct-message")
+                                         ;;           (:file "context-generator")
+                                         ;;           (:file "context-executor")
+                                         ;;           (:file "collect")
+                                         ;;           (:file "room-commands")
+                                         ;;           (:file "to-file")
+                                         ;;           (:file "commands")))
                                          (:module "webhooks"
                                           :serial t
                                           :components ((:file "package")

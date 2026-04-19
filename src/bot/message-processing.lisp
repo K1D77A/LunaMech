@@ -51,17 +51,18 @@
       (when (check-valid-prefix string)
         (let* ((split (str:split " " (str:trim (str:collapse-whitespaces string)) :limit 3))
                (prefix (first split))
-               (in (intern (string-upcase (subseq prefix 1)))))          
+               (in (intern (string-upcase (subseq prefix 1)))))
           (if (or (community-prefix-p community prefix)
                   (community-alias-p community prefix))
               (cons in (rest split))
               (let ((mod (check-found-modules luna in)))
                 (if mod
-                    (progn (unless (rest split)
-                             (error 'missing-invoker
-                                    :message-process-failure-culprit split
-                                    :message-proceess-failure-message "Missing invoker"))
-                           (cons mod (rest split)))
+                    (let ((rest? (rest split)))
+                      (unless rest? 
+                        (error 'missing-invoker
+                               :message-process-failure-culprit split
+                               :message-proceess-failure-message "Missing invoker"))
+                      (cons mod rest?))
                     (let ((trimmed (%trim-message 25 prefix)))
                       (error 'invalid-prefix
                              :message-process-failure-culprit trimmed
@@ -220,7 +221,7 @@ that the message type is unknown then signals the condition 'unknown-message-typ
   (setf (cycle-history luna) nil))
 
 (defun %backup-luna (luna)
-  (log:info "Backing up Luna to ~A" *config-file*)
+  (log:info "Backing up Luna to ~A" (config-path luna))
   (dolist (mod (found-modules luna))
     (on-save luna mod))
   (luna->config luna)

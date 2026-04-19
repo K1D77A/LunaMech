@@ -14,10 +14,16 @@
              :initform (make-timers '(:check)))
             (rooms
              :accessor rooms
+             :initarg :rooms
+             :initform ()
              :type list)
             (previous-counts
              :accessor previous-counts
+             :initarg :previous-counts
              :initform (make-hash-table :test #'equal))))
+
+(defmethod modules-slots-to-serialize ((o jitsi-module))
+  '(rooms previous-counts))
 
 (define-condition jitsi-condition (lunamech-condition)
   ((jitsi-condition-prefix
@@ -35,29 +41,21 @@
     :documentation "a message")))
 
 ;;;few more module specific commands for persistent configs
-(defun save-results ()
-  (when (rooms *module*);dont write empty results
-    (alexandria:write-string-into-file
-     (format nil "~S" (rooms *module*)) "config/jitsi-rooms.lisp"
-     :if-does-not-exist :create
-     :if-exists :supersede)))
-
-(defun results-from-file ()
-  (handler-case
-      (let ((form (uiop:safe-read-file-form "config/jitsi-rooms.lisp")))
-        (setf (rooms *module*) form))
-    (file-error ()
-      (warn "config/jitsi-rooms.lisp does not exist.")
-      nil)))
 
 (defmethod on-load-up (luna (module jitsi-module))
   (setf (timers module) (make-timers '(:check)))
-  (log:info "Loading Jitsi rooms from jitsi-rooms.lisp")
-  (results-from-file))
+  (let ((path (module-persistent-path luna module)))
+    (log:info "Loading Jitsi rooms from: ~S" path)
+    (when (probe-file path)
+      (let ((i (cl-binary-store:restore path)))
+        (reinitialize-instance module
+                               :rooms (rooms i)
+                               :previous-counts (previous-counts i))))))
 
 (defmethod on-save (luna (module jitsi-module))
-  (log:info "Saving Jitsi rooms to jitsi-rooms.lisp")
-  (save-results)
+  (let ((path (module-persistent-path luna module)))
+    (log:info "Saving Jitsi rooms to ~S" path)
+    (cl-binary-store:store path module :track-references nil))
   t)
 
 (defmethod on-module-unload (luna (module jitsi-module))
