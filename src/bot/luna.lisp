@@ -76,7 +76,7 @@ Lunamech will not evaluate any initiating functions and will login using the sam
                                     (invoke-restart
                                      'new-password (new-password)))
                              (log:error 
-                              "Unknown error: ~S" c))))))      
+                              "Unknown error: ~A" c))))))      
       (login connection)
       (unless relog;only perform this on an initial login
         (first-sync connection)))))
@@ -91,7 +91,7 @@ Lunamech will not evaluate any initiating functions and will login using the sam
   (handler-case 
       (login lunamech t)
     (condition (c)
-      (log:error "Restart error: ~S" c)
+      (log:error "Restart error: ~A" c)
       (log:error "Failed to login, retrying in 5 seconds")
       (sleep 5)
       (lrestart lunamech))))
@@ -128,7 +128,7 @@ Lunamech will not evaluate any initiating functions and will login using the sam
     (call-next-method)))
 
 (defmethod handle-conditions (lunamech (c api-timeout))
-  (log:error "Socket condition: ~S" (api-timeout-condition c))
+  (log:error "Socket condition: ~A" (api-timeout-condition c))
   (log:error "Attempting a restart of Lunamech")
   (lrestart lunamech)
   (when (find-restart 'try-again)
@@ -323,6 +323,11 @@ second 'wait-60' recalls 'wait-for-stop' making it wait another 60 seconds."
 Modules
 ||#
 
+(defmethod find-unloaded-module ((lunamech lunamech) (module module))
+  (gethash (name module) (unloaded-modules lunamech)))
+
+(defmethod find-unloaded-module ((lunamech lunamech) (module-name string))
+  (gethash module-name (unloaded-modules lunamech)))
 
 (defmethod find-module ((lunamech lunamech) sym &optional (silent t))
   "Attempt to find a module denoted by sym within LUNAMECH within the found-modules slot."
@@ -333,7 +338,7 @@ Modules
                  lunamech 
                (or (find sym found-modules
                          :test #'string-equal
-                         :key #'(lambda (a) (class-name (class-of a))))
+                         :key #'name)
                    (error 'missing-module
                           :module-error-module sym
                           :module-error-message "Cant find module"))))
@@ -343,7 +348,8 @@ Modules
       nil)))
 
 (defmethod find-modules ((lunamech lunamech))
-  "Loops through (wanted-modules LUNAMECH) and makes an instance of each of them."
+  "Loops through (wanted-modules LUNAMECH) and makes an instance of each of them.
+   This should only be called on initial startup."
   (handler-bind ((module-error
                    (lambda (c)
                      (declare (ignore c))
@@ -367,57 +373,71 @@ Modules
 (defmethod module-loaded-p ((lunamech lunamech) module)
   (and (find module (found-modules lunamech)) t))
 
-(defmethod hotload-module ((lunamech lunamech) sym)
-  "Load a module into Lunamech while Lunamech is running. SYM should be the prefix
-of the module. If SYM is not a valid module signals 'missing-module. If module is
-found but already loaded then 'module-already-loaded is signalled."
-  (format t "Attempting hotload of module denoted by ~A" sym)
-  (log:info "Attempting hotload of module denoted by ~A" sym)
-  (with-accessors ((found-modules found-modules))
-      lunamech
-    (let ((module (find-module lunamech sym)))
-      (if module 
-          (error 'module-already-loaded
-                 :module-error-module module
-                 :module-error-message "Already found module in Lunamech")
-          (let ((descriptor (find-module nil sym)))
-            (if descriptor
-                (let ((instance (make-instance (getf descriptor :module-class))))
-                  (ensure-directories-exist (module-persistent-path lunamech instance))
-                  (push instance found-modules)
-                  (on-module-hotload lunamech module)
-                  (format t "Hotload of ~S~%Successful~%" module)
-                  (log:info "Hotload of ~A~%Successful" module))
-                (progn 
-                  (format t "Couldn't find module ~A" sym)
-                  (log:info "Couldn't find module ~A" sym))))))))
-
-(defmethod unload-module :around ((lunamech lunamech) sym)
-  (log:info "Attempting to unload module denoted by ~A from Lunamech" sym)
-  (report-to-matrix (format nil "Attempting to unload module denoted by ~A from Lunamech" sym))
-  (call-next-method)
-  (report-to-matrix "Module successfully unloaded")
-  (log:info "Module successfully unloaded"))
-
-(defmethod unload-module ((lunamech lunamech) sym)
+(defmethod load-module ((lunamech lunamech) module-name)
+    "Load a module into Lunamech while Lunamech is running."
+  (format t "Attempting load of module denoted by ~A~%" module-name)
+  (log:info "Attempting load of module denoted by ~A" module-name)
+  (let ((module (ignore-errors (find-module lunamech module-name))))
+    (if module 
+        (error 'module-already-loaded
+               :module-error-module module-name
+               :module-error-message "Already found module in Lunamech")
+        (let ((descriptor (find-module nil module-name)))
+          (if descriptor
+              (let ((unloaded? (find-unloaded-module lunamech module-name)))
+                (if unloaded?
+                    (progn (load-module lunamech unloaded?)
+                           (format t "Reload of ~A~%Successful~%" (string-downcase module-name))
+                           (log:info "Reload of ~S~%Successful" module-name))
+                    (let ((instance (make-instance (getf descriptor :module-class))))
+                      (load-module lunamech instance)                          
+                      (format t "Load of ~A~%Successful~%" (string-downcase module-name))
+                      (log:info "Load of ~S~%Successful" module-name))))
+              (progn 
+                (format t "Couldn't find module ~A~%" (string-downcase module-name))
+                (log:info "Couldn't find module ~S" module-name)))))))
+ 
+(defmethod unload-module ((lunamech lunamech) mod-name)
   "Unload a module denoted by SYM from Lunamech. If the modules associated with SYM,
 cannot be found then the condition 'missing-module is signalled."
-  (let ((module (find-module lunamech sym)))
-    (if module 
-        (with-accessors ((found found-modules)
-                         (modules wanted-modules))
-            lunamech
-          (on-module-unload lunamech module)
-          (unload-module lunamech module)
-          (setf modules (remove sym modules :test #'string-equal)
-                found (remove module found :test #'eq))
-          (log:info "Module successfully unloaded")
-          (format t "Module successfully unloaded"))
+  (let* ((module (ignore-errors (find-module lunamech mod-name))))
+    (if module
         (progn
-          (log:info "Couldn't find module in Luna by: ~A" sym)
-          (format t "Couldn't find module in Luna by: ~A" sym)))))
+          (unload-module lunamech module)
+          (log:info "Module ~S successfully unloaded" mod-name)
+          (format t "Module ~A successfully unloaded" (string-downcase mod-name)))
+        (progn
+          (log:info "Couldn't find module in Luna named: ~A" mod-name)
+          (format t "Couldn't find module in Luna named: ~A" (string-downcase mod-name))))))
+
+
+
 
 (defmethod unload-module ((lunamech lunamech) (mod module))
-  (on-module-unload lunamech mod)
-  (setf (found-modules lunamech)
-        (remove mod (found-modules lunamech))))
+  (with-accessors ((found-modules found-modules)
+                   (unloaded-modules unloaded-modules)
+                   (wanted-modules wanted-modules))
+      lunamech 
+    (setf found-modules
+          (remove mod found-modules)
+          (gethash (name mod) unloaded-modules)
+          mod
+          wanted-modules
+          (remove (name mod) wanted-modules :test #'string-equal)))
+  (on-module-unload lunamech mod))
+
+;;the name is fucked.. need to give modules actual names probably just strings.
+
+(defmethod load-module ((lunamech lunamech) (mod module))
+  (with-accessors ((found-modules found-modules)            
+                   (wanted-modules wanted-modules)
+                   (unloaded-modules unloaded-modules))
+      lunamech
+    (remhash (name mod) unloaded-modules)
+    (setf found-modules
+          (push mod found-modules)
+          wanted-modules
+          (pushnew (string-downcase (string (name mod))) wanted-modules :test #'string-equal)))
+  (on-module-load lunamech mod))
+            
+

@@ -92,7 +92,8 @@ an invite. If the invite is valid and from an ubermensch user then joins the roo
                                                '("timeline" "events"))))))))
 
 (defun find-messages-from-rooms (rooms sync)
-  (find-types-in-rooms-timeline '("m.room.message" "m.room.encrypted") rooms sync))
+  (find-types-in-rooms-timeline '("m.room.message") ;"m.room.encrypted")
+                                rooms sync))
 
 (defun extract-all-relevant-messages (luna community sync)
   (declare (ignore luna))

@@ -13,21 +13,29 @@
              :initarg :private-keys
              :documentation "Private keys")))
 
-(defun new-key (keyword pkey)
-  (setf (getf (private-keys *module*) keyword) pkey))
+(defun new-key (luna keyword pkey)
+  (setf (getf (private-keys (find-module luna "private-keys")) keyword) pkey))
 
-(defun get-key (keyword)
-  (getf (private-keys *module*) keyword))
+(defun get-key (luna keyword)
+  (getf (private-keys (find-module luna "private-keys")) keyword))
 
 (defmethod on-load-up (luna (module private-keys-module))
   (let ((path (module-persistent-path luna module "private-keys" "lisp")))
+    (format t "Loading private-keys~%")
     (log:info "Loading private-keys rooms from: ~S" path)
-    (when (probe-file path)
-      (setf (private-keys module) (uiop:read-file-form path)))))
+    (if (probe-file path)
+        (setf (private-keys module) (uiop:read-file-form path))
+        (progn (format t "Private-keys config file doesn't exist.")
+               (log:info "path: ~S didn't exist." path)))))
+
+(defmethod on-module-load (luna (module private-keys-module))
+  (on-load-up luna module))
 
 (defmethod on-save (luna (module private-keys-module))
   (let ((path (module-persistent-path luna module "private-keys" "lisp")))
     (log:info "Saving private keys to ~S" path)
     (alexandria:write-string-into-file (format nil "~S" (private-keys module))
-                                       path))
+                                       path
+                                       :if-exists :supersede
+                                       :if-does-not-exist :create))
   t)

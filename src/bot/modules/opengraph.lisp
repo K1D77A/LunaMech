@@ -65,8 +65,8 @@
     (handler-case
         (call-next-method)
       (serious-condition (c)
-        (log:error "Condition: ~S~A" c c)
-        (report-to-matrix (format nil "Problem with opengraph module:~%~S" c))
+        (log:error "Condition: ~A" c)
+        (report-to-matrix (format nil "Problem with opengraph module:~%~A" c))
         nil))))
 
 (defmethod fetch-opengraph-info (o stream)
@@ -78,7 +78,7 @@
     (handler-case
         (call-next-method)
       (serious-condition (c)
-        (log:error "Condition in extract-oembed-info: ~S~A" c c)))))
+        (log:error "Condition in extract-oembed-info: ~A" c)))))
 
 (defmethod fetch-opengraph-info ((o oembed) stream)
   (let* ((fetched (dex:get (format nil (oembed-url o) (url o))))

@@ -16,7 +16,8 @@ the lunas directory
 (defmethod dont-serialize-slots ((o lunamech))
   '(lunamech-matrix-api/v2:filters
     found-modules
-    thread))
+    thread
+    unloaded-modules))
 
 (defmethod dont-serialize-slots ((o community))
   '(rooms rooms-spellcheck members
@@ -77,6 +78,7 @@ the lunas directory
                    (stopp stopp)
                    (thread thread)
                    (found-modules found-modules)
+                   (unloaded-modules unloaded-modules)
                    (controller-thread controller-thread))
       luna
     (with-accessors ((url url)
@@ -89,7 +91,8 @@ the lunas directory
                                        :url url)
             timestamp (local-time:now)
             stopp nil
-            found-modules nil))
+            found-modules nil
+            unloaded-modules (make-hash-table :test #'equalp)))
     (mapc #'cleanup communities)
     luna))
 
@@ -178,5 +181,7 @@ the lunas directory
                                  :name (first (last (pathname-directory directory)))
                                  :connection connection
                                  :permissions permissions 
-                                 :wanted-modules modules 
+                                 :wanted-modules (if (find "admin" modules :test #'string-equal)
+                                                     modules 
+                                                     (list* "admin" modules))
                                  :uber-rooms uber-rooms)))))

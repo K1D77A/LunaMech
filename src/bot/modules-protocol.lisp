@@ -56,8 +56,14 @@ I guess we can just store mappings between modules and
     ()))
 
 (defgeneric hotload-module (o sym)
-  (:documentation "Attempts to add a module denoted by SYM into Luna as she is running. 
-This will start all of the method calls and immediately invoke 'on-module-hotload."))
+  (:documentation
+    "Attempts to add a module denoted by SYM into Luna as she is running. 
+     This will start all of the method calls and immediately invoke 'on-module-hotload."))
+
+(defgeneric load-module (o sym)
+  (:documentation
+   "Attempts to load a previously loaded module into luna.
+    Must have been in 'found-modules' previously. "))
 
 (defgeneric sym->module-name (o sym))
 
@@ -77,8 +83,8 @@ methods that would normally be called during the use of Luna will no longer be c
 PACKAGE is a symbol denoting the package that the symbols for that module exist. An example
 (register-module 'rss 'mm-module.rss). Doing this saves having to keep a 
 manual list."
-  (pushnew (list* :name name module-description) *lunamech-modules*
-           :test #'eq
+  (pushnew (list* :name (string name) module-description) *lunamech-modules*
+           :test #'string=
            :key #'second))
 
 (defmacro defmodule (name (package prefix privilege-required &rest module-args)
@@ -91,14 +97,16 @@ manual list."
      ,(if module-superclass
           `(defclass ,module-class ,module-superclass
              ,module-slots
-             (:default-initargs 
+             (:default-initargs
+              :name ,(string name)
               :prefix ',prefix 
               :command-type (make-instance ',command-class)
               :privilege-required (make-instance ',privilege-required)))
           `(defclass ,module-class (module)
              ,module-slots
              (:default-initargs 
-              :prefix ',prefix 
+              :prefix ',prefix
+              :name ,(string name)
               :command-type (make-instance ',command-class)
               :privilege-required (make-instance ',privilege-required))))
      (defmethod cl-binary-store:serializable-object-info ((o (eql ',module-class)))
@@ -215,9 +223,13 @@ form of usocket condition. Module is now being unloaded. Condition: ~A" module c
 (new-module-hook on-restart (luna module)
                  "This is called when Luna starts up but doesn't login")
 
-(new-module-hook on-module-hotload (luna module)
-                 "This is called when a module is hotloaded, this can be used by modules to
+(new-module-hook on-module-load (luna module)
+                 "This is called when a module is loaded, this can be used by modules to
     perform operations just after they are loaded.")
+
+(defmethod on-module-load :before ((luna lunamech) (module module))
+  (ensure-directories-exist (module-persistent-path luna module "foo" "bar")))
+  
 
 (new-module-hook on-module-unload (luna module)
                  "This is called before a module is unloaded from Luna,

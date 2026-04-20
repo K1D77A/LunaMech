@@ -122,7 +122,7 @@
                                                                (:file "resizer")
                                                                (:file "processor")
                                                                (:file "stickers")
-                                                               (:file "from-website")))))                               
+                                                               (:file "from-website")))))
                                (:file "commands")
                                (:file "message-processing")
                                (:file "bot")))

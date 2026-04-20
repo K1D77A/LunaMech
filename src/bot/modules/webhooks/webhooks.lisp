@@ -5,70 +5,86 @@
     :accessor luna
     :initarg :luna
     :type lunamech
-    :documentation "The lunamech that created this acceptor"))
+    :documentation "The lunamech that created this acceptor")
+   (allow-webhooks-p
+    :accessor allow-webhooks-p
+    :initform t
+    :documentation "if set to nil then all requests will be ignored."))
   (:documentation "The acceptor for lunas webhooks."))
 
 (defmodule webhook (mm-module.webhook WEBHOOK ubermensch-privilege)
            webhook-command ()
            webhook-module
-           ((allow-webhooks-p
-             :accessor allow-webhooks-p
-             :initform t
-             :documentation "if set to nil then all requests will be ignored.")
-            (port
+           ((port
              :accessor port
              :initarg :port
+             :initform 0 ;;this is used as the marker of a successful load..
              :type fixnum)
             (address
              :accessor address
              :initarg :address
+             :initform ""
              :type string)
-            (name
-             :accessor name
-             :initarg :name
+            (server-name
+             :accessor server-name
+             :initarg :server-name
              :initform "Luna's webhook"
              :type string)
             (webhook-server
              :accessor webhook-server
-             :type luna-acceptor)))
+             :initform nil
+             :type (or luna-acceptor null))))
 
 
 (defmethod on-load-up (luna (module webhook-module))
   (let ((path (module-persistent-path luna module "webhook" "lisp")))
     (log:info "Loading Webhook config from: ~S" path)
-    (destructuring-bind (&key port address name)
-        (uiop:read-file-form path)
-      (setf (port module) port
-            (address module) address
-            (name module) name)))
-  (log:info "Starting Luna's webhook listener on port ~D." (port module))
-  (handler-case
-      (progn 
-        (unless (webhook-server module)
-          (setf (webhook-server module)
-                (make-instance 'luna-acceptor :name (name module)
-                                              :port (port module)
-                                              :address (address module)
-                                              :luna luna)))
-        (tbnl:start (webhook-server module)))
-    (hunchentoot::hunchentoot-simple-error (c)
-      (log:warn "Webhook listener already listening. ~A" c))
-    (serious-condition (c)
-      (log:error "Error starting webhook server on load up. ~A" c))))
+    (format t "Loading Webhook config from webhook.lisp~%")
+    (if (probe-file path)
+        (progn 
+          (destructuring-bind (&key port address name)
+              (uiop:read-file-form path)
+            (setf (port module) port
+                  (address module) address
+                  (server-name module) name))
+          (log:info "Starting Luna's webhook listener on port ~D." (port module))
+          (format t "Starting Luna's webhook listener on port ~D.~%" (port module))
+          (handler-case
+              (progn
+                (unless (webhook-server module)
+                  (setf (webhook-server module)
+                        (make-instance 'luna-acceptor :name (name module)
+                                                      :port (port module)
+                                                      :address (address module)
+                                                      :luna luna)))
+                (tbnl:start (webhook-server module))
+                (log:info "Success")
+                (format t "Success~%"))
+            (hunchentoot::hunchentoot-simple-error (c)
+              (format t "Webhook listener already listening. ~A" c)
+              (log:warn "Webhook listener already listening. ~A" c))
+            (serious-condition (c)
+              (log:error "Error starting webhook server on load up. ~A" c))))
+        (progn (log:info "webhook path: ~S didn't exist" path)
+               (format t "Missing webhook config. Module is loaded but not functional.~
+                          Correct missing config and unload then load again.~%")))))
 
 
 (defmethod on-save (luna (module webhook-module))
-  (let ((path (module-persistent-path luna module "webhook" "lisp")))
-    (log:info "Saving webhook configuration to ~S" path)
-    (alexandria:write-string-into-file
-     (format nil "~S"
-             (list :port (port module)
-                   :name (name module)
-                   :address (address module)))
-     path)))
+  (unless (zerop (port module))
+    (let ((path (module-persistent-path luna module "webhook" "lisp")))    
+      (log:info "Saving webhook configuration to ~S" path)
+      (alexandria:write-string-into-file
+       (format nil "~S"
+               (list :port (port module)
+                     :name (server-name module)
+                     :address (address module)))
+       path
+       :if-exists :supersede
+       :if-does-not-exist :create))))
 
 (defmethod on-restart (luna (module webhook-module))
-  (log:info "Restarting Luna's webhook listener on port 61111.")
+  (log:info "Restarting Luna's webhook listener on port: ~D" (port module))
   (on-shutdown luna module) ;;shutdown the server if possible.
   (handler-case 
       (tbnl:start (webhook-server module))
@@ -79,23 +95,23 @@
     
 
 (defmethod on-shutdown (luna (module webhook-module))
-  (log:info "Stopping Luna's webhook listener on port 61111.")
-  (handler-case 
-      (tbnl:stop (webhook-server module))
+  (log:info "Stopping Luna's webhook listener on port ~D." (port module))
+  (format t "Stopping Luna's webhook listener on port ~D.~%" (port module))
+  (handler-case
+      (when (webhook-server module)
+        (tbnl:stop (webhook-server module)))
     (unbound-slot (c)
+      (format t "Webhook listener was not on while trying to shutdown. ~A~%" c)
       (log:error "Webhook listener was not on while trying to shutdown. ~A" c))
     (serious-condition (c)
+      (format t "Error shutting down wehbook-module. ~A~%" c)
       (log:error "Error shutting down wehbook-module. ~A" c))))
 
+(defmethod on-module-load (luna (module webhook-module))
+  (on-load-up luna module))
 
 (defmethod on-module-unload (luna (module webhook-module))
-  (log:info "Stopping Luna's webhook listener.")
-  (handler-case 
-      (tbnl:stop (webhook-server module))
-    (unbound-slot (c)
-      (log:error "Webhook listener was not on while trying to unload. ~A" c))
-    (serious-condition (c)
-      (log:error "Error unloading wehbook-module. ~A" c))))
+  (on-shutdown luna module))
 
 (defmethod locate-command ((module webhook-module) (priv ubermensch-privilege)
                            invoker community)
@@ -127,24 +143,24 @@
   (format t "Done."))
   
 (defmethod hunchentoot:acceptor-dispatch-request ((acceptor luna-acceptor) request)
-  (when (allow-webhooks-p *module*)
+  (when (allow-webhooks-p tbnl:*acceptor*)
     (call-next-method)))
 
-(def-webhook direct-message ()
-  ((send-otp
-    :validator
-    (lambda (username otp)
-      (declare (ignore username))
-      (let ((len (length otp)))
-        (<= 1 len 4)))
-    :fn (lambda (username otp)
-          (string (mm-module.direct-message:start-dm :otp username
-                                                     (luna tbnl:*acceptor*)
-                                                     otp)))
-    :expected-args (username otp)))
-  (:private-key
-   (lambda ()
-     (mm-module.private-keys:get-key :webhook/direct-message))))
+;; (def-webhook direct-message ()
+;;   ((send-otp
+;;     :validator
+;;     (lambda (username otp)
+;;       (declare (ignore username))
+;;       (let ((len (length otp)))
+;;         (<= 1 len 4)))
+;;     :fn (lambda (username otp)
+;;           (string (mm-module.direct-message:start-dm :otp username
+;;                                                      (luna tbnl:*acceptor*)
+;;                                                      otp)))
+;;     :expected-args (username otp)))
+;;   (:private-key
+;;    (lambda ()
+;;      (mm-module.private-keys:get-key :webhook/direct-message))))
 
 ;;doesnt work. 
 (def-webhook send-messages ()
@@ -158,7 +174,7 @@
     :expected-args (message room-id)))
   (:private-key
    (lambda ()
-     (mm-module.private-keys:get-key :webhook/send-messages))))
+     (mm-module.private-keys:get-key (luna tbnl:*acceptor*) :webhook/send-messages))))
 
 (def-webhook openid ()
   ((openid
@@ -182,20 +198,7 @@
           "t")))
   (:private-key
    (lambda ()
-     (mm-module.private-keys:get-key :webhook/force-restart))))
-
-(defun check-authorized-webhook-request (application private-key)
-  "Checks if the APPLICATION provided (string) is valid, checks if a private-key exists
-for APPLICATION, and then finally makes sure that PRIVATE-KEY provided is string= to 
-the private-key associated with the application found.
-If the private-keys do not match signals 'bad-private-key."
-  (check-type application string)
-  (let* ((upped (intern (string-upcase application) :keyword))
-         (app (get-application upped))
-         (key (get-private-key upped)))
-    (if (string= key private-key)
-        (make-instance app)
-        (error 'bad-private-key :webhook app :private-key private-key))))
+     (mm-module.private-keys:get-key (luna tbnl:*acceptor*) :webhook/force-restart))))
 
 (tbnl:define-easy-handler (uri :uri "/webhook" :default-request-type :POST)
     ()
@@ -217,8 +220,8 @@ If the private-keys do not match signals 'bad-private-key."
                   (log:info "Executing hook. Type ~S. Name: ~S. Rawlen: ~S. Parsed: ~%~S"
                             hook-type hook-name (if raw (length raw) 0) parsed)
                   (apply #'execute-hook hook parsed)))))
-      (serious-condition (c)
+      (condition (c)
         (log:error "Serious condition ~A caught in /webhook." c)
         (setf (tbnl:return-code*) 400)
-        (format nil "~A" c)))))
+        (format nil "See you Space Cowboy!")))))
 

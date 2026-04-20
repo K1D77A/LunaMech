@@ -85,13 +85,22 @@ sure that no event is handled twice by the command execution system.")
     :initarg :wanted-modules
     :initform nil
     :type list
-    :documentation "List of modules by name (symbol) that denote the modules we want to load.")
+    :documentation "List of modules by name (string) that denote the modules we want to load.
+                    This list is persistent so we know which modules to load up next start up.")
+   (unloaded-modules
+    :accessor unloaded-modules
+    :initarg :unloaded-modules
+    :initform (make-hash-table :test #'equalp)
+    :type hash-table
+    :documentation "Maintain a hash-table of modules by name that were previously unloaded
+                    for whatever reason so they can be loaded once again.")
    (found-modules
     :accessor found-modules
     :initform nil
     :type list    
     :documentation "When Luna is started the modules within Luna are searched for within 
-the Lisp image, this is a list of all the modules that were found.")
+                    the Lisp image, this is a list of all the modules that were found.
+                    This is the list of currently running modules.")
    (uber-rooms
     :accessor uber-rooms
     :initarg :uber-rooms
@@ -160,6 +169,10 @@ and it is that same instance that is backed up to the same file."))
     :initarg :command-type
     :documentation "A type, ie a symbol used to look for commands associated
 with this class. The search is done in *commands*.")
+   (name
+    :accessor name
+    :initarg :name
+    :type string)
    (privilege-required
     :accessor privilege-required
     :initarg :privilege-required

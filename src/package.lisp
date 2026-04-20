@@ -355,12 +355,13 @@
            #:lunamech-condition
            #:m-file
            #:file-info
+           #:load-module
            #:on-load-up
-           #:hotload-module
            #:unload-module
            #:api-timeout
            #:get-validator
            #:on-module-hotload
+           #:on-module-load
            #:on-shutdown
            #:on-module-unload
            #:find-messages-from-rooms

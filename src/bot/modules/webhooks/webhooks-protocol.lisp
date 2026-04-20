@@ -139,11 +139,14 @@ later and check the result.")
         (log:error "Condition signalled: ~A" c)
         (setf result c)))))
 
+(defgeneric execute-hook (slot &rest args))
+
 (defmethod execute-hook :around ((slot webhook-api-slot) &rest args)
   (declare (ignore args))
   (handler-case (call-next-method)
     (hook-validation-failed (c)
-      (setf (slot-value slot 'result) c))))
+      (setf (slot-value slot 'result) c)
+      (error c))))
 
 (defmethod execute-hook ((slot webhook-api-slot) &rest args)
   "Calls execute-validator on the SLOT with ARGS and then EXECUTE-FUNCTION. 

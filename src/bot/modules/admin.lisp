@@ -155,9 +155,9 @@
       (format t "There are ~r unique room~:p in Luna ~%" count))))
 
 (new-admin-command load-module ((module-prefix (:maxlen 50) (:minlen 1)))
-    "Loads a new module into Luna. Currently the code has to be loaded."
+    "Loads a module into Luna."
   (handler-case
-      (hotload-module luna (intern (string-upcase module-prefix)))
+      (load-module luna (string-upcase module-prefix))
     (missing-module ()
       (format t "Could not find module associated with ~A" module-prefix))
     (module-already-loaded ()
@@ -166,7 +166,7 @@
 (new-admin-command unload-module ((module-prefix (:maxlen 50) (:minlen 1)))
     "Unloads a module from Luna"
   (handler-case
-      (let ((mod (intern (string-upcase module-prefix))))
+      (let ((mod (string-upcase module-prefix)))
         (if (string= mod "ADMIN")
             (format t "You can't unload the admin module.")
             (unload-module luna mod)))
