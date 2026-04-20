@@ -137,7 +137,9 @@ later and check the result.")
     (handler-case (setf result (apply fn args))
       (condition (c)
         (log:error "Condition signalled: ~A" c)
-        (setf result c)))))
+        (setf result c)
+        (error c)))))
+
 
 (defgeneric execute-hook (slot &rest args))
 

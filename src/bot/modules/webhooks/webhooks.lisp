@@ -169,7 +169,7 @@
                  (declare (ignore message room-id))
                  t)
     :fn (lambda (message room-id)
-          (module-moonmat-message (conn (luna tbnl:*acceptor*)) room-id "~{~A~}" message)
+          (module-moonmat-message (conn (luna tbnl:*acceptor*)) room-id "~A" message)
           "t")
     :expected-args (message room-id)))
   (:private-key
