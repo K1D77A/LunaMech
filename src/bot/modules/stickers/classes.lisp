@@ -1,8 +1,8 @@
-(in-package #:mm-module.sticker)
+(in-package #:luna-module.sticker)
 
 
 
-(defmodule sticker (mm-module.sticker STICKER normie-privilege)
+(defmodule sticker (luna-module.sticker STICKER normie-privilege)
            sticker-command ()
            sticker-module
            ((stickerpicker-url

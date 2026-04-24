@@ -1,4 +1,4 @@
-(in-package #:matrix-moonbot)
+(in-package #:lunamech)
 
 ;;;;this file contains the code used to initiate encryption/decryption within a room
 ;;;;in a community

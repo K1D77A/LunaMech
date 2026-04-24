@@ -1,4 +1,4 @@
-(in-package #:mm-module.webhook)
+(in-package #:luna-module.webhook)
 ;;;;this file contains a MOP for webhooks
 
 (defparameter *hook-types* (make-hash-table :test #'equal))
@@ -167,10 +167,10 @@ the provided PRIVATE-KEY against the one stored within the found webhook, if the
 the same then returns the slot, otherwise signals 'bad-private-key. If no slot can be 
 found by the name SLOT-NAME signals 'webhook-not-found.")
   (:method ((class string) slot-name private-key)
-    (find-hook (find-class (intern (string-upcase class) :mm-module.webhook))
+    (find-hook (find-class (intern (string-upcase class) :luna-module.webhook))
                slot-name private-key))
   (:method ((class webhook) (slot-name string) private-key)
-    (find-hook class (intern (string-upcase slot-name) :mm-module.webhook) private-key))
+    (find-hook class (intern (string-upcase slot-name) :luna-module.webhook) private-key))
   (:method ((class webhook) slot-name pkey)
     (let ((hook (find slot-name (c2mop:class-direct-slots class)
                       :key #'c2mop:slot-definition-name)))

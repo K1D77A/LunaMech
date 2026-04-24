@@ -1,4 +1,4 @@
-(in-package #:matrix-moonbot)
+(in-package #:lunamech)
 
 ;;;;this file contains code to handle a variety of syncs.
 

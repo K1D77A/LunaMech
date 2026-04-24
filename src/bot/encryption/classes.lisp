@@ -1,4 +1,4 @@
-(in-package #:matrix-moonbot)
+(in-package #:lunamech)
 
 (defclass device-keys-basic-holder ()
   ((device-keys

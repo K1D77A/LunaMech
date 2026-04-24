@@ -1,14 +1,14 @@
-(defpackage #:mm-module.huginn
-  (:use #:cl #:matrix-moonbot)
+(defpackage #:luna-module.huginn
+  (:use #:cl #:lunamech)
   (:export #:huginn-command
            #:huginn-module
            #:*module*))
 
-(in-package #:mm-module.huginn)
+(in-package #:luna-module.huginn)
 
 (defparameter *huginn-privileged* ())
 
-(defmodule huginn (mm-module.huginn HUGINN normie-privilege)
+(defmodule huginn (luna-module.huginn HUGINN normie-privilege)
            huginn-command ()
            huginn-module ())
 

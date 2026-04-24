@@ -1,4 +1,4 @@
-(in-package #:matrix-moonbot)
+(in-package #:lunamech)
 
 ;;;;this file just contains some functions to validate some arguments
 

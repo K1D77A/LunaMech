@@ -1,4 +1,4 @@
-(in-package #:matrix-moonbot)
+(in-package #:lunamech)
 
 (defparameter *ark* "The top level luna ark instance :)")
 

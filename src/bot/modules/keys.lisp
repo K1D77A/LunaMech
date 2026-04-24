@@ -1,10 +1,10 @@
-(defpackage #:mm-module.private-keys
-  (:use #:cl #:matrix-moonbot)
+(defpackage #:luna-module.private-keys
+  (:use #:cl #:lunamech)
   (:export #:new-key #:get-key))
 
-(in-package #:mm-module.private-keys)
+(in-package #:luna-module.private-keys)
 
-(defmodule private-keys (mm-module.private-keys PRIVATE-KEYS ubermensch-privilege)
+(defmodule private-keys (luna-module.private-keys PRIVATE-KEYS ubermensch-privilege)
            private-keys-command ()
            private-keys-module
            ((private-keys

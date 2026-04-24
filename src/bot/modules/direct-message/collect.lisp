@@ -1,4 +1,4 @@
-(in-package #:mm-module.direct-message)
+(in-package #:luna-module.direct-message)
 
 #||
 this file contains the means to define and control 'collectors'. 

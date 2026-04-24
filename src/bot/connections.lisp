@@ -1,4 +1,4 @@
-(in-package #:matrix-moonbot)
+(in-package #:lunamech)
 
 (defun new-password ()
   (format *query-io* "Enter a new password: ")

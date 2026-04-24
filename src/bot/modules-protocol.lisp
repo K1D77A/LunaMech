@@ -1,4 +1,4 @@
-(in-package #:matrix-moonbot)
+(in-package #:lunamech)
 
 #||
 Okay so this code is used to create 'modular' functionality within Luna (Moonbot).

@@ -1,12 +1,12 @@
-(defpackage #:mm-module.opengraph
-  (:use #:cl #:matrix-moonbot)
+(defpackage #:luna-module.opengraph
+  (:use #:cl #:lunamech)
   (:export #:global-command
            #:global-module
            #:*module*))
 
-(in-package #:mm-module.opengraph)
+(in-package #:luna-module.opengraph)
 
-(defmodule opengraph (mm-module.opengraph og ubermensch-privilege)
+(defmodule opengraph (luna-module.opengraph og ubermensch-privilege)
            og-command ()
            og-module ())
 

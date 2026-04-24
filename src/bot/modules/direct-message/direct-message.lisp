@@ -1,7 +1,7 @@
-(in-package #:mm-module.direct-message)
+(in-package #:luna-module.direct-message)
 
 
-(defmodule direct-message (mm-module.direct-message DIRECT-MESSAGE ubermensch-privilege)
+(defmodule direct-message (luna-module.direct-message DIRECT-MESSAGE ubermensch-privilege)
            direct-message-command ()
            direct-message-module
            ((current-rooms

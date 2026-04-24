@@ -1,4 +1,4 @@
-(in-package #:matrix-moonbot)
+(in-package #:lunamech)
 
 ;;;;The code in this file implements a nice way to perform many various actions at different
 ;;;;intervals relative to a timestamp.

@@ -1,4 +1,4 @@
-(in-package #:matrix-moonbot)
+(in-package #:lunamech)
 
 (defparameter *hex-colour* "'#cc8aca'")
       

@@ -1,9 +1,9 @@
-(defpackage #:mm-module.site
-  (:use #:cl #:matrix-moonbot))
+(defpackage #:luna-module.site
+  (:use #:cl #:lunamech))
 
-(in-package #:mm-module.site)
+(in-package #:luna-module.site)
 
-(defmodule site (mm-module.site SITE normie-privilege)
+(defmodule site (luna-module.site SITE normie-privilege)
            site-command ()
            site-module ())
 

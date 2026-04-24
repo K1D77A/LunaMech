@@ -1,4 +1,4 @@
-(in-package #:mm-module.direct-message)
+(in-package #:luna-module.direct-message)
 
 (new-direct-message-command send-dm ((user-id :valid-user)
                                      (context :valid-context))

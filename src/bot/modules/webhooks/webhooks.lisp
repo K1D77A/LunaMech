@@ -1,4 +1,4 @@
-(in-package #:mm-module.webhook)
+(in-package #:luna-module.webhook)
 
 (defclass luna-acceptor (tbnl:easy-acceptor)
   ((%luna
@@ -12,7 +12,7 @@
     :documentation "if set to nil then all requests will be ignored."))
   (:documentation "The acceptor for lunas webhooks."))
 
-(defmodule webhook (mm-module.webhook WEBHOOK ubermensch-privilege)
+(defmodule webhook (luna-module.webhook WEBHOOK ubermensch-privilege)
            webhook-command ()
            webhook-module
            ((port
@@ -174,7 +174,7 @@
     :expected-args (message room-id)))
   (:private-key
    (lambda ()
-     (mm-module.private-keys:get-key (luna tbnl:*acceptor*) :webhook/send-messages))))
+     (luna-module.private-keys:get-key (luna tbnl:*acceptor*) :webhook/send-messages))))
 
 (def-webhook openid ()
   ((openid
@@ -185,7 +185,7 @@
     :expected-args nil))
   (:private-key
    (lambda ()
-     (mm-module.private-keys:get-key :webhook/openid))))
+     (luna-module.private-keys:get-key :webhook/openid))))
 
 (def-webhook luna ()
   ((force-restart
@@ -198,7 +198,7 @@
           "t")))
   (:private-key
    (lambda ()
-     (mm-module.private-keys:get-key (luna tbnl:*acceptor*) :webhook/force-restart))))
+     (luna-module.private-keys:get-key (luna tbnl:*acceptor*) :webhook/force-restart))))
 
 (tbnl:define-easy-handler (uri :uri "/webhook" :default-request-type :POST)
     ()

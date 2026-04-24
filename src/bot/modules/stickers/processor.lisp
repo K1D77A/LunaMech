@@ -1,4 +1,4 @@
-(in-package #:mm-module.sticker)
+(in-package #:luna-module.sticker)
 
 (define-condition processor-condition (sticker-condition)
   ())

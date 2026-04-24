@@ -1,8 +1,8 @@
-(defpackage #:mm.config-generator
-  (:use #:cl #:matrix-moonbot)
+(defpackage #:lunamech-generator
+  (:use #:cl #:lunamech)
   (:export #:gen-config))
 
-(in-package #:mm.config-generator)
+(in-package #:lunamech-generator)
 
 ;;;;this file contains the code for helping a new user setup a brand new
 ;;;;config.

@@ -1,4 +1,4 @@
-(in-package #:mm-module.webhook)
+(in-package #:luna-module.webhook)
 
 
 (define-condition webhook-condition (lunamech-condition)

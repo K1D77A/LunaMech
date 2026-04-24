@@ -1,12 +1,12 @@
-(defpackage #:mm-module.rss
-  (:use #:cl #:matrix-moonbot)
+(defpackage #:luna-module.rss
+  (:use #:cl #:lunamech)
   (:export #:global-command
            #:global-module
            #:*module*))
 
-(in-package #:mm-module.rss)
+(in-package #:luna-module.rss)
 
-(defmodule rss (mm-module.rss RSS ubermensch-privilege)
+(defmodule rss (luna-module.rss RSS ubermensch-privilege)
            rss-command ()
            rss-module ((timers
                         :accessor timers

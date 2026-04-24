@@ -1,12 +1,12 @@
-(defpackage #:mm-module.luna
-  (:use #:cl #:matrix-moonbot)
+(defpackage #:luna-module.luna
+  (:use #:cl #:lunamech)
   (:export #:global-command
            #:global-module
            #:*module*))
 
-(in-package #:mm-module.luna)
+(in-package #:luna-module.luna)
 
-(defmodule luna (mm-module.luna LUNA normie-privilege)
+(defmodule luna (luna-module.luna LUNA normie-privilege)
            luna-command ()
            luna-module ())
 
@@ -62,5 +62,5 @@
     "Returns the names of all the modules within Luna"
   (format t "Loaded modules: ~%~{.~:(~A~)~%~}~%Type 'MODULE help' for more information."
           (mapcar (lambda (module)
-                    (symbol-name (matrix-moonbot::prefix module)))
+                    (symbol-name (lunamech::prefix module)))
                   (found-modules *luna*))))

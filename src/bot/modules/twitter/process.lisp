@@ -1,4 +1,4 @@
-(in-package #:mm-module.twitter)
+(in-package #:luna-module.twitter)
 
 #||
 This file contains the code to process different types of messages received

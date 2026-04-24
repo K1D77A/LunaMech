@@ -1,4 +1,4 @@
-(in-package #:matrix-moonbot)
+(in-package #:lunamech)
 
 (defmethod initiate-room-spellchecker ((community community))
   (with-accessors ((rooms-spellcheck rooms-spellcheck)

@@ -1,4 +1,4 @@
-(in-package #:mm-module.direct-message)
+(in-package #:luna-module.direct-message)
 
 #||
 this is the interesting part because we want to be able to program the bot so that

@@ -1,4 +1,4 @@
-(in-package #:matrix-moonbot)
+(in-package #:lunamech)
 
 (new-admin-community-command echo ((to-echo (:maxlen 40) (:minlen 1)))
     "repeats what you say back to you"

@@ -1,4 +1,4 @@
-(in-package #:mm-module.twitter)
+(in-package #:luna-module.twitter)
 
 (defparameter *char-count* 280)
 
@@ -10,7 +10,7 @@ upload them to the twitter-api associated with that rooms id.
 ||#
 
 
-(defmodule twitter (mm-module.twitter TWITTER ubermensch-privilege)
+(defmodule twitter (luna-module.twitter TWITTER ubermensch-privilege)
            twitter-command ()
            twitter-module  ((special-rooms
                              :accessor special-rooms

@@ -1,4 +1,4 @@
-(in-package #:matrix-moonbot)
+(in-package #:lunamech)
 
 (defparameter *luna* "Thread local instance of lunamech :)")
 

@@ -1,4 +1,4 @@
-(in-package #:mm-module.direct-message)
+(in-package #:luna-module.direct-message)
 
 #|
 This file is implementing a similar command system to the main one, it uses the same 

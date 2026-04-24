@@ -1,9 +1,9 @@
-(defpackage #:mm-module.webhook
-  (:use #:cl #:matrix-moonbot)
+(defpackage #:luna-module.webhook
+  (:use #:cl #:lunamech)
   (:export #:webhook-command
            #:webhook-module
            #:register-new-webhook
            #:get-application
            #:*module*))
 
-(in-package #:mm-module.webhook)
+(in-package #:luna-module.webhook)

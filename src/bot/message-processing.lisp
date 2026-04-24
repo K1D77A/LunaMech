@@ -1,4 +1,4 @@
-(in-package #:matrix-moonbot)
+(in-package #:lunamech)
 
 (defun extract-message (message)
   "Extracts the content for the key :|body| within the content for the key :|content|"
@@ -104,7 +104,7 @@
                                    (invoke-restart 'tell-user))))
                   (initiate-command-execution luna priv prefix/module
                                               (intern (string-upcase invoker)
-                                                      :matrix-moonbot)
+                                                      :lunamech)
                                               community room message rest)))))
         (return-nil ()
           :report "Return nil?" 

@@ -1,4 +1,4 @@
-(in-package #:matrix-moonbot)
+(in-package #:lunamech)
 
 (defmacro get-key (location key)
   `(gethash ,(string key) ,location))

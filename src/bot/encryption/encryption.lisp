@@ -1,4 +1,4 @@
-(in-package #:matrix-moonbot)
+(in-package #:lunamech)
 
 (defmethod upload-keys (connection (device-keys device-keys))
   (let* ((output (make-string-output-stream))

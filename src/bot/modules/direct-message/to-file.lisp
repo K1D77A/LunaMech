@@ -1,4 +1,4 @@
-(in-package #:mm-module.direct-message)
+(in-package #:luna-module.direct-message)
 
 (defmethod jojo:%to-json ((obj context))
   (jojo:with-object

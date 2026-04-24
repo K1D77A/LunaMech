@@ -1,12 +1,12 @@
-(defpackage #:mm-module.admin
-  (:use #:cl #:matrix-moonbot)
+(defpackage #:luna-module.admin
+  (:use #:cl #:lunamech)
   (:export #:admin-command
            #:admin-module
            #:*module*))
 
-(in-package #:mm-module.admin)
+(in-package #:luna-module.admin)
 
-(defmodule admin (mm-module.admin ADMIN ubermensch-privilege)
+(defmodule admin (luna-module.admin ADMIN ubermensch-privilege)
            admin-command ()
            admin-module ())
 

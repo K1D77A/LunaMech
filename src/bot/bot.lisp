@@ -1,4 +1,4 @@
-(in-package #:matrix-moonbot)
+(in-package #:lunamech)
 
 (defun front-end-loop ()
   "systemd just restarts Luna if we enter the toplevel so instead we will just loop 
@@ -41,8 +41,7 @@ and sleep over and over and over again."
   (handler-case 
       (front-end-loop)
     (SB-SYS:INTERACTIVE-INTERRUPT ()
-      (when (slot-boundp *ark* 'lunas)
-        (stop *ark*))
+        (stop *ark*)
       (sb-ext:quit))))
 
 

@@ -1,4 +1,4 @@
-(in-package #:mm-module.direct-message)
+(in-package #:luna-module.direct-message)
 
 (defmethod execute-context ((proom proom))
   "Called with an instance of PROOM. With this PROOM it then changes the bindings of 

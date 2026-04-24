@@ -1,7 +1,7 @@
 ;;;; package.lisp
 (in-package #:cl-user)
 
-(defpackage #:matrix-moonbot
+(defpackage #:lunamech
   (:use #:cl
         #:lmav2)
   (:nicknames #:lunamech #:luna)

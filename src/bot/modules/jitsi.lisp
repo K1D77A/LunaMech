@@ -1,12 +1,12 @@
-(defpackage #:mm-module.jitsi
-  (:use #:cl #:matrix-moonbot)
+(defpackage #:luna-module.jitsi
+  (:use #:cl #:lunamech)
   (:export #:jitsi-command
            #:jitsi-module
            #:*module*))
 
-(in-package #:mm-module.jitsi)
+(in-package #:luna-module.jitsi)
 
-(defmodule jitsi (mm-module.jitsi jitsi ubermensch-privilege)
+(defmodule jitsi (luna-module.jitsi jitsi ubermensch-privilege)
            jitsi-command ()
            jitsi-module
            ((timers

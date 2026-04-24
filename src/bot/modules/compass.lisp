@@ -1,12 +1,12 @@
-(defpackage #:mm-module.compass
-  (:use #:cl #:matrix-moonbot)
+(defpackage #:luna-module.compass
+  (:use #:cl #:lunamech)
   (:export #:compass-command
            #:compass-module
            #:*module*))
 
-(in-package #:mm-module.compass)
+(in-package #:luna-module.compass)
 
-(defmodule compass (mm-module.compass COMPASS normie-privilege)
+(defmodule compass (luna-module.compass COMPASS normie-privilege)
            compass-command ()
            compass-module ())
 

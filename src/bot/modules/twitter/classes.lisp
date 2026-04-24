@@ -1,10 +1,10 @@
-(defpackage #:mm-module.twitter
-  (:use #:cl #:matrix-moonbot)
+(defpackage #:luna-module.twitter
+  (:use #:cl #:lunamech)
   (:export #:twitter-command
            #:twitter-module
            #:*module*))
 
-(in-package #:mm-module.twitter)
+(in-package #:luna-module.twitter)
 
 (defclass twitter-api ()
   ((room-id

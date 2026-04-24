@@ -1,5 +1,4 @@
-
-(in-package #:mm-module.sticker)
+(in-package #:luna-module.sticker)
 
 #||
 This module aims to achieve a relatively simple goal, we want the bot to grab all image 
@@ -229,7 +228,7 @@ within the media object so that the correct sticker-api object can be found."
     (dex:post (get-url :upload)
               :headers `(("Content-Type" . "application/json")
                          ("Authorization" .
-                                          ,(mm-module.private-keys:get-key :sticker/upload)))
+                                          ,(luna-module.private-keys:get-key :sticker/upload)))
               :content content 
               :use-connection-pool nil)))
 
@@ -291,7 +290,7 @@ within the media object so that the correct sticker-api object can be found."
   (let ((sender (getf message :|sender|))
         (server (second (str:split #\: room :omit-nulls t :limit 2))))
     `(("Content-Type" . "application/json")
-      ("Token" . ,(mm-module.private-keys:get-key :sticker/user-command))
+      ("Token" . ,(luna-module.private-keys:get-key :sticker/user-command))
       ("Server" . ,server)
       ("Command-Type" . "user")
       ;;because of this we are locked to a per server execution, literally the domain
@@ -373,7 +372,7 @@ the functioning of Luna's stickerpicker module."
 (defun construct-privileged-command (command &rest args)
   (lambda ()
     (dex:post (get-url :command)
-              :headers `(("Token" . ,(mm-module.private-keys:get-key :sticker/priv-command))
+              :headers `(("Token" . ,(luna-module.private-keys:get-key :sticker/priv-command))
                          ("Content-Type" . "application/json")
                          ("Command-Type" . "privileged"))
               :content (jojo:to-json (list :command command :args args))

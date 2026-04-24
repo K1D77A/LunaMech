@@ -1,4 +1,4 @@
-(in-package #:matrix-moonbot)
+(in-package #:lunamech)
 
 (defun mapc-found-modules (luna fun &rest args)
   (mapc (lambda (mod)

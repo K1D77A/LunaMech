@@ -1,4 +1,4 @@
-(in-package #:matrix-moonbot)
+(in-package #:lunamech)
 
 (defmethod initiate-encryption ((connection connection))
   (let* ((account (cl-megolm:make-account))

@@ -1,5 +1,5 @@
-(defpackage #:mm-module.sticker
-  (:use #:cl #:matrix-moonbot)
+(defpackage #:luna-module.sticker
+  (:use #:cl #:lunamech)
   (:export #:sticker-command
            #:sticker-module
            #:*module*))
