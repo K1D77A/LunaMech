@@ -29,5 +29,14 @@
 (defgeneric dont-serialize-slots (o)
   (:documentation "Return a list of slots that aren't saved to disk."))
 
+(defgeneric proceed (o)
+  (:documentation "Return when O can proceed."))
+
+(defgeneric pause (o)
+  (:documentation "Pause O."))
+
+(defgeneric resume (o)
+  (:documentation "Resume O"))
+
 
 

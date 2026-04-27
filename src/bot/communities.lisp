@@ -1,5 +1,15 @@
 (in-package #:lunamech)
 
+(defmethod make-instance :around ((class community) &rest initargs &key &allow-other-keys)
+  (declare (ignore initargs))
+  (let ((instance (call-next-method)))
+    (setf (slot-value instance '%locks)
+          (apply #'make-locks (locks-for-object instance)))))
+
+(defmethod locks-for-object ((community community))
+  '(:members :rooms :admins :aliases))
+
+                             
 (defmethod initiate-room-spellchecker ((community community))
   (with-accessors ((rooms-spellcheck rooms-spellcheck)
                    (rooms rooms))

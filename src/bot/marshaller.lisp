@@ -17,11 +17,12 @@ the lunas directory
   '(lunamech-matrix-api/v2:filters
     found-modules
     thread
-    unloaded-modules))
+    unloaded-modules
+    pause-gate))
 
 (defmethod dont-serialize-slots ((o community))
   '(rooms rooms-spellcheck members
-    lunamech-matrix-api/v2:filters))
+    lunamech-matrix-api/v2:filters %locks))
 
 (defun slots-to-serialize (type)
   (let ((slot-names
@@ -43,6 +44,14 @@ the lunas directory
         (values slots nil)
         (values (setf slots (slots-to-serialize o)) nil))))
 
+(let ((slots '(lunamech-matrix-api/v2:username
+               lunamech-matrix-api/v2:password
+               lunamech-matrix-api/v2:url
+               lunamech-matrix-api/v2:api)))
+  (defmethod cl-binary-store:serializable-object-info ((o (eql 'lunamech-matrix-api/v2:connection)))
+    (values slots nil)))
+
+
 
 (defun grab-configs (&optional (luna-dir *lunas-directory*)
                        (other-config-dir *default-config-location*))
@@ -54,8 +63,8 @@ the lunas directory
    (alexandria:read-file-into-string (merge-pathnames directory "lunamechpass.lisp"))))
 
 (defun config->connection (list directory)
-    (apply #'make-instance 'connection :password (password-from-file directory)
-           list))
+  (apply #'make-instance 'connection :password (password-from-file directory)
+         list))
 
 (defun luna->config (luna)
   "use cl-binary-store to store luna to disk."
@@ -67,7 +76,10 @@ the lunas directory
   (setf (rooms o) ()
         (members o) ()
         (filters o) nil
-        (rooms-spellcheck o) (make-hash-table :test #'equal)))
+        (rooms-spellcheck o) (make-hash-table :test #'equal)
+        (slot-value o '%locks) (apply #'make-locks (locks-for-object o))))
+
+
         
 
 (defmethod cleanup ((luna lunamech))
@@ -79,7 +91,8 @@ the lunas directory
                    (thread thread)
                    (found-modules found-modules)
                    (unloaded-modules unloaded-modules)
-                   (controller-thread controller-thread))
+                   (controller-thread controller-thread)
+                   (pause-gate pause-gate))
       luna
     (with-accessors ((url url)
                      (username username)
@@ -92,7 +105,9 @@ the lunas directory
             timestamp (local-time:now)
             stopp nil
             found-modules nil
-            unloaded-modules (make-hash-table :test #'equalp)))
+            unloaded-modules (make-hash-table :test #'equalp)
+            (slot-value luna '%locks) (apply #'make-locks (locks-for-object luna))
+            pause-gate (sb-concurrency:make-gate :name "Luna gate" :open t)))
     (mapc #'cleanup communities)
     luna))
 

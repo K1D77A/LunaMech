@@ -79,16 +79,16 @@
 (defun moon-mapcar (community room function list)
   (moon-map #'mapcar community room function list))
 
-(defun report-condition-to-matrix (condition message)
+(defun report-condition-to-matrix (condition message &optional (luna *luna*))
   (mapc (lambda (uber)
-          (module-moonmat-message (conn *luna*) uber "~A ~A" message 
+          (module-moonmat-message (conn luna) uber "~A ~A" message 
                                   (%emergency-format condition)))
-        (uber-rooms *luna*)))
+        (uber-rooms luna)))
 
-(defun report-to-matrix (message)
+(defun report-to-matrix (message &optional (luna *luna*))
   (mapc (lambda (uber)
-          (module-moonmat-message (conn *luna*) uber "~A" message))
-        (uber-rooms *luna*))
+          (module-moonmat-message (conn luna) uber "~A" message))
+        (uber-rooms luna))
   nil)
 
 (defgeneric %emergency-format (condition))

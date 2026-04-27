@@ -2,6 +2,16 @@
 
 (defparameter *luna* "Thread local instance of lunamech :)")
 
+(defmethod make-instance :around ((class lunamech) &rest initargs &key &allow-other-keys)
+  (declare (ignore initargs))
+  (let ((instance (call-next-method)))
+    (setf (slot-value instance '%locks)
+          (apply #'make-locks (locks-for-object instance)))))
+
+(defmethod locks-for-object ((lunamech lunamech))
+  (declare (ignore lunamech))
+  '(:found-modules :cycle-history :thread :permissions))
+
 (defmethod permissions :around ((lunamech lunamech))
   (quicklock (lunamech :permissions)
     (call-next-method)))
@@ -13,6 +23,17 @@
 (defmethod found-modules :around ((lunamech lunamech))
   (quicklock (lunamech :found-modules)
     (call-next-method)))
+
+(defmethod proceed ((luna lunamech))
+  (sb-concurrency:wait-on-gate (pause-gate luna))
+  (sb-concurrency:wait-on-gate (pause-gate *ark*)))
+
+(defmethod pause ((luna lunamech))
+  (sb-concurrency:close-gate (pause-gate luna)))
+
+(defmethod resume ((luna lunamech))
+  (sb-concurrency:open-gate (pause-gate luna)))
+
 
 ;; (defmethod (setf found-modules) :after (new-val (lunamech lunamech))
 ;;   "Remove duplicate found-modules after adding/removing one."
@@ -264,7 +285,7 @@ found-module and then recalls start."
 (defmethod stop ((lunamech lunamech))
   (setf (stopp lunamech) t)
   (ignore-errors 
-   (report-to-matrix "I have been told to shutdown"))
+   (report-to-matrix "I have been told to shutdown" lunamech))
   (log:info "Waiting for Lunamech to stop on its own")
   (let ((err-count 0))
     (handler-bind ((luna-still-running

@@ -10,7 +10,7 @@ and sleep over and over and over again."
   (log:info "Starting daily logging to logs/")
   (log:config :daily "logs/lunamech-log"))
 
-(defun setup-and-go (&key (swank t))
+(defun setup-and-go (&key (swank t) (toplevel t))
   "This is the default entry function for the dumped lisp image."
   (log:info "LunaMech is booting.")
   (setup-log4cl)
@@ -18,7 +18,7 @@ and sleep over and over and over again."
       (progn 
         (when swank
           (log:info "Starting primary Swank server.")
-;          (swank:create-server :port 54000 :dont-close t);primary sly connection
+          (swank:create-server :port 54000 :dont-close t);primary sly connection
           (log:info "You can now connect with Swank."))
         (tagbody weee 
            (flet ((initialize-configs ()
@@ -38,8 +38,9 @@ and sleep over and over and over again."
     (condition (c)
       (log:error "~A" c)
       (sb-ext:quit :unix-status 1)))
-  (handler-case 
-      (front-end-loop)
+  (handler-case
+      (when toplevel 
+        (front-end-loop))
     (SB-SYS:INTERACTIVE-INTERRUPT ()
         (stop *ark*)
       (sb-ext:quit))))

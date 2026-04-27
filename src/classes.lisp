@@ -26,11 +26,14 @@
     :initarg :timestamp
     :initform (local-time:now)
     :type local-time:timestamp)
+   (%pause-gate
+    :accessor pause-gate
+    :initform (sb-concurrency:make-gate :name "Ark gate" :open t))
    (%state
     :accessor state
     :initarg :state
     :initform :idle
-    :type (member :starting :started :stopping :stopped :idle :paused))
+    :type (member :starting :stopping :stopped :idle :paused :running))
    (%wanted-modules
     :accessor wanted-modules
     :initarg :wanted-modules
@@ -58,7 +61,10 @@
     :accessor communities
     :initarg :communities
     :type list
-    :documentation "A list of instances of community")   
+    :documentation "A list of instances of community")
+   (%pause-gate
+    :accessor pause-gate
+    :initform (sb-concurrency:make-gate :name "Luna gate" :open t))
    (permissions
     :accessor permissions
     :initarg :permissions
@@ -139,17 +145,17 @@ for that module.")
    (%locks
     :reader %locks
     :type list
-    :documentation "The locks for certain other slots."
-    :initform (flet ((nl (&rest names)
-                       (loop :for name :in names
-                             :appending (list name (bt2:make-lock :name (format nil "~A" name))))))
-                (nl :found-modules :cycle-history :thread :permissions))))
+    :initform nil
+    :documentation "The locks for certain other slots."))
   (:documentation "Luna (Luna here) is the primary class that is used to store all 
 information related to the operation and interaction with the Matrix api. It is an 
 instance of Luna (Luna here) that is created from the communities.lisp config file
 and it is that same instance that is backed up to the same file."))
 
 (c2mop:ensure-finalized (find-class 'lunamech))
+
+(defgeneric locks-for-object (object)
+  (:documentation "Return a list of keywords used to lock access to certain slots."))
 
       
 (defmethod print-object ((lunamech lunamech) stream)
@@ -405,11 +411,9 @@ the community. This is normally acquired through the populate-community command.
     :documentation "Extra information associated with this community. This is not used.")
    (%locks
     :reader %locks
-    :initform
-    (flet ((nl (&rest names)
-             (loop :for name :in names
-                   :appending (list name (bt2:make-lock :name (format nil "~A" name))))))
-      (nl :members :rooms :admins :aliases)))))
+    :initform nil)))
+
+
 
 
 (defmethod print-object ((community community) stream)

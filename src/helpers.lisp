@@ -10,5 +10,10 @@
   (loop :for val :being :the :hash-value :in hash-table
         :when (funcall function val)
           :collect val))
+
+(defun make-locks (&rest names)
+  (loop :for name :in names
+        :appending (list name (bt2:make-lock :name (format nil "~A" name)))))
+
         
 

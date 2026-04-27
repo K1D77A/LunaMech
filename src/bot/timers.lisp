@@ -61,7 +61,7 @@ to another and choose whether it is time to execute or not"))
   `(when (>= (local-time:timestamp-difference (timestamp *luna*)
                                               (timestamp ,timer))
              ,time-in-seconds)
-     ,(if (eql position :after)
+     ,(if (eq position :after)
           `(unwind-protect
                 (locally ,@body)
              (reset-timer ,timer))
