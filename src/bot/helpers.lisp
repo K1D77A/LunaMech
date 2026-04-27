@@ -62,10 +62,13 @@
     (condition ()
       nil)))
 
-(defmacro quicklock ((object lock-key) &body body)
+(defmacro quicklock ((object lock-key read-or-write) &body body)
   (alexandria:with-gensyms (lock)
     `(with-slots (%locks)
          ,object
        (let ((,lock (getf %locks ,lock-key)))
-         (bt2:with-lock-held (,lock)
-           (locally ,@body))))))
+         ,(if (eq read-or-write :read)
+             `(sb-concurrency:frlock-read (,lock)
+                (locally ,@body))
+             `(sb-concurrency:frlock-write (,lock)
+                (locally ,@body)))))))

@@ -146,7 +146,7 @@ for that module.")
     :reader %locks
     :type list
     :initform nil
-    :documentation "The locks for certain other slots."))
+    :documentation "frlocks for slots."))
   (:documentation "Luna (Luna here) is the primary class that is used to store all 
 information related to the operation and interaction with the Matrix api. It is an 
 instance of Luna (Luna here) that is created from the communities.lisp config file

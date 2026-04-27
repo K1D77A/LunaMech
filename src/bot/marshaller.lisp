@@ -73,11 +73,11 @@ the lunas directory
     (cl-binary-store:store path luna :track-references nil)))
 
 (defmethod cleanup ((o community))
-  (setf (rooms o) ()
+  (setf (slot-value o '%locks) (apply #'make-locks (locks-for-object o))
+        (rooms o) ()
         (members o) ()
         (filters o) nil
-        (rooms-spellcheck o) (make-hash-table :test #'equal)
-        (slot-value o '%locks) (apply #'make-locks (locks-for-object o))))
+        (rooms-spellcheck o) (make-hash-table :test #'equal)))
 
 
         
@@ -99,14 +99,14 @@ the lunas directory
                      (api api))
         connection
       (setf connection
-            (make-instance 'connection :username username
+             (make-instance 'connection :username username
                                        :password (password-from-file config-path)
                                        :url url)
+            (slot-value luna '%locks) (apply #'make-locks (locks-for-object luna))
             timestamp (local-time:now)
             stopp nil
             found-modules nil
             unloaded-modules (make-hash-table :test #'equalp)
-            (slot-value luna '%locks) (apply #'make-locks (locks-for-object luna))
             pause-gate (sb-concurrency:make-gate :name "Luna gate" :open t)))
     (mapc #'cleanup communities)
     luna))

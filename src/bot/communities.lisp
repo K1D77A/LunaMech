@@ -19,17 +19,44 @@
                (string-downcase (pkv room-plist :NAME)))
              rooms))))
 
+
+
 (defmethod members :around ((community community))
-  (quicklock (community :members)
+  (quicklock (community :members :read)
     (call-next-method)))
+
+(defmethod (setf members) :around (newval (community community))
+  (quicklock (community :members :write)
+    (call-next-method)))
+
 
 (defmethod rooms :around ((community community))
-  (quicklock (community :rooms)
+  (quicklock (community :rooms :read)
     (call-next-method)))
 
-(defmethod admins :around ((community community))
-  (quicklock (community :admins)
+(defmethod (setf rooms) :around (new-val (community community))
+  (quicklock (community :rooms :write)
     (call-next-method)))
+
+
+(defmethod admins :around ((community community))
+  (quicklock (community :admins :read)
+    (call-next-method)))
+
+(defmethod (setf admins) :around (new-val (community community))
+  (quicklock (community :admins :write)
+    (call-next-method)))
+
+
+(defmethod aliases :around ((community community))
+  (quicklock (community :aliases :read)
+    (call-next-method)))
+
+(defmethod (setf aliases) :around (new-val (community community))
+  (quicklock (community :aliases :write)
+    (call-next-method)))
+
+
 
 (defmethod rooms-id ((community community))
   "Extracts the room id's of all the rooms within COMMUNITY"

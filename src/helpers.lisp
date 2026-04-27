@@ -13,7 +13,7 @@
 
 (defun make-locks (&rest names)
   (loop :for name :in names
-        :appending (list name (bt2:make-lock :name (format nil "~A" name)))))
+        :appending (list name (sb-concurrency:make-frlock :name (format nil "~A" name)))))
 
         
 

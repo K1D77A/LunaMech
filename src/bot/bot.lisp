@@ -10,7 +10,7 @@ and sleep over and over and over again."
   (log:info "Starting daily logging to logs/")
   (log:config :daily "logs/lunamech-log"))
 
-(defun setup-and-go (&key (swank t) (toplevel t))
+(defun setup-and-go (&key (swank t) (toplevel t) (quit t))
   "This is the default entry function for the dumped lisp image."
   (log:info "LunaMech is booting.")
   (setup-log4cl)
@@ -37,7 +37,8 @@ and sleep over and over and over again."
         (log:info "Dropping into top level."))
     (condition (c)
       (log:error "~A" c)
-      (sb-ext:quit :unix-status 1)))
+      (when quit 
+        (sb-ext:quit :unix-status 1))))
   (handler-case
       (when toplevel 
         (front-end-loop))

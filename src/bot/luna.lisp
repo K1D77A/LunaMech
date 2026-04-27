@@ -12,17 +12,43 @@
   (declare (ignore lunamech))
   '(:found-modules :cycle-history :thread :permissions))
 
+
+(defmethod (setf permissions) :around (newval (lunamech lunamech))
+  (quicklock (lunamech :permissions :write)
+    (call-next-method)))
+
 (defmethod permissions :around ((lunamech lunamech))
-  (quicklock (lunamech :permissions)
+  (quicklock (lunamech :permissions :read)
+    (call-next-method)))
+
+
+(defmethod (setf cycle-history) :around (newval (lunamech lunamech))
+  (quicklock (lunamech :cycle-history :write)
+    (call-next-method)))
+
+(defmethod cycle-history :around ((lunamech lunamech))
+  (quicklock (lunamech :cycle-history :read)
+    (call-next-method)))
+
+
+(defmethod (setf thread) :around (new-val (lunamech lunamech))
+  (quicklock (lunamech :thread :write)
     (call-next-method)))
 
 (defmethod thread :around ((lunamech lunamech))
-  (quicklock (lunamech :thread)
+  (quicklock (lunamech :thread :read)
+    (call-next-method)))
+
+
+(defmethod (setf found-modules) :around (new-val (lunamech lunamech))
+  (quicklock (lunamech :found-modules :write)
     (call-next-method)))
 
 (defmethod found-modules :around ((lunamech lunamech))
-  (quicklock (lunamech :found-modules)
+  (quicklock (lunamech :found-modules :read)
     (call-next-method)))
+
+
 
 (defmethod proceed ((luna lunamech))
   (sb-concurrency:wait-on-gate (pause-gate luna))
